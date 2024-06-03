@@ -9,6 +9,7 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 * Show nearby and owned perks in a more convenient window (late-game QOL)
 # Predicting functions (turned off by default)
 * Predict next fungal shifts including flask resolutions
+* Show AP/LC recipes
 * Predict perks in next holy mountain
 * Predict perks reroll
 * Predict perk lottery result
