@@ -6,7 +6,7 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 ![alt text](https://github.com/xaxnas/lamas_stats/blob/main/showcase/overlay.png)
 ## Basic functions
 * Show various stats on overlay or in hidden menu in a non-intrusive way, togglable by hotkey
-* Show previous fungal shifts including a results with flask
+* Show previous fungal shifts including results with flask
 * Show fungal shift cooldown
 * Show nearby and owned perks in a more convenient window (late-game QOL)
 ## Predicting functions (turned off by default)
