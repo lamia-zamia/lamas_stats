@@ -21,3 +21,6 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 * [Settings](https://github.com/xaxnas/lamas_stats/blob/main/showcase/settings.png)
 * [Fungal shift interface](https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal.png)
 * [Perks interface](https://github.com/xaxnas/lamas_stats/blob/main/showcase/perks.png)
+
+## Localization
+English, Russian
