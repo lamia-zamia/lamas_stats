@@ -1,7 +1,7 @@
 function OnModPreInit()
 	local game_translations = "data/translations/common.csv"
 	local mod_translations = "mods/lamas_stats/translations/translation.csv"
-	local translations = ModTextFileGetContent(game_translations) .. ModTextFileGetContent(mod_translations)
+	local translations = ModTextFileGetContent(game_translations) .. "\n" .. ModTextFileGetContent(mod_translations)
 
 	ModTextFileSetContent(game_translations, translations:gsub("\r\n","\n"):gsub("\n\n","\n"))
 	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then --hooking perks refresh into game events
