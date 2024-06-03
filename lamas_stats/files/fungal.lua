@@ -9,15 +9,14 @@ function gui_fungal_shift()
 	GuiBeginAutoBox(gui)
 	GuiLayoutBeginVertical(gui, menu_pos_x, menu_pos_y, false, 0, 0) --layer1
 	GuiZSet(gui,900)
-	-- GuiLayoutBeginVertical(gui,0,0)
+
 	GuiText(gui, 0, 0, "==== " .. GameTextGetTranslatedOrNot("$lamas_stat_fungal_shift") .. " ====", fungal_shift_scale)
 	
 	GuiLayoutBeginHorizontal(gui,0,0, false)
 	gui_do_return_button(fungal_shift_scale, gui_main) --return
-	-- if GuiButton(gui, 999, 0, 0, "[" .. GameTextGetTranslatedOrNot("$menu_mods_refresh") .. "]", fungal_shift_scale) then --refresh
+
 	gui_do_refresh_button(fungal_shift_scale, gui_fungal_shift_get_shifts)
-		-- GamePrint("List updated")
-	-- end
+
 	if current_shifts ~= tonumber(GlobalsGetValue("fungal_shift_iteration", "0")) then
 		gui_fungal_shift_get_shifts()
 	end
@@ -27,7 +26,6 @@ function gui_fungal_shift()
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		gui_fungal_show_aplc_recipes()
 	end
-	
 	
 	local cooldown = ShowFungalCooldown()
 	if cooldown > 0 then
@@ -41,17 +39,11 @@ function gui_fungal_shift()
 		gui_fungal_shift_display_past_shifts()
 	end
 	
-	-- if current_shifts > 0 and table.getn(past_shifts) == 0 then
-		-- gui_fungal_shift_get_past_shifts()
-	-- end
-	
 	if ModSettingGet("lamas_stats.enable_fungal_future") then
 		gui_fungal_shift_display_future_shifts()
 	end
 	
-	
 	GuiLayoutEnd(gui) --layer1
-
 
 	GuiZSetForNextWidget(gui, 1000)
 	GuiEndAutoBoxNinePiece(gui, 1, 130, 0, false, 0, screen_png, screen_png)
@@ -153,12 +145,10 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
     end
 
     return {from=_from, to=_to, failed = _failed}
-	
 end
 
 function gui_fungal_shift_display_from(material)
 	GuiBeginAutoBox(gui)
-	-- GuiText(gui, 0, 0, "from ", fungal_shift_scale)
 	local tooltiptext = ""
 	if material.flask == "from" then --if flask was flagged
 		if current_shifts < material.number then --if it's future shift
@@ -198,7 +188,6 @@ function gui_fungal_shift_display_from(material)
 end
 
 function gui_fungal_shift_display_to(material)	
-	-- GuiZSetForNextWidget(gui, 900)
 	GuiText(gui, 0, 0, "-> ", fungal_shift_scale)
 	
 	local tooltiptext = ""
@@ -214,7 +203,6 @@ function gui_fungal_shift_display_to(material)
 				material_to = GameTextGetTranslatedOrNot("$item_potion")
 				show_to = false
 			else
-				-- GuiZSetForNextWidget(gui, 900)
 				GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$lamas_stats_or") .. " ", fungal_shift_scale)
 			end
 			tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$lamas_stats_fungal_shift_possible") .. "\n"
@@ -238,8 +226,6 @@ function gui_fungal_shift_display_to(material)
 		end
 	end
 	
-	-- print(material_to)
-	-- GuiZSetForNextWidget(gui, 900)
 	GuiText(gui, 0, 0, material_to, fungal_shift_scale)
 	
 
@@ -264,7 +250,7 @@ function gui_fungal_shift_get_past_shifts()
 	past_shifts = {}
 	local past_materials = ComponentGetValue2(worldcomponent, "changed_materials")
 	local shift_number = 1
-	-- print("i'm alive")
+
 	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
 	for i=1,current_shifts,1 do
 		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
@@ -343,7 +329,6 @@ function gui_fungal_shift_get_future_shifts()
 			future_shifts[i].failed = nil
 		end
 	end
-	
 end
 
 function gui_fungal_shift_display_future_shifts()
@@ -362,7 +347,6 @@ function gui_fungal_shift_display_future_shifts()
 				
 		GuiLayoutEnd(gui)
 		
-		
 		if future_shifts[i].failed ~= nil then --if there could be a failed attempt then say so
 			GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
 			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$lamas_stats_fungal_if_fail") .. " ", fungal_shift_scale)
@@ -372,7 +356,6 @@ function gui_fungal_shift_display_future_shifts()
 			gui_fungal_shift_add_color_potion_icon(future_shifts[i].to)
 			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[future_shifts[i].to].name) .. ":", fungal_shift_scale)
 			GuiLayoutEnd(gui)
-			
 			
 			GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
 			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$lamas_stats_shift") .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
@@ -415,7 +398,6 @@ function gui_fungal_shift_gather_material_name_table() --function to get table o
 			end
 		end
 	end
-	
 	for _,mat in pairs(original_material_properties) do
 		r,g,b,a = color_abgr_split(tonumber(mat.color.hex,16))
 		mat.color.red = b/255 --i have no idea why red and blue is switched in this function

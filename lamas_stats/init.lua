@@ -2,8 +2,8 @@ function OnModPreInit()
 	local game_translations = "data/translations/common.csv"
 	local mod_translations = "mods/lamas_stats/translations/translation.csv"
 	local translations = ModTextFileGetContent(game_translations) .. ModTextFileGetContent(mod_translations)
+
 	ModTextFileSetContent(game_translations, translations:gsub("\r\n","\n"):gsub("\n\n","\n"))
-	-- print("*************************************************preinit")
 	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then --hooking perks refresh into game events
 		AppendFunction("data/scripts/perks/perk.lua", "if ( no_perk_entity == false ) then", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
 		AppendFunction("data/scripts/perks/perk.lua", "perk_spawn( x, y, perk_id )", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
@@ -47,7 +47,6 @@ end
 
 
 function ReOpenGUI()
-	print("gui reopened")
 	CloseGUI()
 	OpenGUI()
 end

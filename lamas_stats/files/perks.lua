@@ -6,7 +6,6 @@ local perks = perk_get_spawn_order() --from default function
 local perks_current_max_width = ModSettingGet("lamas_stats.current_perks_percentage")
 local how_many_into_future = ModSettingGet("lamas_stats.future_perks_amount")
 
-
 local perks_stats,perks_data,actions_data,perks_current,future_perks,perks_onscreen,reroll_perks,future_index,reroll_index,reroll_count = nil
 local perks_current_count,perks_current_max_count = nil
 
@@ -20,7 +19,6 @@ local perks_predict_icon_scale = 1 * perks_predict_scale
 
 local perks_current_scale = ModSettingGet("lamas_stats.current_perks_scale")
 local perks_current_icon_scale = 0.7 * perks_current_scale
-
 
 function gui_perks_main()
 	GuiBeginAutoBox(gui)
@@ -82,7 +80,6 @@ function gui_perks_main()
 	GuiEndAutoBoxNinePiece(gui, 1, 0, 0, false, 0, screen_png, screen_png)
 end
 
-
 function gui_perks_show_stats()
 	GuiLayoutBeginHorizontal(gui,0,0, false)
 	GuiImage(gui, GuiID, 0, 0, perk_png, 1, perks_scale * 0.7) --displaying img by id
@@ -120,7 +117,6 @@ end
 
 function gui_perks_get_perks_on_screen()
 	perks_onscreen = {}
-	-- actions_data = {}
 	
 	local x,y = EntityGetTransform(player)
 	local all_perks = EntityGetInRadiusWithTag(x, y, 500, "item_perk")
@@ -165,12 +161,9 @@ function gui_perks_get_perks_on_screen()
 			end
 			perks_onscreen[i].cast = card
 			
-			-- print(tostring(actions))
-			-- debug_print_table(actions)
 		end
 	end
 	table.sort(perks_onscreen, function(a, b) return a.x < b.x end)
-	-- debug_print_table(perks_onscreen)
 end
 
 function gui_perks_show_perks_on_screen()
@@ -276,14 +269,8 @@ function gui_perks_show_future_perks()
 		-- index = {}
 		if #perks_onscreen > 0 then
 			perk_count = #perks_onscreen
-			-- for i=1, perk_count do
-				-- table.insert(index,#showperk - perks_onscreen[i].pos + 1)
-			-- end
 		else
 			perk_count = tonumber(GlobalsGetValue( "TEMPLE_PERK_COUNT", "3"))
-			-- for i=1, perk_count do
-				-- table.insert(index,#showperk - i + 1)
-			-- end
 		end
 		index = reroll_index
 		step = -1
@@ -295,7 +282,6 @@ function gui_perks_show_future_perks()
 		step = 1
 		index = future_index
 	end
-	
 	
 	GuiLayoutBeginHorizontal(gui,0,0, false)
 	GuiText(gui, 0, 0, "---- " .. title .. " ----", perks_scale)
@@ -331,7 +317,6 @@ function gui_perks_get_reroll_perks()
 			perk_id = perks[next_perk_index]
 		end
 		while perk_id == "" do --the game forcefully sets perk_id into "" if it rolled non-stackable perk, so we are increasing perk index untill we get an valid or null perk
-			-- print(next_perk_index .. " " .. tostring(perk_id))
 			next_perk_index = next_perk_index - 1
 			
 			perk_id = perks[next_perk_index]
@@ -341,7 +326,6 @@ function gui_perks_get_reroll_perks()
 				perk_id = perks[next_perk_index]
 			end
 		end
-		-- print("i: " .. i .. ", ix: " .. next_perk_index .. ", " .. perk_id)
 		table.insert(reroll_perks, 1, perk_id) 
 		next_perk_index = next_perk_index - 1
 	end
@@ -417,8 +401,6 @@ function gui_perks_refresh_perks()
 		gui_perks_get_future_perks()
 		gui_perks_get_reroll_perks()
 	end
-	
-
 end
 
 gui_perks_collate_data_perks()
