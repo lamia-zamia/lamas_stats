@@ -277,7 +277,7 @@ function gui_perks_show_future_perks()
 	else
 		showperk = future_perks
 		title = _T.lamas_stats_perks_next
-		button = _T.lamas_stats_perks_next
+		button = _T.lamas_stats_perks_reroll
 		perk_count = tonumber(GlobalsGetValue( "TEMPLE_PERK_COUNT", "3"))
 		step = 1
 		index = future_index
