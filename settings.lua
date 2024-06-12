@@ -121,6 +121,7 @@ local default =
 	["stats_show_player_pos"] = false,
 	["stats_show_player_pos_pw"] = true,
 	["stats_show_player_biome"] = false,
+	["KYS_Button"] = false,
 }
 
 function ResetSettings(mod_id, gui, in_main_menu, im_id, setting)
@@ -554,6 +555,25 @@ local function build_settings()
 						},
 					},
 				},
+			},
+			{
+				category_id = "KYS",
+					ui_name = _T.KYScat,
+					ui_description = _T.KYScatDesc,
+					foldable = true,
+					_folded = true,
+					
+					settings = 
+					{
+						{
+							id = "KYS_Button",
+							ui_name = _T.KYS_Button,
+							ui_description = _T.KYS_ButtonDesc,
+							value_default = default["KYS_Button"],
+							scope = MOD_SETTING_SCOPE_RUNTIME,
+							change_fn = mod_setting_change_callback,
+						},
+					},
 			},
 		},
 	},

@@ -20,13 +20,11 @@ function gui_fungal_shift()
 	if current_shifts ~= tonumber(GlobalsGetValue("fungal_shift_iteration", "0")) then
 		gui_fungal_shift_get_shifts()
 	end
-	
 	GuiImgId = 1100
-	
+
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		gui_fungal_show_aplc_recipes()
 	end
-	
 	local cooldown = ShowFungalCooldown()
 	if cooldown > 0 then
 		GuiImage(gui, GuiImgId, -5, -1, fungal_png, 1, 0.7 * fungal_shift_scale)
@@ -34,15 +32,12 @@ function gui_fungal_shift()
 		GuiImgId = GuiImgId + 1
 	end
 	GuiLayoutEnd(gui)
-	
 	if ModSettingGet("lamas_stats.enable_fungal_past") then
 		gui_fungal_shift_display_past_shifts()
 	end
-	
 	if ModSettingGet("lamas_stats.enable_fungal_future") then
 		gui_fungal_shift_display_future_shifts()
 	end
-	
 	GuiLayoutEnd(gui) --layer1
 
 	GuiZSetForNextWidget(gui, 1000)
@@ -84,6 +79,9 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 
     while converted_any == false and convert_tries < maximum_shifts do
         local seed2 = 42345 + iter - 1 + 1000*convert_tries --minus one for consistency with other objects
+		if ModIsEnabled("Apotheosis") then --aphotheosis used old mechanic
+			seed2 = 58925 + iter - 1 + convert_tries
+		end
         SetRandomSeed(89346, seed2)
         local rnd = random_create( 9123, seed2 )
         local from = pick_random_from_table_weighted(rnd, materials_from)
@@ -98,7 +96,7 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
             flask = false,
             probability = to.probability,
             material = to.material,
-            greedy_mat = nil,
+            greedy_mat = "gold",
             grass_holy = "grass",
 			greedy_success = false,
         }
@@ -110,34 +108,48 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
                 _from.flask = true
             else
                 _to.flask = true
-
-                -- heh he
-                if random_nexti( rnd, 1, 1000 ) ~= 1 then
-                    _to.greedy_mat = random_from_array(greedy_materials)
-                    _to.grass_holy = "grass"
-                else
-                    _to.greedy_mat = "gold"
-                    _to.grass_holy = "grass_holy"
-					_to.greedy_success = true
-                end
+				if greedy_materials ~= nil then --compatibility with mods?
+					-- heh he
+					if random_nexti( rnd, 1, 1000 ) ~= 1 then
+						_to.greedy_mat = random_from_array(greedy_materials)
+						_to.grass_holy = "grass"
+					else
+						_to.greedy_mat = "gold"
+						_to.grass_holy = "grass_holy"
+						_to.greedy_success = true
+					end
+				end
             end
         end
-
-        -- Check for failed attempts
+		
 		local same_mat = 0
-		for _, mat in ipairs(_from.materials) do
-			if mat == _to.material then
-				if _from.flask or _to.flask then
+		local apotheosis_cursed_liquid_red_arr = {}
+		
+		for i=1, #_from.materials do
+			if _from.materials[i] == _to.material then
+				-- if _from.flask or _to.flask then
 					same_mat = same_mat + 1
-				end
+				-- end
 			end
 			if same_mat == #_from.materials then 
 				_failed = gui_fungal_shift_get_seed_shifts(iter, convert_tries + 1)
 			end
 			converted_any = true	
+			
+			if ModIsEnabled("Apotheosis") then --damn it's ugly
+				if _from.materials[i] == "apotheosis_cursed_liquid_red_static" or _from.materials[i] == "apotheosis_cursed_liquid_red" then
+					table.insert(apotheosis_cursed_liquid_red_arr, _from.materials[i])
+					table.insert(apotheosis_cursed_liquid_red_arr,"apotheosis_cursed_liquid_red_static")
+					table.insert(apotheosis_cursed_liquid_red_arr,"apotheosis_cursed_liquid_red")
+				end
+			end
 		end
 
         convert_tries = convert_tries + 1
+		
+		if apotheosis_cursed_liquid_red_arr[1] then --if it was cured liquid from apo
+			_from.materials = apotheosis_cursed_liquid_red_arr
+		end
     end
 
     if not converted_any then
@@ -164,7 +176,7 @@ function gui_fungal_shift_display_from(material)
 			tooltiptext = tooltiptext .. _T.lamas_stats_fungal_shift_used .. "\n"
 		end
 	end
-	
+
 	if ModSettingGet("lamas_stats.fungal_group_type") == "group" then
 		if #material.from > 1 then
 			GuiText(gui, 0, 0, _T.lamas_stats_fungal_group_of, fungal_shift_scale)
@@ -172,7 +184,6 @@ function gui_fungal_shift_display_from(material)
 			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.from[1]].name), fungal_shift_scale)
 		end
 	end
-		
 	
 	for i,mat in ipairs(material.from) do
 		if ModSettingGet("lamas_stats.fungal_group_type") == "full" then
@@ -182,6 +193,7 @@ function gui_fungal_shift_display_from(material)
 		tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[mat].name)
 		tooltiptext = tooltiptext .. ", " .. _T.lamas_stats_ingame_name .. (": ") .. mat .. "\n"
 	end
+
 	GuiEndAutoBoxNinePiece(gui,0,0,0,0,0,empty_png,empty_png)
 
 	GuiTooltip(gui,"",tooltiptext)
@@ -255,25 +267,40 @@ function gui_fungal_shift_get_past_shifts()
 	for i=1,current_shifts,1 do
 		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
 		local from_mat = seed_shifts.from.materials --getting shift by seed
-		local from_mat_n = table.getn(from_mat) --getting number of materials that was shifted
-		local to_mat = seed_shifts.to.material
 		
 		past_shifts[i] = {}
 		past_shifts[i].flask = ""
 		past_shifts[i].number = i
 		past_shifts[i].from = {}
-		for j=1,from_mat_n do
-			table.insert(past_shifts[i].from, past_materials[shift_number])
-			past_shifts[i].to = past_materials[shift_number+1]
-			shift_number = shift_number + 2
-			if past_shifts[i].to ~= to_mat then
-				if seed_shifts.to.flask == true then past_shifts[i].flask = "to" end
-			end
-			if past_materials[shift_number-2] ~= from_mat[j] then --if we converted from flask and in seed there was multiple
-				if seed_shifts.from.flask == true then past_shifts[i].flask = "from" end
-				break
+
+		past_shifts[i].to = past_materials[shift_number+1]
+		
+		if past_shifts[i].to ~= seed_shifts.to.material then --if we converted to flask
+			if seed_shifts.to.flask then 
+				past_shifts[i].flask = "to" 
+				for _,mat in ipairs(from_mat) do --adding materials that was shifted except for same
+					if mat ~= past_shifts[i].to then
+						table.insert(past_shifts[i].from, mat)
+					end
+				end
+				shift_number = shift_number + (#past_shifts[i].from) * 2
+				goto continue
 			end
 		end
+
+		for _,mat in ipairs(from_mat) do
+			table.insert(past_shifts[i].from, past_materials[shift_number])
+			if past_materials[shift_number] ~= mat then
+				if seed_shifts.from.flask then
+					past_shifts[i].flask = "from" 
+					shift_number = shift_number + 2
+					break
+				end
+			end
+			shift_number = shift_number + 2
+		end
+
+		::continue::
 	end
 end
 
@@ -315,6 +342,7 @@ end
 function gui_fungal_shift_get_future_shifts()
 	future_shifts = {}
 	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
+
 	for i=current_shifts+1,maximum_shifts,1 do
 		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
 		local from_mat = seed_shifts.from.materials --getting shift by seed
@@ -322,7 +350,6 @@ function gui_fungal_shift_get_future_shifts()
 		local to_mat = seed_shifts.to.material
 
 		future_shifts[i] = gui_fungal_shift_insert_future_shifts(i, seed_shifts)
-		
 		if seed_shifts.failed ~= nil then 
 			future_shifts[i].failed = gui_fungal_shift_insert_future_shifts(i, seed_shifts.failed) 
 		else
@@ -337,14 +364,13 @@ function gui_fungal_shift_display_future_shifts()
 	if current_shifts < maximum_shifts then
 		GuiText(gui, 0, 0, "---- " .. nextshifttext .. " ----",fungal_shift_scale)
 	end
+
 	for i=current_shifts+1,maximum_shifts,1 do
 		GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
 		GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
 		
 		gui_fungal_shift_display_from(future_shifts[i])
-
 		gui_fungal_shift_display_to(future_shifts[i])
-				
 		GuiLayoutEnd(gui)
 		
 		if future_shifts[i].failed ~= nil then --if there could be a failed attempt then say so
@@ -363,7 +389,6 @@ function gui_fungal_shift_display_future_shifts()
 			gui_fungal_shift_display_to(future_shifts[i].failed)	
 			GuiLayoutEnd(gui)
 		end
-		
 		if i == current_shifts+1 and i < maximum_shifts then
 			GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
 			GuiText(gui, 0, 0, "---- ",fungal_shift_scale) 
@@ -383,6 +408,16 @@ end
 function gui_fungal_shift_gather_material_name_table() --function to get table of material name and color, called once on menu initialization
 	local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua")
 	local xml = nxml.parse(ModTextFileGetContent("data/materials.xml"))
+	
+	local files = ModMaterialFilesGet()
+	for _, file in ipairs(files) do --add modded materials
+		if file ~= "data/materials.xml" then
+			for _, comp in ipairs(nxml.parse(ModTextFileGetContent(file)).children) do
+				xml.children[#xml.children+1] = comp
+			end
+		end
+	end
+	
 	for elem in xml:each_child() do
 		if elem.attr["ui_name"] ~= nil then
 			original_material_properties[elem.attr["name"]] = {}

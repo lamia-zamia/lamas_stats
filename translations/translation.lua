@@ -116,6 +116,12 @@ translations =
 		lamas_stats_position_toggle = "Click to toggle",
 		lamas_stats_location = "Location",
 		lamas_stats_unknown = "Unknown",
+		KYScat = "Kill yourself",
+		KYScatDesc = "Category for suicide, in case you are too far into godrun",
+		KYS_Button = "Enable suicide button",
+		KYS_ButtonDesc = "To show suicide button or no",
+		KYS_Suicide = "Suicide",
+		KYS_Suicide_Warn = "Are you sure? This button will kill you",
     },
 	["русский"] = {
 		Hotkey = "Горячая клавиша",
@@ -233,6 +239,12 @@ translations =
 		lamas_stats_position_toggle = "Кликнуть для переключения",
 		lamas_stats_location = "Локация",
 		lamas_stats_unknown = "Неизвестно",
+		KYScat = "Убить себя",
+		KYScatDesc = "Категория для суицида на случай, если вы слишком неубиваемы",
+		KYS_Button = "Включить кнопку суицида",
+		KYS_ButtonDesc = "Показывать кнопку суицида или нет",
+		KYS_Suicide = "Суицид",
+		KYS_Suicide_Warn = "Точно? Эта кнопка убьёт Мину",
 	},
 }
 

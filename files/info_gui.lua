@@ -123,6 +123,39 @@ local function PopulateButtons()
 				end,
 		})
 	end
+	
+	if ModSettingGet("lamas_stats.KYS_Button") then 
+		table.insert(lamas_stats_main_menu_buttons,
+		{
+			ui_name = "[" .. _T.KYScat .. "]",
+			action = function()
+				gui_menu = gui_kys_main
+				end,
+		})
+	end
+end
+
+function gui_kys_main()
+	GuiBeginAutoBox(gui)
+	GuiLayoutBeginVertical(gui, menu_pos_x, menu_pos_y) --layer1
+	GuiZSet(gui,800)
+	GuiText(gui, 0, 0, ModSettingGet("lamas_stats.lamas_menu_header"))
+
+	gui_do_return_button(fungal_shift_scale, gui_main) --return
+	
+	GuiColorSetForNextWidget(gui,1,1,0,1)
+	GuiText(gui, 0, 0, _T.KYS_Suicide_Warn)
+	
+	GuiColorSetForNextWidget(gui,1,0,0,1)
+	if GuiButton(gui, 5555, 0, 0, "[" .. _T.KYScat .. "]", 1) then
+		local gsc_id = EntityGetFirstComponentIncludingDisabled(player, "GameStatsComponent")
+		ComponentSetValue2(gsc_id, "extra_death_msg", _T.KYS_Suicide)
+		EntityKill(player)
+	end
+
+	GuiLayoutEnd(gui) --layer1
+	GuiZSetForNextWidget(gui, 1000)
+	GuiEndAutoBoxNinePiece(gui, 1, 130, 0, false, 0, screen_png, screen_png)
 end
 
 local function PopulateMenuText()
