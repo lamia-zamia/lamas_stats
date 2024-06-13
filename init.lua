@@ -1,3 +1,4 @@
+--[[	game hooks start here]]
 function OnModPreInit()
 	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then --hooking perks refresh into game events
 		AppendFunction("data/scripts/perks/perk.lua", "if ( no_perk_entity == false ) then", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
@@ -29,7 +30,11 @@ function OnWorldPostUpdate()
 	end
 end
 
-
+function OnPlayerDied()
+	CloseGUI()
+end
+--[[	end of game hook]]
+--[[	custom functions start here]]
 function OpenGUI()
     EntityLoad("mods/lamas_stats/files/info_gui.xml")
 	lamas_stats_menu_enabled = true
@@ -40,14 +45,9 @@ function CloseGUI()
 	lamas_stats_menu_enabled = false
 end
 
-
 function ReOpenGUI()
 	CloseGUI()
 	OpenGUI()
-end
-
-function OnPlayerDied()
-	CloseGUI()
 end
 
 function AppendFunction(file, search, add)
