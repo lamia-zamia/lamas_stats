@@ -6,6 +6,9 @@ player = EntityGetWithTag("player_unit")[1]
 
 current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
 maximum_shifts = ModSettingGet("lamas_stats.fungal_shift_max")
+if ModIsEnabled("Apotheosis") then --aphotheosis
+	maximum_shifts = maximum_shifts + 1
+end
 
 worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
 
