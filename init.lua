@@ -36,6 +36,7 @@ end
 --[[	end of game hook]]
 --[[	custom functions start here]]
 function OpenGUI()
+--123
     EntityLoad("mods/lamas_stats/files/info_gui.xml")
 	lamas_stats_menu_enabled = true
 end
