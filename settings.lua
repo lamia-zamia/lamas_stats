@@ -144,11 +144,6 @@ end
 local function build_settings()
 	return {
 	{
-		id = "setting_changed",
-		value_default = false,
-		hidden = true,
-	},
-	{
 		id = "input_key",
 		ui_name = _T.Hotkey,
 		ui_description = _T.HotkeyDesc,
@@ -445,11 +440,6 @@ local function build_settings()
 						scope =  MOD_SETTING_SCOPE_RUNTIME_RESTART,
 					},
 					{
-						id = "enable_perks_autoupdate_flag",
-						value_default = false,
-						hidden = true,
-					},
-					{
 						category_id = "current_perks_cat",
 						ui_name = _T.current_perks_cat,
 						foldable = true,
@@ -588,7 +578,6 @@ local function build_settings()
 			{
 				id = "reset_settings",
 				ui_name = _T.ResetSettings,
-				-- value_default = true,
 				scope = MOD_SETTING_SCOPE_RUNTIME,
 				ui_fn = ResetSettingsUI, -- custom widget
 			},
@@ -608,7 +597,6 @@ function ModSettingsUpdate( init_scope )
 	local old_version = mod_settings_get_version( mod_id )
 	waitingForKey = false
 	mod_settings_update( mod_id, mod_settings, init_scope )
-	
 end
 
 function ModSettingsGuiCount()
