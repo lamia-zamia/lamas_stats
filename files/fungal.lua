@@ -72,7 +72,7 @@ function gui_fungal_show_aplc_recipes_tooltip_add_recipe(mat_id, mat_table)
 	GuiLayoutEnd(gui)
 end
 
-function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shifts based on seed (code is copied from game itself)
+function gui_fungal_shift_get_seed_shifts(iter, convert_tries, mat_from, mat_to) --calculate shifts based on seed (code is copied from game itself)
 	local _from, _to = nil, nil
     local converted_any = false
     local convert_tries = convert_tries or 0
@@ -89,13 +89,14 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 
         _from = {
             flask = false,
-            probability = from.probability,
-            materials = from.materials,
+            -- probability = from.probability,
+            materials = mat_from or from.materials,
+			
         }
         _to = {
             flask = false,
-            probability = to.probability,
-            material = to.material,
+            -- probability = to.probability,
+            material = mat_to or to.material,
             greedy_mat = "gold",
             grass_holy = "grass",
 			greedy_success = false,
@@ -125,16 +126,11 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 		local same_mat = 0
 		local apotheosis_cursed_liquid_red_arr = {}
 		
+		-- local failed_flag = false
 		for i=1, #_from.materials do
 			if _from.materials[i] == _to.material then
-				-- if _from.flask or _to.flask then
-					same_mat = same_mat + 1
-				-- end
-			end
-			if same_mat == #_from.materials then 
-				_failed = gui_fungal_shift_get_seed_shifts(iter, convert_tries + 1)
-			end
-			converted_any = true	
+				same_mat = same_mat + 1
+			end	
 			
 			if ModIsEnabled("Apotheosis") then --damn it's ugly
 				if _from.materials[i] == "apotheosis_cursed_liquid_red_static" or _from.materials[i] == "apotheosis_cursed_liquid_red" then
@@ -144,7 +140,23 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 				end
 			end
 		end
-
+		
+		if same_mat == #_from.materials then --if conversion failed
+			if _from.flask or _to.flask then --if flask shift is available
+				_failed = gui_fungal_shift_get_seed_shifts(iter, convert_tries + 1)
+				converted_any = true
+			else
+				if ModIsEnabled("Apotheosis") then --damn it's ugly
+					_from = {materials ={"fail"}}
+					_to = {material = "fail"}
+					_failed = nil
+					converted_any = true
+				end
+			end
+		else
+			converted_any = true
+		end
+		
         convert_tries = convert_tries + 1
 		
 		if apotheosis_cursed_liquid_red_arr[1] then --if it was cured liquid from apo
@@ -161,6 +173,7 @@ end
 
 function gui_fungal_shift_display_from(material)
 	GuiBeginAutoBox(gui)
+	-- debug_print_table(material)
 	local tooltiptext = ""
 	if material.flask == "from" then --if flask was flagged
 		if current_shifts < material.number then --if it's future shift
@@ -264,42 +277,79 @@ function gui_fungal_shift_get_past_shifts()
 	local shift_number = 1
 
 	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
+	if current_shifts > maximum_shifts then current_shifts = maximum_shifts end
 	for i=1,current_shifts,1 do
-		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
-		local from_mat = seed_shifts.from.materials --getting shift by seed
+		local seed_shifts = gui_fungal_shift_get_seed_shifts(i) --getting shift by seed
 		
 		past_shifts[i] = {}
 		past_shifts[i].flask = ""
 		past_shifts[i].number = i
 		past_shifts[i].from = {}
 
-		past_shifts[i].to = past_materials[shift_number+1]
-		
-		if past_shifts[i].to ~= seed_shifts.to.material then --if we converted to flask
-			if seed_shifts.to.flask then 
-				past_shifts[i].flask = "to" 
-				for _,mat in ipairs(from_mat) do --adding materials that was shifted except for same
-					if mat ~= past_shifts[i].to then
-						table.insert(past_shifts[i].from, mat)
-					end
-				end
-				shift_number = shift_number + (#past_shifts[i].from) * 2
-				goto continue
-			end
+		if seed_shifts.to.material == "fail" then
+			past_shifts[i].to = "lamas_failed_shift"
+			table.insert(past_shifts[i].from, "lamas_failed_shift")
+			goto continue
 		end
 
-		for _,mat in ipairs(from_mat) do
-			table.insert(past_shifts[i].from, past_materials[shift_number])
-			if past_materials[shift_number] ~= mat then
-				if seed_shifts.from.flask then
-					past_shifts[i].flask = "from" 
-					shift_number = shift_number + 2
+		past_shifts[i].to = past_materials[shift_number+1]
+		
+--[[	additional check for failed shifts, mainly if shift was happened using "from" flask into the same "to" material ]]
+		if seed_shifts.from.flask then
+			local temp_failed_shift = gui_fungal_shift_get_seed_shifts(i, 1) --getting next iteration of seed shift 
+			local fullmatch = 0 --how many times there was an match between real shift and "failed" shift
+			for ii,mat in ipairs(temp_failed_shift.from.materials) do
+				local iter = 2*(ii - 1)
+				--if real shift is identical to "failed" shift
+				if mat == past_materials[shift_number+iter] then 
+					fullmatch = fullmatch + 1
+				else
 					break
 				end
 			end
-			shift_number = shift_number + 2
+			if fullmatch == #temp_failed_shift.from.materials then 
+				-- past_shifts[i].flask = "from_fail" --todo add display of failed shift
+				past_shifts[i].from = temp_failed_shift.from.materials
+				shift_number = shift_number + (#past_shifts[i].from) * 2 
+				goto continue
+			end
 		end
-
+--[[	excluding same materials ]]
+		local unique_from = {}
+		for _,mat in ipairs(seed_shifts.from.materials ) do --adding materials that was shifted except for same material
+			if #seed_shifts.from.materials  > 1 then 
+				if mat ~= past_shifts[i].to then
+					table.insert(unique_from, mat)
+				end
+			else
+				table.insert(unique_from, mat)
+			end
+		end
+--[[	checking if shifted to is different from seed ]]
+		if past_shifts[i].to ~= seed_shifts.to.material then --if "to" material is not the same as in seed
+			if seed_shifts.to.flask then 
+				past_shifts[i].flask = "to" 
+				past_shifts[i].from = unique_from
+				shift_number = shift_number + (#past_shifts[i].from) * 2 
+				goto continue
+			end
+		end
+--[[	checking if shifted from is different from seed ]]
+		for j,mat in ipairs(unique_from) do
+			if past_materials[shift_number] ~= mat then
+				if seed_shifts.from.flask then
+					past_shifts[i].flask = "from" 
+					if j == 1 then --foolproofing cases where first material matching shifted material
+						table.insert(past_shifts[i].from, past_materials[shift_number])
+						shift_number = shift_number + 2 
+					end
+					break
+				end
+			else
+				table.insert(past_shifts[i].from, past_materials[shift_number])
+				shift_number = shift_number + 2
+			end
+		end
 		::continue::
 	end
 end
@@ -314,6 +364,7 @@ function gui_fungal_shift_display_past_shifts()
 		gui_fungal_shift_display_to(past_shift)
 		
 		GuiLayoutEnd(gui)
+				
 	end	
 end
 
@@ -344,12 +395,16 @@ function gui_fungal_shift_get_future_shifts()
 	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
 
 	for i=current_shifts+1,maximum_shifts,1 do
+	
+		-- print(
 		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
 		local from_mat = seed_shifts.from.materials --getting shift by seed
 		local from_mat_n = #from_mat --getting number of materials that was shifted
 		local to_mat = seed_shifts.to.material
 
 		future_shifts[i] = gui_fungal_shift_insert_future_shifts(i, seed_shifts)
+		-- print(tostring(future_shifts[i].failed))
+		-- debug_print_table(future_shifts[i].failed)
 		if seed_shifts.failed ~= nil then 
 			future_shifts[i].failed = gui_fungal_shift_insert_future_shifts(i, seed_shifts.failed) 
 		else
@@ -422,17 +477,34 @@ function gui_fungal_shift_gather_material_name_table() --function to get table o
 		if elem.attr["ui_name"] ~= nil then
 			original_material_properties[elem.attr["name"]] = {}
 			original_material_properties[elem.attr["name"]].name = elem.attr["ui_name"]
-			local graphics = elem:first_of("Graphics")
+			
 			original_material_properties[elem.attr["name"]].color = {}
+			local graphics = elem:first_of("Graphics")
+			
+			-- original_material_properties[elem.attr["name"]].graphics = graphics.attr["texture_file"] or potion_png
 			if graphics == nil then
 				original_material_properties[elem.attr["name"]].color.hex = elem.attr["wang_color"]
-			elseif graphics.attr["color"] == nil then
-				original_material_properties[elem.attr["name"]].color.hex = elem.attr["wang_color"]
+				original_material_properties[elem.attr["name"]].graphics = potion_png
 			else
-				original_material_properties[elem.attr["name"]].color.hex = graphics.attr["color"]
+				--color
+				if graphics.attr["color"] == nil then
+					original_material_properties[elem.attr["name"]].color.hex = elem.attr["wang_color"]
+				else
+					original_material_properties[elem.attr["name"]].color.hex = graphics.attr["color"]
+				end
+				--graphics
+				if graphics.attr["texture_file"] == nil then
+					original_material_properties[elem.attr["name"]].graphics = potion_png
+				else
+					original_material_properties[elem.attr["name"]].graphics = graphics.attr["texture_file"]
+				end
 			end
 		end
 	end
+	original_material_properties["lamas_failed_shift"] = {}
+	original_material_properties["lamas_failed_shift"].name = "fail"
+	original_material_properties["lamas_failed_shift"].color = {}
+	original_material_properties["lamas_failed_shift"].color.hex = "44b53535"
 	for _,mat in pairs(original_material_properties) do
 		r,g,b,a = color_abgr_split(tonumber(mat.color.hex,16))
 		mat.color.red = b/255 --i have no idea why red and blue is switched in this function
@@ -444,8 +516,15 @@ end
 
 function gui_fungal_shift_add_color_potion_icon(material)
 	SetColor(original_material_properties[material].color)
-	GuiImage(gui, GuiImgId, 0, 0, potion_png, 1, fungal_shift_scale)
-	GuiImgId = GuiImgId + 1
+	local scale = 1
+	-- if original_material_properties[material].graphics ~= potion_png then
+		-- scale = 0.33333
+	-- end
+	-- GameSetPostFxTextureParameter("what", original_material_properties[material].graphics, 0, 0)
+	-- GuiOptionsAddForNextWidget(gui, 22)
+	-- GuiImage(gui, GuiImgId, 0, 0, potion_png, 1, fungal_shift_scale * scale)
+	-- GuiImgId = GuiImgId + 1
+	gui_fungal_shift_add_potion_icon()
 end
 
 function gui_fungal_shift_add_potion_icon()
