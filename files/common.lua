@@ -61,8 +61,8 @@ function gui_menu_switch_button(gui, id, scale, menu) --gui frame, scale, loop f
 	end
 end
 
-function gui_do_refresh_button(gui, scale, action) 
-	if GuiButton(gui, 999, 0, 0, "[" .. GameTextGetTranslatedOrNot("$menu_mods_refresh") .. "]", scale) then --refresh
+function gui_do_refresh_button(gui, id, scale, action) 
+	if GuiButton(gui, id, 0, 0, "[" .. GameTextGetTranslatedOrNot("$menu_mods_refresh") .. "]", scale) then --refresh
 		action()
 		GamePrint(_T.lamas_stat_refresh_text)
 	end

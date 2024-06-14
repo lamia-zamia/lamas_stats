@@ -6,6 +6,12 @@ local original_material_properties = {} --table of material names and colors, po
 local fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
 
 function gui_fungal_shift()
+	local gui_id = 1000
+	function id()
+		gui_id = gui_id + 1
+		return gui_id
+	end
+	
 	GuiBeginAutoBox(gui_menu)
 	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y, false, 0, 0) --layer1
 	GuiZSet(gui_menu,900)
@@ -13,23 +19,21 @@ function gui_fungal_shift()
 	GuiText(gui_menu, 0, 0, "==== " .. _T.FungalShifts .. " ====", fungal_shift_scale)
 	
 	GuiLayoutBeginHorizontal(gui_menu,0,0, false)
-	gui_menu_switch_button(gui_menu, 9999, fungal_shift_scale, gui_menu_main_display_loop) --return
+	gui_menu_switch_button(gui_menu, id(), fungal_shift_scale, gui_menu_main_display_loop) --return
 
-	gui_do_refresh_button(gui_menu, fungal_shift_scale, gui_fungal_shift_get_shifts)
+	gui_do_refresh_button(gui_menu, id(), fungal_shift_scale, gui_fungal_shift_get_shifts)
 
 	if current_shifts ~= tonumber(GlobalsGetValue("fungal_shift_iteration", "0")) then
 		gui_fungal_shift_get_shifts()
 	end
-	GuiImgId = 1100
 
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		gui_fungal_show_aplc_recipes()
 	end
 	local cooldown = ShowFungalCooldown()
 	if cooldown > 0 then
-		GuiImage(gui_menu, GuiImgId, -5, -1, fungal_png, 1, 0.7 * fungal_shift_scale)
+		GuiImage(gui_menu, id(), -5, -1, fungal_png, 1, 0.7 * fungal_shift_scale)
 		GuiText(gui_menu, 0, 0, _T.lamas_stats_fungal_cooldown .. " " .. cooldown)
-		GuiImgId = GuiImgId + 1
 	end
 	GuiLayoutEnd(gui_menu)
 	if ModSettingGet("lamas_stats.enable_fungal_past") then
@@ -516,20 +520,11 @@ end
 
 function gui_fungal_shift_add_color_potion_icon(material)
 	SetColor(original_material_properties[material].color)
-	local scale = 1
-	-- if original_material_properties[material].graphics ~= potion_png then
-		-- scale = 0.33333
-	-- end
-	-- GameSetPostFxTextureParameter("what", original_material_properties[material].graphics, 0, 0)
-	-- GuiOptionsAddForNextWidget(gui_menu, 22)
-	-- GuiImage(gui_menu, GuiImgId, 0, 0, potion_png, 1, fungal_shift_scale * scale)
-	-- GuiImgId = GuiImgId + 1
 	gui_fungal_shift_add_potion_icon()
 end
 
 function gui_fungal_shift_add_potion_icon()
-	GuiImage(gui_menu, GuiImgId, 0, 0, potion_png, 1, fungal_shift_scale)
-	GuiImgId = GuiImgId + 1
+	GuiImage(gui_menu, id(), 0, 0, potion_png, 1, fungal_shift_scale)
 end
 
 function SetColor(material)

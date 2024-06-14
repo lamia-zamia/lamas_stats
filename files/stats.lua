@@ -1,6 +1,6 @@
 local stats_x = nil
 local pos_toggle = false
-local player_x, player_y = EntityGetTransform(player)
+local player_x, player_y = get_player_pos()
 
 function PopulateStats(i, gui, x, y, str)
 	if i > 2 then str = "|" .. str end
@@ -75,7 +75,7 @@ function ShowTimeHoverTooltip(gui)
 end
 
 function ShowPlayerBiome(i, gui, id, x, y)
-	player_x, player_y = EntityGetTransform(player)
+	player_x, player_y = get_player_pos()
 	local biome = BiomeMapGetName(player_x, player_y)
 	local par_x = GetParallelWorldPosition(player_x, player_y)
 	
@@ -93,7 +93,7 @@ end
 function ShowPlayerPos(i, gui, id, x, y)
 	local transString = "|" .. _T.lamas_stats_position
 	local width = GuiGetTextDimensions(gui, transString)
-	player_x, player_y = EntityGetTransform(player)
+	player_x, player_y = get_player_pos()
 	if GuiButton(gui, 105, stats_x, y, transString) then
 		pos_toggle = not pos_toggle
 	end
