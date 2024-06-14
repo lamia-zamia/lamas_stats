@@ -1,4 +1,4 @@
-dofile_once("data/scripts/lib/coroutines.lua")
+-- dofile_once("data/scripts/lib/coroutines.lua")
 dofile_once("mods/lamas_stats/files/common.lua")
 dofile_once("mods/lamas_stats/translations/translation.lua")
 
@@ -14,9 +14,14 @@ end
 
 menu_pos_x = 2
 menu_pos_y = 12
-local lamas_stats_main_menu_buttons = {}
-local lamas_stats_main_menu_list = {}
+-- local lamas_stats_main_menu_buttons = {}
+-- local lamas_stats_main_menu_list = {}
 local top_text = "[L]"
+local lamas_stats_menu_enabled = false
+
+if ModSettingGet("lamas_stats.enabled_at_start") == true then
+	lamas_stats_menu_enabled = true
+end
 
 menu_opened = false
 
@@ -98,9 +103,8 @@ function gui_main()
 	GuiLayoutEnd(gui) --layer1
 end
 
-
-
 local function PopulateButtons()
+	lamas_stats_main_menu_buttons = {}
 	if ModSettingGet("lamas_stats.enable_fungal") == true then
 		dofile_once("mods/lamas_stats/files/fungal.lua")
 		table.insert(lamas_stats_main_menu_buttons,
@@ -159,7 +163,7 @@ function gui_kys_main()
 end
 
 local function PopulateMenuText()
-	
+	lamas_stats_main_menu_list = {}
 	if ModSettingGet("lamas_stats.stats_enable") then
 		dofile_once("mods/lamas_stats/files/stats.lua")
 		table.insert(lamas_stats_main_menu_list,ShowStart)
@@ -185,12 +189,7 @@ local function LamasStatsPopulateMenu()
 	PopulateButtons()
 end
 
-function get_player()
-  return (EntityGetWithTag( "player_unit" ) or {})[1]
-end
-
 function get_player_pos()
-  local player = get_player()
   if not player then return 0, 0 end
   return EntityGetTransform(player)
 end
@@ -202,13 +201,17 @@ if ModSettingGet("lamas_stats.lamas_menu_enabled_default") == true then
 	ToggleMenu()
 end
 
-async_loop(function()
-	--overlay
+function lamas_stats_gui_main_loop() --main loop
+	if InputIsKeyJustDown(ModSettingGet("lamas_stats.input_key")) then 
+		lamas_stats_menu_enabled = not lamas_stats_menu_enabled
+	end
+
 	if player then --if player is even alive
+		--overlay
 		if gui_top ~= nil then
 			GuiStartFrame(gui_top)
 		end
-		if gui_top_frame ~= nil and GameIsInventoryOpen() == false then
+		if gui_top_frame ~= nil and GameIsInventoryOpen() == false and lamas_stats_menu_enabled then
 			gui_top_frame()
 		end
 
@@ -216,9 +219,14 @@ async_loop(function()
 		if gui ~= nil then
 			GuiStartFrame(gui)
 		end
-		if gui_menu ~= nil and GameIsInventoryOpen() == false then
+		if gui_menu ~= nil and GameIsInventoryOpen() == false and lamas_stats_menu_enabled then
 			gui_menu()
 		end
 	end
-	wait(0)
-end)
+
+	if ModSettingGet("lamas_stats.setting_changed") then
+		LamasStatsPopulateMenu()
+		ModSettingSet("lamas_stats.setting_changed", false)
+	end
+	-- if not lamas_stats_menu_enabled then
+end
