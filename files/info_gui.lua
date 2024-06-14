@@ -1,106 +1,76 @@
--- dofile_once("data/scripts/lib/coroutines.lua")
 dofile_once("mods/lamas_stats/files/common.lua")
 dofile_once("mods/lamas_stats/translations/translation.lua")
 
-gui_top_frame = nil
 gui_top = GuiCreate()
-
-stat_pos_x = ModSettingGet("lamas_stats.overlay_x")
-stat_pos_y = ModSettingGet("lamas_stats.overlay_y")
-
-if ModSettingGet("lamas_stats.enable_fungal_recipes") then
-	APLC_table = dofile_once("mods/lamas_stats/files/APLC.lua")
-end
+gui_menu = GuiCreate()
 
 menu_pos_x = 2
 menu_pos_y = 12
--- local lamas_stats_main_menu_buttons = {}
--- local lamas_stats_main_menu_list = {}
+
 local top_text = "[L]"
-local lamas_stats_menu_enabled = false
+local lamas_stats_menu_enabled = ModSettingGet("lamas_stats.enabled_at_start")
 
-if ModSettingGet("lamas_stats.enabled_at_start") == true then
-	lamas_stats_menu_enabled = true
+local menu_opened = false
+if ModSettingGet("lamas_stats.lamas_menu_enabled_default") then
+	local menu_opened = true
+	gui_menu_function = gui_menu_main_display_loop
 end
 
-menu_opened = false
-
-function gui_do_return_button(scale, menu)
-	scale = scale or 1
-	menu = menu or gui_main
-	if GuiButton(gui, 99999, 0, 0, "[" .. _T.lamas_stat_return .. "]", scale) then
-		gui_menu = menu
+function gui_top_main_display_loop()
+	local gui_id = 100
+	local function id()
+		gui_id = gui_id + 1
+		return gui_id
 	end
-end
-
-function gui_do_refresh_button(scale, action)
-	if GuiButton(gui, 999, 0, 0, "[" .. GameTextGetTranslatedOrNot("$menu_mods_refresh") .. "]", scale) then --refresh
-		action()
-		GamePrint(_T.lamas_stat_refresh_text)
-	end
-end
-
-function gui_top_main()
-	GuiZSet(gui,800)
+	
+	GuiZSet(gui_menu,800)
 	GuiLayoutBeginHorizontal(gui_top, stat_pos_x, stat_pos_y, false, 0, 0)
-
-	if GuiButton(gui_top, 101, 0, 0, top_text) then
+	if GuiButton(gui_top, id(), 0, 0, top_text) then
 		ToggleMenu()
 	end
 	GuiLayoutEnd(gui_top)
 	if ModSettingGet("lamas_stats.stats_position") == "on top" then
 		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_top)
-		GUI_Stats(gui_top, x+20, y)
+		GUI_Stats(gui_top, id(), x+20, y)
 	end
 end
 
-function GUI_Stats(gui, x, y)
-	for i,stat in ipairs(lamas_stats_main_menu_list) do
-		stat(i, gui, x, y)
+function gui_menu_main_display_loop()
+	local gui_id = 100
+	local function id()
+		gui_id = gui_id + 1
+		return gui_id
 	end
+	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y) --layer1
+	GuiZSet(gui_menu,800)
+	GuiText(gui_menu, 0, 0, ModSettingGet("lamas_stats.lamas_menu_header"))
+
+	if ModSettingGet("lamas_stats.stats_position") == "merged" then
+		GuiText(gui_menu,0,0," ")
+		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_menu)
+		GuiLayoutBeginLayer(gui_menu)
+		GUI_Stats(gui_menu, id(), x, y)
+		GuiLayoutEndLayer(gui_menu) 
+	end
+	
+	for _,button in ipairs(lamas_stats_main_menu_buttons) do
+		if GuiButton(gui_menu, id(), 0, 0, button.ui_name) then
+			button.action()
+		end
+	end
+	GuiLayoutEnd(gui_menu) --layer1
 end
 
 function ToggleMenu()
 	if menu_opened then
-		GuiDestroy(gui)
-		gui_menu = nil
-		gui = nil
+		gui_menu_function = nil
 		top_text = "[L]"
 		menu_opened = false
 	else
-		menu_opened = true
-		gui = GuiCreate()
-		gui_menu = gui_main
+		gui_menu_function = gui_menu_main_display_loop
 		top_text = "[*]"
+		menu_opened = true
 	end
-end
-
-function gui_main()
-	GuiLayoutBeginVertical(gui, menu_pos_x, menu_pos_y) --layer1
-	GuiZSet(gui,800)
-	GuiText(gui, 0, 0, ModSettingGet("lamas_stats.lamas_menu_header"))
-
-	if ModSettingGet("lamas_stats.stats_position") == "merged" then
-		GuiText(gui,0,0," ")
-		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui)
-		
-		GuiLayoutBeginLayer(gui)
-		GUI_Stats(gui, x, y)
-		
-		GuiLayoutEndLayer(gui) 
-	end
-	
-	local hax_btn_id = 123
-	for i,it in ipairs(lamas_stats_main_menu_buttons) do
-		GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
-		if GuiButton(gui, hax_btn_id, 0, 0, it.ui_name) then
-			it.action()
-		end
-		hax_btn_id = hax_btn_id + 1
-		GuiLayoutEnd(gui)
-	end
-	
-	GuiLayoutEnd(gui) --layer1
 end
 
 local function PopulateButtons()
@@ -112,7 +82,7 @@ local function PopulateButtons()
 			ui_name = "[" .. _T.FungalShifts .. "]",
 			action = function() 
 				gui_fungal_shift_get_shifts()
-				gui_menu = gui_fungal_shift 
+				gui_menu_function = gui_fungal_shift 
 				end,
 		})
 	end
@@ -123,7 +93,7 @@ local function PopulateButtons()
 			ui_name = "[" .. _T.Perks .. "]",
 			action = function() 
 				gui_perks_refresh_perks()
-				gui_menu = gui_perks_main
+				gui_menu_function = gui_perks_main
 				end,
 		})
 	end
@@ -133,100 +103,88 @@ local function PopulateButtons()
 		{
 			ui_name = "[" .. _T.KYScat .. "]",
 			action = function()
-				gui_menu = gui_kys_main
+				gui_menu_function = gui_kys_main_loop
 				end,
 		})
 	end
 end
 
-function gui_kys_main()
-	GuiBeginAutoBox(gui)
-	GuiLayoutBeginVertical(gui, menu_pos_x, menu_pos_y) --layer1
-	GuiZSet(gui,800)
-	GuiText(gui, 0, 0, ModSettingGet("lamas_stats.lamas_menu_header"))
+function gui_kys_main_loop()
+	local gui_id = 100
+	local function id()
+		gui_id = gui_id + 1
+		return gui_id
+	end
+	
+	local scale = 1
+	GuiBeginAutoBox(gui_menu)
+	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y) --layer1
+	GuiZSet(gui_menu,800)
+	GuiText(gui_menu, 0, 0, ModSettingGet("lamas_stats.lamas_menu_header"))
 
-	gui_do_return_button(fungal_shift_scale, gui_main) --return
+	gui_menu_switch_button(gui_menu, id(), scale, gui_menu_main_display_loop) --return
 	
-	GuiColorSetForNextWidget(gui,1,1,0,1)
-	GuiText(gui, 0, 0, _T.KYS_Suicide_Warn)
+	GuiColorSetForNextWidget(gui_menu,1,1,0,1)
+	GuiText(gui_menu, 0, 0, _T.KYS_Suicide_Warn)
 	
-	GuiColorSetForNextWidget(gui,1,0,0,1)
-	if GuiButton(gui, 5555, 0, 0, "[" .. _T.KYScat .. "]", 1) then
+	GuiColorSetForNextWidget(gui_menu,1,0,0,1)
+	if GuiButton(gui_menu, id(), 0, 0, "[" .. _T.KYScat .. "]", 1) then
 		local gsc_id = EntityGetFirstComponentIncludingDisabled(player, "GameStatsComponent")
 		ComponentSetValue2(gsc_id, "extra_death_msg", _T.KYS_Suicide)
 		EntityKill(player)
 	end
 
-	GuiLayoutEnd(gui) --layer1
-	GuiZSetForNextWidget(gui, 1000)
-	GuiEndAutoBoxNinePiece(gui, 1, 130, 0, false, 0, screen_png, screen_png)
+	GuiLayoutEnd(gui_menu) --layer1
+	GuiZSetForNextWidget(gui_menu, 1000)
+	GuiEndAutoBoxNinePiece(gui_menu, 1, 130, 0, false, 0, screen_png, screen_png)
 end
 
-local function PopulateMenuText()
+local function PopulateStatsList()
 	lamas_stats_main_menu_list = {}
 	if ModSettingGet("lamas_stats.stats_enable") then
 		dofile_once("mods/lamas_stats/files/stats.lua")
-		table.insert(lamas_stats_main_menu_list,ShowStart)
-			
-		if ModSettingGet("lamas_stats.stats_showtime") then table.insert(lamas_stats_main_menu_list,ShowTime) end
-		if ModSettingGet("lamas_stats.stats_showkills") then table.insert(lamas_stats_main_menu_list,ShowKill) end
-		
-		if ModSettingGet("lamas_stats.stats_show_fungal_cooldown") then 
-			if ModSettingGet("lamas_stats.stats_show_fungal_order") == "first" then table.insert(lamas_stats_main_menu_list,2,ShowFungal) 
-			else table.insert(lamas_stats_main_menu_list,ShowFungal) end
-		end	
-		
-		if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
-		
-		if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
-		
-		table.insert(lamas_stats_main_menu_list,ShowEnd)
 	end
 end
 
-local function LamasStatsPopulateMenu()
-	PopulateMenuText()
+local function LamasStatsApplySettings()
+	stat_pos_x = ModSettingGet("lamas_stats.overlay_x")
+	stat_pos_y = ModSettingGet("lamas_stats.overlay_y")
+	PopulateStatsList()
 	PopulateButtons()
+	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
+		APLC_table = dofile_once("mods/lamas_stats/files/APLC.lua")
+	end
 end
 
-function get_player_pos()
-  if not player then return 0, 0 end
-  return EntityGetTransform(player)
+function GuiStartFrameWithChecks(gui_frame, gui_function)
+	if player then --if player is even alive
+		if gui_frame ~= nil then GuiStartFrame(gui_frame) end
+		if gui_function ~= nil and GameIsInventoryOpen() == false and lamas_stats_menu_enabled then
+			gui_function()
+		end
+	end
 end
 
-LamasStatsPopulateMenu()
-gui_top_frame = gui_top_main
-
-if ModSettingGet("lamas_stats.lamas_menu_enabled_default") == true then
-	ToggleMenu()
-end
-
-function lamas_stats_gui_main_loop() --main loop
+--[[		main loop		]]
+function lamas_stats_main_loop() 
+	--hotkey
 	if InputIsKeyJustDown(ModSettingGet("lamas_stats.input_key")) then 
 		lamas_stats_menu_enabled = not lamas_stats_menu_enabled
 	end
+	
+	--overlay
+	GuiStartFrameWithChecks(gui_top, gui_top_function)
 
-	if player then --if player is even alive
-		--overlay
-		if gui_top ~= nil then
-			GuiStartFrame(gui_top)
-		end
-		if gui_top_frame ~= nil and GameIsInventoryOpen() == false and lamas_stats_menu_enabled then
-			gui_top_frame()
-		end
+	--menu
+	GuiStartFrameWithChecks(gui_menu, gui_menu_function)
 
-		--menu
-		if gui ~= nil then
-			GuiStartFrame(gui)
-		end
-		if gui_menu ~= nil and GameIsInventoryOpen() == false and lamas_stats_menu_enabled then
-			gui_menu()
-		end
-	end
-
+	--apply settings
 	if ModSettingGet("lamas_stats.setting_changed") then
-		LamasStatsPopulateMenu()
+		LamasStatsApplySettings()
 		ModSettingSet("lamas_stats.setting_changed", false)
 	end
-	-- if not lamas_stats_menu_enabled then
 end
+
+--[[		these are executed once on load		]]
+LamasStatsApplySettings()
+gui_top_function = gui_top_main_display_loop

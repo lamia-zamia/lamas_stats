@@ -54,3 +54,21 @@ function GuiTooltipLamas(gui, x, y, z, action)
 		GuiZSet(gui, z)
 	end
 end
+
+function gui_menu_switch_button(gui, id, scale, menu) --gui frame, scale, loop function to display
+	if GuiButton(gui, id, 0, 0, "[" .. _T.lamas_stat_return .. "]", scale) then
+		gui_menu_function = menu
+	end
+end
+
+function gui_do_refresh_button(gui, scale, action) 
+	if GuiButton(gui, 999, 0, 0, "[" .. GameTextGetTranslatedOrNot("$menu_mods_refresh") .. "]", scale) then --refresh
+		action()
+		GamePrint(_T.lamas_stat_refresh_text)
+	end
+end
+
+function get_player_pos()
+	if not player then return 0, 0 end
+	return EntityGetTransform(player)
+end

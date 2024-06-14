@@ -260,6 +260,7 @@ _T = setmetatable({},
 	end
 	if not translations[currentLang][k] then
 		print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, currentLang))
+		currentLang = "English"
 	end
 	return translations[currentLang][k]
 	end

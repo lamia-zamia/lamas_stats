@@ -1,5 +1,3 @@
-
-
 --[[	game hooks start here]]
 function OnModPreInit()
 	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then --hooking perks refresh into game events
@@ -10,48 +8,12 @@ end
 
 function OnPlayerSpawned(player_entity)
 	dofile_once("mods/lamas_stats/files/info_gui.lua") --loading main gui file
-	
-
-	-- else
-		-- CloseGUI() --in case if menu was loaded during
-	-- end
 end
 
 function OnWorldPostUpdate()
-	if lamas_stats_gui_main_loop then lamas_stats_gui_main_loop() end
-
-        -- if (lamas_stats_menu_enabled == false) then
-			-- OpenGUI()
-        -- else
-			-- CloseGUI()
-        -- end
-    -- end
-	-- if lamas_stats_menu_enabled == true and ModSettingGet("lamas_stats.setting_changed") then
-		-- ReOpenGUI()
-		-- ModSettingSet("lamas_stats.setting_changed", false)
-	-- end
+	if lamas_stats_main_loop then lamas_stats_main_loop() end
 end
 
-function OnPlayerDied()
-	-- CloseGUI()
-end
---[[	end of game hook]]
---[[	custom functions start here]]
-function OpenGUI()
---123
-    -- EntityLoad("mods/lamas_stats/files/info_gui.xml")
-	lamas_stats_menu_enabled = true
-end
-
-function CloseGUI()
-    -- EntityKill(EntityGetWithName("lamas_stats_info_gui"))
-	lamas_stats_menu_enabled = false
-end
-
-function ReOpenGUI()
-	CloseGUI()
-	OpenGUI()
-end
 
 function AppendFunction(file, search, add)
 	local content = ModTextFileGetContent(file)

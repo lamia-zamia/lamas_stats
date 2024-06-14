@@ -21,23 +21,23 @@ local perks_current_scale = ModSettingGet("lamas_stats.current_perks_scale")
 local perks_current_icon_scale = 0.7 * perks_current_scale
 
 function gui_perks_main()
-	GuiBeginAutoBox(gui)
+	GuiBeginAutoBox(gui_menu)
 	
-	GuiLayoutBeginVertical(gui, menu_pos_x, menu_pos_y, false, 0, 0) --layer1
-	GuiZSet(gui,900)
-	GuiText(gui, 0, 0, "==== " .. _T.Perks .. " ====", perks_scale)
+	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y, false, 0, 0) --layer1
+	GuiZSet(gui_menu,900)
+	GuiText(gui_menu, 0, 0, "==== " .. _T.Perks .. " ====", perks_scale)
 	
 	--buttons
-	GuiLayoutBeginHorizontal(gui,0,0, false)
-	gui_do_return_button(perks_scale, gui_main) --return
-	gui_do_refresh_button(perks_scale, gui_perks_refresh_perks)
+	GuiLayoutBeginHorizontal(gui_menu,0,0, false)
+	gui_menu_switch_button(gui_menu, 9999, perks_scale, gui_menu_main_display_loop) --return
+	gui_do_refresh_button(gui_menu, perks_scale, gui_perks_refresh_perks)
 	
 	GuiID = 1100
 	GuiZ = 1000
 	
 	if ModSettingGet("lamas_stats.enable_current_perks") then
 		if perks_current_count > 0 then
-			if GuiButton(gui, GuiID, 0, 0, "[" .. _T.lamas_stat_current .. "]", perks_scale) then
+			if GuiButton(gui_menu, GuiID, 0, 0, "[" .. _T.lamas_stat_current .. "]", perks_scale) then
 				display_current = not display_current
 			end
 			GuiID = GuiID + 1
@@ -45,13 +45,13 @@ function gui_perks_main()
 	end
 	
 	if ModSettingGet("lamas_stats.enable_future_perks") then
-		if GuiButton(gui, GuiID, 0, 0, "[" .. _T.lamas_stats_perks_next .. "]", perks_scale) then
+		if GuiButton(gui_menu, GuiID, 0, 0, "[" .. _T.lamas_stats_perks_next .. "]", perks_scale) then
 			display_future = not display_future
 		end
 		GuiID = GuiID + 1
 	end
 	
-	GuiLayoutEnd(gui) 
+	GuiLayoutEnd(gui_menu) 
 	--buttons end
 	
 	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then
@@ -75,28 +75,28 @@ function gui_perks_main()
 	if display_future then gui_perks_show_future_perks() end
 	
 
-	GuiLayoutEnd(gui) --layer1
-	GuiZSetForNextWidget(gui, GuiZ+10)
-	GuiEndAutoBoxNinePiece(gui, 1, 0, 0, false, 0, screen_png, screen_png)
+	GuiLayoutEnd(gui_menu) --layer1
+	GuiZSetForNextWidget(gui_menu, GuiZ+10)
+	GuiEndAutoBoxNinePiece(gui_menu, 1, 0, 0, false, 0, screen_png, screen_png)
 end
 
 function gui_perks_show_stats()
-	GuiLayoutBeginHorizontal(gui,0,0, false)
-	GuiImage(gui, GuiID, 0, 0, perk_png, 1, perks_scale * 0.7) --displaying img by id
+	GuiLayoutBeginHorizontal(gui_menu,0,0, false)
+	GuiImage(gui_menu, GuiID, 0, 0, perk_png, 1, perks_scale * 0.7) --displaying img by id
 	GuiID = GuiID + 1
-	GuiText(gui, 0, 0, perks_current_count, perks_scale)
+	GuiText(gui_menu, 0, 0, perks_current_count, perks_scale)
 	
 	for perk,text in pairs(perks_stats) do
-		GuiImage(gui, GuiID, 0, 0, perks_data[perk].perk_icon, 1, perks_scale * 0.7)
+		GuiImage(gui_menu, GuiID, 0, 0, perks_data[perk].perk_icon, 1, perks_scale * 0.7)
 		GuiID = GuiID + 1
-		GuiText(gui, 0, 0, text)
+		GuiText(gui_menu, 0, 0, text)
 	end
 
-	GuiImage(gui, GuiID, 0, 0, reroll_png, 1, perks_scale * 0.7) --displaying img by id
+	GuiImage(gui_menu, GuiID, 0, 0, reroll_png, 1, perks_scale * 0.7) --displaying img by id
 	GuiID = GuiID + 1
-	GuiText(gui, 0, 0, reroll_count, perks_scale)
+	GuiText(gui_menu, 0, 0, reroll_count, perks_scale)
 
-	GuiLayoutEnd(gui) 
+	GuiLayoutEnd(gui_menu) 
 end
 
 function gui_perks_gather_stats()
@@ -169,16 +169,16 @@ end
 function gui_perks_show_perks_on_screen()
 	if perks_onscreen == nil then return end
 	if #perks_onscreen > 0 then
-		GuiZSetForNextWidget(gui, GuiZ)
-		GuiText(gui, 0, 0, "---- " .. _T.nearby_perks_cat .. " ----", perks_scale)
+		GuiZSetForNextWidget(gui_menu, GuiZ)
+		GuiText(gui_menu, 0, 0, "---- " .. _T.nearby_perks_cat .. " ----", perks_scale)
 		
-		local width_icon = GuiGetImageDimensions(gui, perks_data["EXTRA_PERK"].perk_icon, perks_scale) 
-		GuiLayoutBeginHorizontal(gui,0,0, false)
+		local width_icon = GuiGetImageDimensions(gui_menu, perks_data["EXTRA_PERK"].perk_icon, perks_scale) 
+		GuiLayoutBeginHorizontal(gui_menu,0,0, false)
 		for i,perk in ipairs(perks_onscreen) do 
 			local tooltip_name = GameTextGetTranslatedOrNot(perks_data[perk.perk_id].ui_name)
 			local tooltip_desc = GameTextGetTranslatedOrNot(perks_data[perk.perk_id].ui_description)
-			GuiZSetForNextWidget(gui, GuiZ-1)
-			GuiImage(gui, GuiID, 0, 0, perks_data[perk.perk_id].perk_icon, 1, perks_scale) --displaying img by id
+			GuiZSetForNextWidget(gui_menu, GuiZ-1)
+			GuiImage(gui_menu, GuiID, 0, 0, perks_data[perk.perk_id].perk_icon, 1, perks_scale) --displaying img by id
 
 			GuiID = GuiID + 1
 			if perk.cast ~= nil then
@@ -186,59 +186,59 @@ function gui_perks_show_perks_on_screen()
 				tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].name)
 				tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].description)
 			end
-			GuiTooltip(gui, tooltip_name, tooltip_desc)
+			GuiTooltip(gui_menu, tooltip_name, tooltip_desc)
 			if perk.lottery then
-				local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui)
+				local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_menu)
 				
-				GuiLayoutBeginLayer(gui)
-				GuiZSetForNextWidget(gui, GuiZ-2)
-				GuiImage(gui, GuiID, x+(width_icon/1.5), y - (width_icon/6), perks_data["PERKS_LOTTERY"].perk_icon, 1, perks_scale*0.5) --displaying img by id
+				GuiLayoutBeginLayer(gui_menu)
+				GuiZSetForNextWidget(gui_menu, GuiZ-2)
+				GuiImage(gui_menu, GuiID, x+(width_icon/1.5), y - (width_icon/6), perks_data["PERKS_LOTTERY"].perk_icon, 1, perks_scale*0.5) --displaying img by id
 				GuiID = GuiID + 1
-				GuiLayoutEndLayer(gui) 
+				GuiLayoutEndLayer(gui_menu) 
 			end
 		end
-		GuiLayoutEnd(gui)
+		GuiLayoutEnd(gui_menu)
 	end
 end
 
 function gui_perks_show_current_perks()
-	GuiLayoutBeginHorizontal(gui,0,0, false)
-	GuiText(gui, 0, 0, "---- " .. _T.lamas_stat_current .. " ----", perks_scale)
-	GuiLayoutEnd(gui)
+	GuiLayoutBeginHorizontal(gui_menu,0,0, false)
+	GuiText(gui_menu, 0, 0, "---- " .. _T.lamas_stat_current .. " ----", perks_scale)
+	GuiLayoutEnd(gui_menu)
 	local rows = 1 
-	GuiText(gui, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself
-	local width_icon = GuiGetImageDimensions(gui, perks_data["EXTRA_PERK"].perk_icon, perks_current_icon_scale) 
-	local width_space = GuiGetTextDimensions(gui, " ", perks_current_scale)
-	local width_text_max = GuiGetTextDimensions(gui, perks_current_max_count .. "x", perks_current_scale)
-	local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui)
-	local width_screen = GuiGetScreenDimensions(gui)
+	GuiText(gui_menu, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself
+	local width_icon = GuiGetImageDimensions(gui_menu, perks_data["EXTRA_PERK"].perk_icon, perks_current_icon_scale) 
+	local width_space = GuiGetTextDimensions(gui_menu, " ", perks_current_scale)
+	local width_text_max = GuiGetTextDimensions(gui_menu, perks_current_max_count .. "x", perks_current_scale)
+	local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_menu)
+	local width_screen = GuiGetScreenDimensions(gui_menu)
 
-	GuiLayoutBeginLayer(gui)
+	GuiLayoutBeginLayer(gui_menu)
 	
 	local idx = 1
 	for perk_id,count in pairs(perks_current) do
 		local text = count .. "x"
-		local width_text = GuiGetTextDimensions(gui,text,perks_current_scale)
-		GuiText(gui, width_text_max - width_text + x, y, text, perks_current_scale)
+		local width_text = GuiGetTextDimensions(gui_menu,text,perks_current_scale)
+		GuiText(gui_menu, width_text_max - width_text + x, y, text, perks_current_scale)
 		x = x + width_text_max
 		
-		GuiImage(gui, GuiID, x, y, perks_data[perk_id].perk_icon, 1, perks_current_icon_scale)
+		GuiImage(gui_menu, GuiID, x, y, perks_data[perk_id].perk_icon, 1, perks_current_icon_scale)
 		GuiID = GuiID + 1
-		GuiTooltip(gui, perks_data[perk_id].ui_name, perks_data[perk_id].ui_description)
+		GuiTooltip(gui_menu, perks_data[perk_id].ui_name, perks_data[perk_id].ui_description)
 		
-		local _,_,_,x_tmp = GuiGetPreviousWidgetInfo(gui)
+		local _,_,_,x_tmp = GuiGetPreviousWidgetInfo(gui_menu)
 		
 		if (x_tmp/perks_current_max_width) > width_screen and idx < perks_current_count then
-			GuiLayoutEndLayer(gui)
-			GuiText(gui, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself
-			_,_,_,x,y = GuiGetPreviousWidgetInfo(gui)
-			GuiLayoutBeginLayer(gui)
+			GuiLayoutEndLayer(gui_menu)
+			GuiText(gui_menu, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself
+			_,_,_,x,y = GuiGetPreviousWidgetInfo(gui_menu)
+			GuiLayoutBeginLayer(gui_menu)
 		else
 			x = x + width_icon + width_space
 		end
 		idx = idx + 1
 	end
-	GuiLayoutEndLayer(gui) 
+	GuiLayoutEndLayer(gui_menu) 
 end
 
 function gui_perks_get_current_perks()
@@ -283,26 +283,26 @@ function gui_perks_show_future_perks()
 		index = future_index
 	end
 	
-	GuiLayoutBeginHorizontal(gui,0,0, false)
-	GuiText(gui, 0, 0, "---- " .. title .. " ----", perks_scale)
-	if GuiButton(gui, GuiID, 0, 0, "[" .. button .. "]", perks_scale) then
+	GuiLayoutBeginHorizontal(gui_menu,0,0, false)
+	GuiText(gui_menu, 0, 0, "---- " .. title .. " ----", perks_scale)
+	if GuiButton(gui_menu, GuiID, 0, 0, "[" .. button .. "]", perks_scale) then
 		gui_perks_refresh_perks()
 		display_reroll = not display_reroll
 	end
 	GuiID = GuiID + 1
 	
-	GuiLayoutEnd(gui)
+	GuiLayoutEnd(gui_menu)
 
 	for i=1,how_many_into_future do --how many mountains to display
 		local index_differential = (perk_count * (i-1)) * step
-		GuiLayoutBeginHorizontal(gui,0,0, false)
+		GuiLayoutBeginHorizontal(gui_menu,0,0, false)
 			for i,idx in ipairs(index) do
 				local index_iterator = idx + index_differential
-				GuiImage(gui, GuiID, 0, 0, perks_data[showperk[index_iterator]].perk_icon, 1, perks_predict_icon_scale) --displaying img by id
-				GuiTooltip(gui, perks_data[showperk[index_iterator]].ui_name, perks_data[showperk[index_iterator]].ui_description)
+				GuiImage(gui_menu, GuiID, 0, 0, perks_data[showperk[index_iterator]].perk_icon, 1, perks_predict_icon_scale) --displaying img by id
+				GuiTooltip(gui_menu, perks_data[showperk[index_iterator]].ui_name, perks_data[showperk[index_iterator]].ui_description)
 				GuiID = GuiID + 1
 			end
-		GuiLayoutEnd(gui)
+		GuiLayoutEnd(gui_menu)
 	end
 end
 
