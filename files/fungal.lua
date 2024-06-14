@@ -2,7 +2,6 @@ dofile_once("data/scripts/magic/fungal_shift.lua") --for materials list
 
 local past_shifts = {} --table of past shifts (real one)
 local future_shifts = {} --table of future shifts
-local original_material_properties = {} --table of material names and colors, populates from materials.xml
 local fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
 
 function gui_fungal_shift()
@@ -30,7 +29,7 @@ function gui_fungal_shift()
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		gui_fungal_show_aplc_recipes()
 	end
-	local cooldown = ShowFungalCooldown()
+	local cooldown = GetFungalCooldown()
 	if cooldown > 0 then
 		GuiImage(gui_menu, id(), -5, -1, fungal_png, 1, 0.7 * fungal_shift_scale)
 		GuiText(gui_menu, 0, 0, _T.lamas_stats_fungal_cooldown .. " " .. cooldown)
@@ -177,7 +176,6 @@ end
 
 function gui_fungal_shift_display_from(material)
 	GuiBeginAutoBox(gui_menu)
-	-- debug_print_table(material)
 	local tooltiptext = ""
 	if material.flask == "from" then --if flask was flagged
 		if current_shifts < material.number then --if it's future shift
@@ -464,60 +462,6 @@ function gui_fungal_shift_get_shifts()
 	end
 end
 
-function gui_fungal_shift_gather_material_name_table() --function to get table of material name and color, called once on menu initialization
-	local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua")
-	local xml = nxml.parse(ModTextFileGetContent("data/materials.xml"))
-	
-	local files = ModMaterialFilesGet()
-	for _, file in ipairs(files) do --add modded materials
-		if file ~= "data/materials.xml" then
-			for _, comp in ipairs(nxml.parse(ModTextFileGetContent(file)).children) do
-				xml.children[#xml.children+1] = comp
-			end
-		end
-	end
-	
-	for elem in xml:each_child() do
-		if elem.attr["ui_name"] ~= nil then
-			original_material_properties[elem.attr["name"]] = {}
-			original_material_properties[elem.attr["name"]].name = elem.attr["ui_name"]
-			
-			original_material_properties[elem.attr["name"]].color = {}
-			local graphics = elem:first_of("Graphics")
-			
-			-- original_material_properties[elem.attr["name"]].graphics = graphics.attr["texture_file"] or potion_png
-			if graphics == nil then
-				original_material_properties[elem.attr["name"]].color.hex = elem.attr["wang_color"]
-				original_material_properties[elem.attr["name"]].graphics = potion_png
-			else
-				--color
-				if graphics.attr["color"] == nil then
-					original_material_properties[elem.attr["name"]].color.hex = elem.attr["wang_color"]
-				else
-					original_material_properties[elem.attr["name"]].color.hex = graphics.attr["color"]
-				end
-				--graphics
-				if graphics.attr["texture_file"] == nil then
-					original_material_properties[elem.attr["name"]].graphics = potion_png
-				else
-					original_material_properties[elem.attr["name"]].graphics = graphics.attr["texture_file"]
-				end
-			end
-		end
-	end
-	original_material_properties["lamas_failed_shift"] = {}
-	original_material_properties["lamas_failed_shift"].name = "fail"
-	original_material_properties["lamas_failed_shift"].color = {}
-	original_material_properties["lamas_failed_shift"].color.hex = "44b53535"
-	for _,mat in pairs(original_material_properties) do
-		r,g,b,a = color_abgr_split(tonumber(mat.color.hex,16))
-		mat.color.red = b/255 --i have no idea why red and blue is switched in this function
-		mat.color.green = g/255
-		mat.color.blue = r/255
-		mat.color.alpha = a/255
-	end
-end
-
 function gui_fungal_shift_add_color_potion_icon(material)
 	SetColor(original_material_properties[material].color)
 	gui_fungal_shift_add_potion_icon()
@@ -531,4 +475,4 @@ function SetColor(material)
 	GuiColorSetForNextWidget(gui_menu,material.red,material.green,material.blue,material.alpha)
 end
 
-gui_fungal_shift_gather_material_name_table() --gather table
+

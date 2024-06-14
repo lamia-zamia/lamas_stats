@@ -12,7 +12,7 @@ end
 
 worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
 
-function ShowFungalCooldown()
+function GetFungalCooldown()
     local last_frame = tonumber(GlobalsGetValue("fungal_shift_last_frame", "-1"))
     if last_frame == -1 then 
 		return 0 

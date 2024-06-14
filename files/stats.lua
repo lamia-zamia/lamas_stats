@@ -8,7 +8,7 @@ function PopulateStats(i, gui, x, y, str)
 end
 
 function ShowFungal(i, gui, id, x, y)
-	local cooldown = ShowFungalCooldown()
+	local cooldown = GetFungalCooldown()
 	if cooldown > 0 then
 		local width = 0
 		local transString = _T.lamas_stats_fungal_cooldown
