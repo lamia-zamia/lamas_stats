@@ -1,4 +1,3 @@
-dofile_once("mods/lamas_stats/files/common.lua")
 dofile_once("mods/lamas_stats/translations/translation.lua")
 
 gui_top = GuiCreate()
@@ -23,11 +22,13 @@ function gui_top_main_display_loop()
 		return gui_id
 	end
 	
-	GuiZSet(gui_menu,800)
+	GuiZSet(gui_top,800)
 	GuiLayoutBeginHorizontal(gui_top, stat_pos_x, stat_pos_y, false, 0, 0)
 	if GuiButton(gui_top, id(), 0, 0, top_text) then
 		ToggleMenu()
 	end
+	--test
+	GuiImage(gui_top, id(), 200, 0, virtual_png_dir .. "data/materials_gfx/darkness.png", 1, 5)
 	GuiLayoutEnd(gui_top)
 	if ModSettingGet("lamas_stats.stats_position") == "on top" then
 		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_top)
@@ -75,18 +76,18 @@ end
 
 local function PopulateButtons()
 	lamas_stats_main_menu_buttons = {}
-	if ModSettingGet("lamas_stats.enable_fungal") == true then
+	if ModSettingGet("lamas_stats.enable_fungal") then
 		dofile_once("mods/lamas_stats/files/fungal.lua")
 		table.insert(lamas_stats_main_menu_buttons,
 		{
 			ui_name = "[" .. _T.FungalShifts .. "]",
 			action = function() 
-				gui_fungal_shift_get_shifts()
+				UpdateFungalVariables()
 				gui_menu_function = gui_fungal_shift 
 				end,
 		})
 	end
-	if ModSettingGet("lamas_stats.enable_perks") == true then
+	if ModSettingGet("lamas_stats.enable_perks") then
 		dofile_once("mods/lamas_stats/files/perks.lua")
 		table.insert(lamas_stats_main_menu_buttons,
 		{
@@ -147,12 +148,16 @@ local function PopulateStatsList()
 end
 
 local function LamasStatsApplySettings()
+	UpdateCommonVariables()
 	stat_pos_x = ModSettingGet("lamas_stats.overlay_x")
 	stat_pos_y = ModSettingGet("lamas_stats.overlay_y")
 	PopulateStatsList()
 	PopulateButtons()
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		APLC_table = dofile_once("mods/lamas_stats/files/APLC.lua")
+	end
+	if ModSettingGet("lamas_stats.enable_fungal") then
+		UpdateFungalVariables()
 	end
 end
 

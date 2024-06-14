@@ -2,15 +2,19 @@ empty_png = "data/ui_gfx/empty.png"
 fungal_png = "data/ui_gfx/status_indicators/fungal_shift.png"
 potion_png = "data/items_gfx/potion.png"
 screen_png = "mods/lamas_stats/files/9piece0_more_transparent.png"
-player = EntityGetWithTag("player_unit")[1]
+virtual_png_dir = "mods/lamas_stats/files/virtual/"
 
-current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
-maximum_shifts = ModSettingGet("lamas_stats.fungal_shift_max")
-if ModIsEnabled("Apotheosis") then --aphotheosis
-	maximum_shifts = maximum_shifts + 1
+
+
+function UpdateCommonVariables()
+	worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
+	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
+	player = EntityGetWithTag("player_unit")[1]
+	maximum_shifts = ModSettingGet("lamas_stats.fungal_shift_max")
+	if ModIsEnabled("Apotheosis") then --aphotheosis
+		maximum_shifts = maximum_shifts + 1
+	end
 end
-
-worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
 
 function GetFungalCooldown()
     local last_frame = tonumber(GlobalsGetValue("fungal_shift_last_frame", "-1"))

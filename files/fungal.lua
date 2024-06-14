@@ -32,7 +32,7 @@ function gui_fungal_shift()
 	local cooldown = GetFungalCooldown()
 	if cooldown > 0 then
 		GuiImage(gui_menu, id(), -5, -1, fungal_png, 1, 0.7 * fungal_shift_scale)
-		GuiText(gui_menu, 0, 0, _T.lamas_stats_fungal_cooldown .. " " .. cooldown)
+		GuiText(gui_menu, 0, 0, _T.lamas_stats_fungal_cooldown .. " " .. cooldown, fungal_shift_scale)
 	end
 	GuiLayoutEnd(gui_menu)
 	if ModSettingGet("lamas_stats.enable_fungal_past") then
@@ -46,6 +46,11 @@ function gui_fungal_shift()
 	GuiZSetForNextWidget(gui_menu, 1000)
 	GuiEndAutoBoxNinePiece(gui_menu, 1, 130, 0, false, 0, screen_png, screen_png)
 	
+end
+
+function UpdateFungalVariables()
+	fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
+	gui_fungal_shift_get_shifts()
 end
 
 function gui_fungal_show_aplc_recipes()
@@ -463,12 +468,17 @@ function gui_fungal_shift_get_shifts()
 end
 
 function gui_fungal_shift_add_color_potion_icon(material)
-	SetColor(original_material_properties[material].color)
-	gui_fungal_shift_add_potion_icon()
+	-- SetColor(original_material_properties[material].color)
+	-- debug_print_table(original_material_properties[material])
+	-- original_material_properties[material].icon
+	gui_fungal_shift_add_potion_icon(original_material_properties[material].icon)
+	
 end
 
-function gui_fungal_shift_add_potion_icon()
-	GuiImage(gui_menu, id(), 0, 0, potion_png, 1, fungal_shift_scale)
+function gui_fungal_shift_add_potion_icon(icon)
+	-- print(icon)
+	icon = icon or potion_png
+	GuiImage(gui_menu, id(), 0, 0, icon, 1, fungal_shift_scale)
 end
 
 function SetColor(material)
