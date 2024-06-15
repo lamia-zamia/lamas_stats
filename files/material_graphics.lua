@@ -72,7 +72,7 @@ local function lamas_stats_gather_material() --function to get table of material
 		
 	for _,element_name in ipairs({"CellData","CellDataChild"}) do
 		for elem in xml:each_of(element_name) do
-			if elem.attr["ui_name"] ~= nil then		
+			if elem.attr["ui_name"] ~= nil then	
 				original_material_properties[elem.attr["name"]] = {}
 				original_material_properties[elem.attr["name"]].name = elem.attr["ui_name"]
 				
@@ -85,8 +85,8 @@ local function lamas_stats_gather_material() --function to get table of material
 	original_material_properties["lamas_failed_shift"].name = "fail"
 	original_material_properties["lamas_failed_shift"].color = {}
 	original_material_properties["lamas_failed_shift"].color.red = 1
-	original_material_properties["lamas_failed_shift"].color.green = 1
-	original_material_properties["lamas_failed_shift"].color.blue = 1
+	original_material_properties["lamas_failed_shift"].color.green = 0
+	original_material_properties["lamas_failed_shift"].color.blue = 0
 	original_material_properties["lamas_failed_shift"].color.alpha = 1
 end
 
