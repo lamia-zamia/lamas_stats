@@ -468,17 +468,21 @@ function gui_fungal_shift_get_shifts()
 end
 
 function gui_fungal_shift_add_color_potion_icon(material)
-	-- SetColor(original_material_properties[material].color)
-	-- debug_print_table(original_material_properties[material])
-	-- original_material_properties[material].icon
-	gui_fungal_shift_add_potion_icon(original_material_properties[material].icon)
-	
+	local scale = 1
+	-- if material == "peat" then
+		-- print(original_material_properties[material].icon)
+	-- end
+	if original_material_properties[material].icon == potion_png then
+		SetColor(original_material_properties[material].color)
+	else scale = 1 end
+	gui_fungal_shift_add_potion_icon(original_material_properties[material].icon, scale)
 end
 
-function gui_fungal_shift_add_potion_icon(icon)
+function gui_fungal_shift_add_potion_icon(icon, scale)
 	-- print(icon)
+	scale = scale or 1
 	icon = icon or potion_png
-	GuiImage(gui_menu, id(), 0, 0, icon, 1, fungal_shift_scale)
+	GuiImage(gui_menu, id(), 0, 0, icon, 1, fungal_shift_scale * scale)
 end
 
 function SetColor(material)

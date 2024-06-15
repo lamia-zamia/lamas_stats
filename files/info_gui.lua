@@ -27,8 +27,6 @@ function gui_top_main_display_loop()
 	if GuiButton(gui_top, id(), 0, 0, top_text) then
 		ToggleMenu()
 	end
-	--test
-	GuiImage(gui_top, id(), 200, 0, virtual_png_dir .. "data/materials_gfx/darkness.png", 1, 5)
 	GuiLayoutEnd(gui_top)
 	if ModSettingGet("lamas_stats.stats_position") == "on top" then
 		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_top)

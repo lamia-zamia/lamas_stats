@@ -1,10 +1,10 @@
 empty_png = "data/ui_gfx/empty.png"
 fungal_png = "data/ui_gfx/status_indicators/fungal_shift.png"
 potion_png = "data/items_gfx/potion.png"
+pile_png = "mods/lamas_stats/files/pile.png"
+solid_static_png = "mods/lamas_stats/files/solid_static.png"
 screen_png = "mods/lamas_stats/files/9piece0_more_transparent.png"
 virtual_png_dir = "mods/lamas_stats/files/virtual/"
-
-
 
 function UpdateCommonVariables()
 	worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
