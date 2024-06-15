@@ -16,11 +16,15 @@ end
 
 --[[	game hooks start here]]
 function OnModPreInit()
-	lamas_stats_gather_material_name_table = dofile_once("mods/lamas_stats/files/material_graphics.lua")
+	
 	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then --hooking perks refresh into game events
 		AppendFunction("data/scripts/perks/perk.lua", "if ( no_perk_entity == false ) then", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
 		AppendFunction("data/scripts/perks/perk.lua", "perk_spawn( x, y, perk_id )", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
 	end
+end
+
+function OnMagicNumbersAndWorldSeedInitialized()
+	lamas_stats_gather_material_name_table = dofile_once("mods/lamas_stats/files/material_graphics.lua")
 end
 
 function OnPlayerSpawned(player_entity)

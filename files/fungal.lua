@@ -80,7 +80,7 @@ function gui_fungal_show_aplc_recipes_tooltip_add_recipe(mat_id, mat_table)
 	GuiLayoutEnd(gui_menu)
 end
 
-function gui_fungal_shift_get_seed_shifts(iter, convert_tries, mat_from, mat_to) --calculate shifts based on seed (code is copied from game itself)
+function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shifts based on seed (code is copied from game itself)
 	local _from, _to = nil, nil
     local converted_any = false
     local convert_tries = convert_tries or 0
@@ -98,13 +98,13 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries, mat_from, mat_to)
         _from = {
             flask = false,
             -- probability = from.probability,
-            materials = mat_from or from.materials,
+            materials = from.materials,
 			
         }
         _to = {
             flask = false,
             -- probability = to.probability,
-            material = mat_to or to.material,
+            material = to.material,
             greedy_mat = "gold",
             grass_holy = "grass",
 			greedy_success = false,
@@ -238,19 +238,21 @@ function gui_fungal_shift_display_to(material)
 				GuiText(gui_menu, 0, 0, _T.lamas_stats_or .. " ", fungal_shift_scale)
 			end
 			tooltiptext = tooltiptext .. _T.lamas_stats_fungal_shift_possible .. "\n"
-			if ModSettingGet("lamas_stats.enable_fungal_greedy_tip") then
-				tooltiptext = tooltiptext .. _T.lamas_stats_fungal_greedy .. "\n"
-			end
-			if ModSettingGet("lamas_stats.enable_fungal_greedy_gold") then
-				tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$mat_gold") .. " -> "
-				tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.greedy_mat].name) .. "\n"
-			end
-			if ModSettingGet("lamas_stats.enable_fungal_greedy_grass") then
-				tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$mat_grass_holy") .. " -> "
-				tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.grass_holy].name) .. "\n"
-			end
-			if material.greedy_success then
-				GuiColorSetForNextWidget(gui_menu, 0.7, 0.2, 1, 1)
+			if not ModIsEnabled("Apotheosis") then
+				if ModSettingGet("lamas_stats.enable_fungal_greedy_tip") then
+					tooltiptext = tooltiptext .. _T.lamas_stats_fungal_greedy .. "\n"
+				end
+				if ModSettingGet("lamas_stats.enable_fungal_greedy_gold") then
+					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$mat_gold") .. " -> "
+					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.greedy_mat].name) .. "\n"
+				end
+				if ModSettingGet("lamas_stats.enable_fungal_greedy_grass") then
+					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$mat_grass_holy") .. " -> "
+					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.grass_holy].name) .. "\n"
+				end
+				if material.greedy_success then
+					GuiColorSetForNextWidget(gui_menu, 0.7, 0.2, 1, 1)
+				end
 			end
 		else --past shift
 			GuiColorSetForNextWidget(gui_menu, 1, 1, 0.698, 1)
@@ -293,12 +295,12 @@ function gui_fungal_shift_get_past_shifts()
 		past_shifts[i].number = i
 		past_shifts[i].from = {}
 
-		if seed_shifts.to.material == "fail" then
+		if seed_shifts.to.material == "fail" or past_materials[shift_number+1] == nil then
 			past_shifts[i].to = "lamas_failed_shift"
 			table.insert(past_shifts[i].from, "lamas_failed_shift")
 			goto continue
 		end
-
+		
 		past_shifts[i].to = past_materials[shift_number+1]
 		
 --[[	additional check for failed shifts, mainly if shift was happened using "from" flask into the same "to" material ]]
@@ -469,9 +471,7 @@ end
 
 function gui_fungal_shift_add_color_potion_icon(material)
 	local scale = 1
-	-- if material == "peat" then
-		-- print(original_material_properties[material].icon)
-	-- end
+	-- print(tostring(material))
 	if original_material_properties[material].icon == potion_png then
 		SetColor(original_material_properties[material].color)
 	else scale = 1 end
