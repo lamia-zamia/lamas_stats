@@ -1,8 +1,9 @@
 dofile_once("data/scripts/magic/fungal_shift.lua") --for materials list
+dofile_once("mods/lamas_stats/files/fungal_past.lua")
+dofile_once("mods/lamas_stats/files/fungal_future.lua")
 
 local past_shifts = {} --table of past shifts (real one)
 local future_shifts = {} --table of future shifts
-local fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
 
 function gui_fungal_shift()
 	local gui_id = 1000
@@ -13,14 +14,15 @@ function gui_fungal_shift()
 	
 	GuiBeginAutoBox(gui_menu)
 	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y, false, 0, 0) --layer1
-	GuiZSet(gui_menu,900)
+	local guiZ = 900
+	GuiZSet(gui_menu,guiZ)
 
 	GuiText(gui_menu, 0, 0, "==== " .. _T.FungalShifts .. " ====", fungal_shift_scale)
 	
 	GuiLayoutBeginHorizontal(gui_menu,0,0, false)
 	gui_menu_switch_button(gui_menu, id(), fungal_shift_scale, gui_menu_main_display_loop) --return
 
-	gui_do_refresh_button(gui_menu, id(), fungal_shift_scale, gui_fungal_shift_get_shifts)
+	gui_do_refresh_button(gui_menu, id(), fungal_shift_scale, UpdateFungalVariables)
 
 	if current_shifts ~= tonumber(GlobalsGetValue("fungal_shift_iteration", "0")) then
 		gui_fungal_shift_get_shifts()
@@ -43,14 +45,8 @@ function gui_fungal_shift()
 	end
 	GuiLayoutEnd(gui_menu) --layer1
 
-	GuiZSetForNextWidget(gui_menu, 1000)
+	GuiZSetForNextWidget(gui_menu, guiZ + 100)
 	GuiEndAutoBoxNinePiece(gui_menu, 1, 130, 0, false, 0, screen_png, screen_png)
-	
-end
-
-function UpdateFungalVariables()
-	fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
-	gui_fungal_shift_get_shifts()
 end
 
 function gui_fungal_show_aplc_recipes()
@@ -60,7 +56,7 @@ function gui_fungal_show_aplc_recipes()
 	gui_fungal_shift_add_color_potion_icon("magic_liquid_hp_regeneration_unstable")
 	GuiText(gui_menu, 0, 0, "]", fungal_shift_scale)
 	GuiEndAutoBoxNinePiece(gui_menu,0,0,0,0,0,empty_png,empty_png)
-	GuiTooltipLamas(gui_menu, 50, 0, 900, gui_fungal_show_aplc_recipes_tooltip)
+	GuiTooltipLamas(gui_menu, 50, 0, guiZ, gui_fungal_show_aplc_recipes_tooltip)
 end
 
 function gui_fungal_show_aplc_recipes_tooltip()
@@ -185,7 +181,10 @@ function gui_fungal_shift_display_from(material)
 	if material.flask == "from" then --if flask was flagged
 		if current_shifts < material.number then --if it's future shift
 			tooltiptext = tooltiptext .. _T.lamas_stats_fungal_shift_possible .. "\n"
-			gui_fungal_shift_add_flask_shift()
+			-- gui_fungal_shift_add_flask_shift()
+			gui_fungal_shift_add_potion_icon()
+			GuiColorSetForNextWidget(gui_menu, 1, 0.2, 0, 1)
+			GuiText(gui_menu, 0, 0, _T.lamas_stats_or .. " ", fungal_shift_scale)
 			if material.failed ~= nil then
 				GuiEndAutoBoxNinePiece(gui_menu,0,0,0,0,0,empty_png,empty_png)
 				GuiTooltip(gui_menu,"",tooltiptext)
@@ -219,247 +218,89 @@ function gui_fungal_shift_display_from(material)
 	GuiTooltip(gui_menu,"",tooltiptext)
 end
 
+function gui_fungal_shift_display_to_tooltip_greedy(gui, tooltip)
+	if not ModIsEnabled("Apotheosis") then
+		if ModSettingGet("lamas_stats.enable_fungal_greedy_tip") then
+			GuiColorSetForNextWidget(gui_menu, 0.7, 0.7, 0.7, 1)
+			GuiText(gui, 0, 0, _T.lamas_stats_fungal_greedy, fungal_shift_scale)
+		end
+		if ModSettingGet("lamas_stats.enable_fungal_greedy_gold") then
+			GuiLayoutBeginHorizontal(gui, 0, 0)
+			gui_fungal_shift_add_color_potion_icon("gold")
+			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$mat_gold") .. " ->", fungal_shift_scale)
+			gui_fungal_shift_add_color_potion_icon(tooltip.material.greedy_mat)
+			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[tooltip.material.greedy_mat].name), fungal_shift_scale)
+			GuiLayoutEnd(gui)
+		end
+		if ModSettingGet("lamas_stats.enable_fungal_greedy_grass") then
+			GuiLayoutBeginHorizontal(gui, 0, 0)
+			gui_fungal_shift_add_color_potion_icon("grass_holy")
+			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$mat_grass_holy") .. " ->", fungal_shift_scale)
+			gui_fungal_shift_add_color_potion_icon(tooltip.material.grass_holy)
+			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[tooltip.material.grass_holy].name), fungal_shift_scale)
+			GuiLayoutEnd(gui)
+		end
+	end
+end
+
+function gui_fungal_shift_display_to_tooltip(gui, tooltip)
+	GuiLayoutBeginVertical(gui, 0, 0)
+	GuiLayoutBeginHorizontal(gui, 0, 0)
+	if tooltip.material.failed ~= nil then
+		-- gui_fungal_shift_add_color_potion_icon(material.to)
+		-- todo
+	else
+		gui_fungal_shift_add_color_potion_icon(tooltip.material.to)
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[tooltip.material.to].name), fungal_shift_scale)
+		GuiColorSetForNextWidget(gui_menu, 0.7, 0.7, 0.7, 1)
+		GuiText(gui, 0, 0, " (" .. _T.lamas_stats_ingame_name .. ": " .. tooltip.material.to .. ")", fungal_shift_scale)
+	end
+	GuiLayoutEnd(gui)
+	
+	if tooltip.shift ~= nil then
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		gui_fungal_shift_add_potion_icon()
+		if tooltip.shift == "possible" then
+			GuiText(gui, 0, 0, _T.lamas_stats_fungal_shift_possible .. "!", fungal_shift_scale)
+			GuiLayoutEnd(gui)
+			gui_fungal_shift_display_to_tooltip_greedy(gui, tooltip)
+		else
+			GuiText(gui, 0, 0, _T.lamas_stats_fungal_shift_used, fungal_shift_scale)
+			GuiLayoutEnd(gui)
+		end
+	end
+	GuiLayoutEnd(gui)
+end
+
 function gui_fungal_shift_display_to(material)	
 	GuiText(gui_menu, 0, 0, "-> ", fungal_shift_scale)
-	
-	local tooltiptext = ""
-	local material_to = GameTextGetTranslatedOrNot(original_material_properties[material.to].name)
-	local show_to = true
+	local tooltip = {}
+	tooltip.material = material
 	GuiBeginAutoBox(gui_menu)
 	if material.flask == "to" then
 		if current_shifts < material.number then --if it's future shift
 			gui_fungal_shift_add_potion_icon()
-			GuiColorSetForNextWidget(gui_menu, 1, 0.2, 0, 1)
-			
-			if material.failed ~= nil then
-				material_to = GameTextGetTranslatedOrNot("$item_potion")
-				show_to = false
-			else
-				GuiText(gui_menu, 0, 0, _T.lamas_stats_or .. " ", fungal_shift_scale)
-			end
-			tooltiptext = tooltiptext .. _T.lamas_stats_fungal_shift_possible .. "\n"
-			if not ModIsEnabled("Apotheosis") then
-				if ModSettingGet("lamas_stats.enable_fungal_greedy_tip") then
-					tooltiptext = tooltiptext .. _T.lamas_stats_fungal_greedy .. "\n"
-				end
-				if ModSettingGet("lamas_stats.enable_fungal_greedy_gold") then
-					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$mat_gold") .. " -> "
-					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.greedy_mat].name) .. "\n"
-				end
-				if ModSettingGet("lamas_stats.enable_fungal_greedy_grass") then
-					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot("$mat_grass_holy") .. " -> "
-					tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.grass_holy].name) .. "\n"
-				end
-				if material.greedy_success then
-					GuiColorSetForNextWidget(gui_menu, 0.7, 0.2, 1, 1)
-				end
-			end
+			tooltip.shift = "possible"
+			if material.greedy_success then	GuiColorSetForNextWidget(gui_menu, 0.7, 0.2, 1, 1)
+			else GuiColorSetForNextWidget(gui_menu, 1, 0.2, 0, 1) end
+			GuiText(gui_menu, 0, 0, _T.lamas_stats_or .. " ", fungal_shift_scale)
 		else --past shift
 			GuiColorSetForNextWidget(gui_menu, 1, 1, 0.698, 1)
-			tooltiptext = tooltiptext .. _T.lamas_stats_fungal_shift_used .. "\n"
+			tooltip.shift = "used"
 		end
 	end
 	
-	GuiText(gui_menu, 0, 0, material_to, fungal_shift_scale)
-	
-
-	if show_to then
+	if material.failed ~= nil then
+		GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot("$item_potion"), fungal_shift_scale)
+	else
+		GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.to].name), fungal_shift_scale)
 		gui_fungal_shift_add_color_potion_icon(material.to)
-		tooltiptext = tooltiptext .. GameTextGetTranslatedOrNot(original_material_properties[material.to].name)
-		tooltiptext = tooltiptext .. ", " .. _T.lamas_stats_ingame_name .. (": ") .. material.to .. "\n"
 	end
 	
 	GuiEndAutoBoxNinePiece(gui_menu,0,0,0,0,0,empty_png,empty_png)
-	GuiTooltip(gui_menu,"",tooltiptext)
+	-- GuiTooltip(gui_menu,"",tooltiptext)
+	GuiTooltipLamas(gui_menu, 50, 0, guiZ, gui_fungal_shift_display_to_tooltip, tooltip)
 	GuiText(gui_menu, 0, 0, "", fungal_shift_scale)
-end
-
-function gui_fungal_shift_add_flask_shift()
-	gui_fungal_shift_add_potion_icon()
-	GuiColorSetForNextWidget(gui_menu, 1, 0.2, 0, 1)
-	GuiText(gui_menu, 0, 0, _T.lamas_stats_or .. " ", fungal_shift_scale)
-end
-
-function gui_fungal_shift_get_past_shifts()
-	past_shifts = {}
-	local past_materials = ComponentGetValue2(worldcomponent, "changed_materials")
-	local shift_number = 1
-
-	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
-	if current_shifts > maximum_shifts then current_shifts = maximum_shifts end
-	for i=1,current_shifts,1 do
-		local seed_shifts = gui_fungal_shift_get_seed_shifts(i) --getting shift by seed
-		
-		past_shifts[i] = {}
-		past_shifts[i].flask = ""
-		past_shifts[i].number = i
-		past_shifts[i].from = {}
-
-		if seed_shifts.to.material == "fail" or past_materials[shift_number+1] == nil then
-			past_shifts[i].to = "lamas_failed_shift"
-			table.insert(past_shifts[i].from, "lamas_failed_shift")
-			goto continue
-		end
-		
-		past_shifts[i].to = past_materials[shift_number+1]
-		
---[[	additional check for failed shifts, mainly if shift was happened using "from" flask into the same "to" material ]]
-		if seed_shifts.from.flask then
-			local temp_failed_shift = gui_fungal_shift_get_seed_shifts(i, 1) --getting next iteration of seed shift 
-			local fullmatch = 0 --how many times there was an match between real shift and "failed" shift
-			for ii,mat in ipairs(temp_failed_shift.from.materials) do
-				local iter = 2*(ii - 1)
-				--if real shift is identical to "failed" shift
-				if mat == past_materials[shift_number+iter] then 
-					fullmatch = fullmatch + 1
-				else
-					break
-				end
-			end
-			if fullmatch == #temp_failed_shift.from.materials then 
-				-- past_shifts[i].flask = "from_fail" --todo add display of failed shift
-				past_shifts[i].from = temp_failed_shift.from.materials
-				shift_number = shift_number + (#past_shifts[i].from) * 2 
-				goto continue
-			end
-		end
---[[	excluding same materials ]]
-		local unique_from = {}
-		for _,mat in ipairs(seed_shifts.from.materials ) do --adding materials that was shifted except for same material
-			if #seed_shifts.from.materials  > 1 then 
-				if mat ~= past_shifts[i].to then
-					table.insert(unique_from, mat)
-				end
-			else
-				table.insert(unique_from, mat)
-			end
-		end
---[[	checking if shifted to is different from seed ]]
-		if past_shifts[i].to ~= seed_shifts.to.material then --if "to" material is not the same as in seed
-			if seed_shifts.to.flask then 
-				past_shifts[i].flask = "to" 
-				past_shifts[i].from = unique_from
-				shift_number = shift_number + (#past_shifts[i].from) * 2 
-				goto continue
-			end
-		end
---[[	checking if shifted from is different from seed ]]
-		for j,mat in ipairs(unique_from) do
-			if past_materials[shift_number] ~= mat then
-				if seed_shifts.from.flask then
-					past_shifts[i].flask = "from" 
-					if j == 1 then --foolproofing cases where first material matching shifted material
-						table.insert(past_shifts[i].from, past_materials[shift_number])
-						shift_number = shift_number + 2 
-					end
-					break
-				end
-			else
-				table.insert(past_shifts[i].from, past_materials[shift_number])
-				shift_number = shift_number + 2
-			end
-		end
-		::continue::
-	end
-end
-
-function gui_fungal_shift_display_past_shifts()
-	for _,past_shift in ipairs(past_shifts) do
-		GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-		GuiText(gui_menu, 0, 0, _T.lamas_stats_shift .. " " .. tostring(past_shift.number) .. ": ", fungal_shift_scale)
-		
-		gui_fungal_shift_display_from(past_shift)
-
-		gui_fungal_shift_display_to(past_shift)
-		
-		GuiLayoutEnd(gui_menu)
-				
-	end	
-end
-
-function gui_fungal_shift_insert_future_shifts(i, mats)
-	local arr = {}
-	arr.flask = ""
-	arr.number = i
-	arr.from = {}
-	
-	for _,mat in ipairs(mats.from.materials) do
-		table.insert(arr.from, mat)
-		arr.to = mats.to.material
-	end
-	
-	if mats.from.flask == true then arr.flask = "from" end
-	if mats.to.flask == true then 
-		arr.flask = "to" 
-		arr.greedy_mat = mats.to.greedy_mat
-		arr.grass_holy = mats.grass_holy
-		arr.greedy_success = mats.to.greedy_success
-	end
-	
-	return arr
-end
-
-function gui_fungal_shift_get_future_shifts()
-	future_shifts = {}
-	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
-
-	for i=current_shifts+1,maximum_shifts,1 do
-	
-		-- print(
-		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
-		local from_mat = seed_shifts.from.materials --getting shift by seed
-		local from_mat_n = #from_mat --getting number of materials that was shifted
-		local to_mat = seed_shifts.to.material
-
-		future_shifts[i] = gui_fungal_shift_insert_future_shifts(i, seed_shifts)
-		-- print(tostring(future_shifts[i].failed))
-		-- debug_print_table(future_shifts[i].failed)
-		if seed_shifts.failed ~= nil then 
-			future_shifts[i].failed = gui_fungal_shift_insert_future_shifts(i, seed_shifts.failed) 
-		else
-			future_shifts[i].failed = nil
-		end
-	end
-end
-
-function gui_fungal_shift_display_future_shifts()
-	local nextshifttext = _T.lamas_stats_fungal_next_shift
-	
-	if current_shifts < maximum_shifts then
-		GuiText(gui_menu, 0, 0, "---- " .. nextshifttext .. " ----",fungal_shift_scale)
-	end
-
-	for i=current_shifts+1,maximum_shifts,1 do
-		GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-		GuiText(gui_menu, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
-		
-		gui_fungal_shift_display_from(future_shifts[i])
-		gui_fungal_shift_display_to(future_shifts[i])
-		GuiLayoutEnd(gui_menu)
-		
-		if future_shifts[i].failed ~= nil then --if there could be a failed attempt then say so
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, _T.lamas_stats_fungal_if_fail .. " ", fungal_shift_scale)
-			gui_fungal_shift_add_potion_icon()
-			GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot("$item_potion"),fungal_shift_scale)
-			GuiText(gui_menu, 0, 0, " " .. _T.lamas_stats_or .. " ", fungal_shift_scale)
-			gui_fungal_shift_add_color_potion_icon(future_shifts[i].to)
-			GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[future_shifts[i].to].name) .. ":", fungal_shift_scale)
-			GuiLayoutEnd(gui_menu)
-			
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
-			gui_fungal_shift_display_from(future_shifts[i].failed)
-			gui_fungal_shift_display_to(future_shifts[i].failed)	
-			GuiLayoutEnd(gui_menu)
-		end
-		if i == current_shifts+1 and i < maximum_shifts then
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, "---- ",fungal_shift_scale) 
-			GuiText(gui_menu, GuiGetTextDimensions(gui_menu, nextshifttext, fungal_shift_scale), 0, " ----",fungal_shift_scale)
-			GuiLayoutEnd(gui_menu)
-		end
-	end	
 end
 
 function gui_fungal_shift_get_shifts()
@@ -469,24 +310,23 @@ function gui_fungal_shift_get_shifts()
 	end
 end
 
-function gui_fungal_shift_add_color_potion_icon(material)
-	local scale = 1
-	-- print(tostring(material))
-	if original_material_properties[material].icon == potion_png then
-		SetColor(original_material_properties[material].color)
-	else scale = 1 end
-	gui_fungal_shift_add_potion_icon(original_material_properties[material].icon, scale)
+function UpdateFungalVariables()
+	fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
+	gui_fungal_shift_get_shifts()
 end
 
-function gui_fungal_shift_add_potion_icon(icon, scale)
-	-- print(icon)
-	scale = scale or 1
+function gui_fungal_shift_add_color_potion_icon(material)
+	if original_material_properties[material].icon == potion_png then
+		SetColor(original_material_properties[material].color)
+	end
+	gui_fungal_shift_add_potion_icon(original_material_properties[material].icon)
+end
+
+function gui_fungal_shift_add_potion_icon(icon)
 	icon = icon or potion_png
-	GuiImage(gui_menu, id(), 0, 0, icon, 1, fungal_shift_scale * scale)
+	GuiImage(gui_menu, id(), 0, 0, icon, 1, fungal_shift_scale)
 end
 
 function SetColor(material)
 	GuiColorSetForNextWidget(gui_menu,material.red,material.green,material.blue,material.alpha)
 end
-
-
