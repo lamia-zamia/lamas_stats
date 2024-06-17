@@ -36,7 +36,7 @@ function GetFungalCooldown()
 	end
 end
 
-function GuiTooltipLamas(gui, x, y, z, action)
+function GuiTooltipLamas(gui, x, y, z, action, passable_table)
 	local _,_,gui_hovered,gui_x,gui_y = GuiGetPreviousWidgetInfo(gui)
 	if gui_hovered then --immitating tooltip
 		GuiZSet(gui,-100)
@@ -47,7 +47,7 @@ function GuiTooltipLamas(gui, x, y, z, action)
 		
 		GuiLayoutBeginVertical(gui, gui_x + x, gui_y + y, true)
 		
-		action(gui)
+		action(gui, passable_table)
 		
 		GuiLayoutEnd(gui)
 		
