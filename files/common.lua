@@ -1,3 +1,4 @@
+dofile_once("mods/lamas_stats/translations/translation.lua")
 empty_png = "data/ui_gfx/empty.png"
 fungal_png = "data/ui_gfx/status_indicators/fungal_shift.png"
 potion_png = "data/items_gfx/potion.png"
@@ -34,6 +35,16 @@ function GetFungalCooldown()
 	else 
 		return 0
 	end
+end
+
+function GuiTextGray(gui, x, y, text, scale)
+	GuiColorSetForNextWidget(gui, 0.7, 0.7, 0.7, 1)
+	GuiText(gui, x, y, text, scale)
+end
+
+function GuiTextRed(gui, x, y, text, scale)
+	GuiColorSetForNextWidget(gui, 1, 0.2, 0, 1)
+	GuiText(gui, x, y, text, scale)
 end
 
 function GuiTooltipLamas(gui, x, y, z, action, passable_table)
