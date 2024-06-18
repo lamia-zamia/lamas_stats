@@ -32,12 +32,11 @@ local function lamas_stats_set_icon(elem, graphics)
 	if graphics == nil or graphics.attr["texture_file"] == nil or graphics.attr["texture_file"] == "" then
 		original_material_properties[elem.attr["name"]].icon = potion_png
 	else
-		if elem.attr["liquid_sand"] == "1" then 
-			if elem.attr["solid_static_type"] == "1" then
-				original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(graphics.attr["texture_file"], solid_static_png)
-			else
-				original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(graphics.attr["texture_file"], pile_png)
-			end
+		local tags = elem.attr["tags"]
+		if tags ~= nil and string.find(tags, "static") then 
+			original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(graphics.attr["texture_file"], solid_static_png)
+		elseif elem.attr["liquid_sand"] == "1" then 
+			original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(graphics.attr["texture_file"], pile_png)
 		else original_material_properties[elem.attr["name"]].icon = potion_png end
 	end
 end
@@ -82,7 +81,7 @@ local function lamas_stats_gather_material() --function to get table of material
 		end
 	end
 	original_material_properties["lamas_failed_shift"] = {}
-	original_material_properties["lamas_failed_shift"].name = "fail"
+	original_material_properties["lamas_failed_shift"].name = _T.lamas_stats_fungal_failed
 	original_material_properties["lamas_failed_shift"].color = {}
 	original_material_properties["lamas_failed_shift"].color.red = 1
 	original_material_properties["lamas_failed_shift"].color.green = 0
