@@ -50,7 +50,7 @@ end
 local gui_tooltip_size_cache = setmetatable({}, { __mode = "k" })
 
 local function ReturnZeroOrMinus(value)
-	if value < 0 then return value - 10
+	if value <= 10 then return value - 10
 	else return 0 end
 end
 
@@ -73,7 +73,7 @@ function GuiTooltipLamas(gui, x, y, z, action, passable_table)
 	local _,_,gui_hovered,gui_x,gui_y,gui_w,gui_h = GuiGetPreviousWidgetInfo(gui)
 	if gui_hovered then --immitating tooltip
 		local key = tostring(action) .. tostring(passable_table)
-		GuiTooltipLamasValidateTooltipCache(gui_x + gui_w + 10, gui_y + (gui_h/2) + y, z, action, passable_table, key)
+		GuiTooltipLamasValidateTooltipCache(gui_x + gui_w + x + 10, gui_y + (gui_h/2) + y, z, action, passable_table, key)
 		GuiZSet(gui,-100)
 		GuiAnimateBegin(gui)
 		GuiAnimateScaleIn(gui, 555, 0.1, false)
