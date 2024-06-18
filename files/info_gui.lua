@@ -1,5 +1,3 @@
-dofile_once("mods/lamas_stats/translations/translation.lua")
-
 gui_top = GuiCreate()
 gui_menu = GuiCreate()
 
