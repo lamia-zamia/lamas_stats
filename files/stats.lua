@@ -38,7 +38,7 @@ function ShowKill(i, gui, id, x, y)
 	local width = GuiGetTextDimensions(gui, transString)
 	PopulateStats(i, gui, stats_x, y, transString .. " " .. StatsGetValue("enemies_killed"))
 	if ModSettingGet("lamas_stats.stats_show_innocent") then
-		GuiTooltipLamas(gui, 30, 10, 800, ShowKillTooltip)
+		GuiTooltipLamas(gui, 0, 10, 800, ShowKillTooltip)
 	end
 	stats_x = stats_x + 30 + width
 end
@@ -52,7 +52,7 @@ function ShowTime(i, gui, id, x, y)
 	local transString = GameTextGetTranslatedOrNot("$stat_time")
 	local width = GuiGetTextDimensions(gui, transString)
 	PopulateStats(i, gui, stats_x, y, transString .. " " .. StatsGetValue("playtime_str"))
-	GuiTooltipLamas(gui, 30, 10, 800, ShowTimeHoverTooltip)
+	GuiTooltipLamas(gui, 0, 10, 800, ShowTimeHoverTooltip)
 	stats_x = stats_x + 44 + width
 end
 
@@ -98,7 +98,7 @@ function ShowPlayerPos(i, gui, id, x, y)
 		pos_toggle = not pos_toggle
 	end
 	if ModSettingGet("lamas_stats.stats_show_player_pos_pw") then
-		GuiTooltipLamas(gui, 30, 10, 800, ShowPlayerPosTooltip)
+		GuiTooltipLamas(gui, 0, 10, 800, ShowPlayerPosTooltip)
 	end
 	stats_x = stats_x + width + 5
 	
