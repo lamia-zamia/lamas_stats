@@ -83,18 +83,17 @@ function gui_fungal_shift_get_past_shifts()
 			end
 		end
 		::continue::
-		-- print(i,shift_number)
 	end
 end
 
-function gui_fungal_shift_display_past_shifts()
+function gui_fungal_shift_display_past_shifts(gui)
 	for _,past_shift in ipairs(past_shifts) do
 		if past_shift.flask ~= "lamas_failed_shift" then 
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, _T.lamas_stats_shift .. " " .. tostring(past_shift.number) .. ": ", fungal_shift_scale)
-			gui_fungal_shift_display_from(past_shift)
-			gui_fungal_shift_display_to(past_shift)
-			GuiLayoutEnd(gui_menu)	
+			GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
+			GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(past_shift.number) .. ": ", fungal_shift_scale)
+			gui_fungal_shift_display_from(gui, past_shift)
+			gui_fungal_shift_display_to(gui, past_shift)
+			GuiLayoutEnd(gui)	
 		end
 	end	
 end

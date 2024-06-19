@@ -28,7 +28,7 @@ function gui_fungal_shift()
 	end
 
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
-		gui_fungal_show_aplc_recipes()
+		gui_fungal_show_aplc_recipes(gui_menu)
 	end
 	local cooldown = GetFungalCooldown()
 	if cooldown > 0 then
@@ -37,10 +37,10 @@ function gui_fungal_shift()
 	end
 	GuiLayoutEnd(gui_menu)
 	if ModSettingGet("lamas_stats.enable_fungal_past") then
-		gui_fungal_shift_display_past_shifts()
+		gui_fungal_shift_display_past_shifts(gui_menu)
 	end
 	if ModSettingGet("lamas_stats.enable_fungal_future") then
-		gui_fungal_shift_display_future_shifts()
+		gui_fungal_shift_display_future_shifts(gui_menu)
 	end
 	GuiLayoutEnd(gui_menu) --layer1
 

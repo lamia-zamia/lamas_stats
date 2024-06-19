@@ -35,25 +35,25 @@ function gui_fungal_shift_get_future_shifts()
 	end
 end
 
-function gui_fungal_shift_display_future_shifts()
+function gui_fungal_shift_display_future_shifts(gui)
 	local nextshifttext = _T.lamas_stats_fungal_next_shift
 	
 	if current_shifts < maximum_shifts then
-		GuiText(gui_menu, 0, 0, "---- " .. nextshifttext .. " ----",fungal_shift_scale)
+		GuiText(gui, 0, 0, "---- " .. nextshifttext .. " ----",fungal_shift_scale)
 	end
 
 	for i=current_shifts+1,maximum_shifts,1 do
-		GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-		GuiText(gui_menu, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
+		GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
+		GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
 		
-		gui_fungal_shift_display_from(future_shifts[i])
-		gui_fungal_shift_display_to(future_shifts[i])
-		GuiLayoutEnd(gui_menu)
+		gui_fungal_shift_display_from(gui, future_shifts[i])
+		gui_fungal_shift_display_to(gui, future_shifts[i])
+		GuiLayoutEnd(gui)
 		if i == current_shifts+1 and i < maximum_shifts then
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, "---- ",fungal_shift_scale) 
-			GuiText(gui_menu, GuiGetTextDimensions(gui_menu, nextshifttext, fungal_shift_scale), 0, " ----",fungal_shift_scale)
-			GuiLayoutEnd(gui_menu)
+			GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
+			GuiText(gui, 0, 0, "---- ",fungal_shift_scale) 
+			GuiText(gui, GuiGetTextDimensions(gui, nextshifttext, fungal_shift_scale), 0, " ----",fungal_shift_scale)
+			GuiLayoutEnd(gui)
 		end
 	end	
 end
