@@ -1,20 +1,25 @@
 local stats_x = nil
 local pos_toggle = false
 local player_x, player_y = get_player_pos()
+local cooldown,transStringFungal
 
 function PopulateStats(i, gui, x, y, str)
 	if i > 2 then str = "|" .. str end
 	GuiText(gui, x, y, str)
 end
 
+local function ShowFungalTooltip(gui)
+	GuiText(gui, 0, 0, transStringFungal .. " " .. cooldown)
+end
+
 function ShowFungal(i, gui, id, x, y)
-	local cooldown = GetFungalCooldown()
+	cooldown = GetFungalCooldown()
 	if cooldown > 0 then
 		local width = 0
-		local transString = _T.lamas_stats_fungal_cooldown
+		transStringFungal = _T.lamas_stats_fungal_cooldown
 		if ModSettingGet("lamas_stats.stats_show_fungal_type") == "time" then
-			width = GuiGetTextDimensions(gui, transString) + 20
-			PopulateStats(i, gui, stats_x, y, transString .. " " .. cooldown)
+			width = GuiGetTextDimensions(gui, transStringFungal) + 20
+			PopulateStats(i, gui, stats_x, y, transStringFungal .. " " .. cooldown)
 		else
 			width = GuiGetImageDimensions(gui,fungal_png) - 7
 			local x_offset = 0
@@ -24,13 +29,17 @@ function ShowFungal(i, gui, id, x, y)
 				x_offset = -3
 			end
 			GuiImage(gui,id,stats_x - x_offset,y - 2,fungal_png, 1, 0.9)
-			
-			GuiTooltip(gui, transString .. " " .. cooldown, "")
+			GuiTooltipLamas(gui, 0, 10, 800, ShowFungalTooltip)
 			PopulateStats(i, gui, stats_x, y, "")
 		end
 		
 		stats_x = stats_x + width
 	end
+end
+
+local function ShowKillTooltip(gui)
+	GuiText(gui, 0, 0, _T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
+	GuiText(gui, 0, 0, _T.lamas_stats_progress_kills_innocent .. " " .. GlobalsGetValue("HELPLESS_KILLS",0))
 end
 
 function ShowKill(i, gui, id, x, y)
@@ -43,20 +52,7 @@ function ShowKill(i, gui, id, x, y)
 	stats_x = stats_x + 30 + width
 end
 
-function ShowKillTooltip(gui)
-	GuiText(gui, 0, 0, _T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
-	GuiText(gui, 0, 0, _T.lamas_stats_progress_kills_innocent .. " " .. GlobalsGetValue("HELPLESS_KILLS",0))
-end
-
-function ShowTime(i, gui, id, x, y)
-	local transString = GameTextGetTranslatedOrNot("$stat_time")
-	local width = GuiGetTextDimensions(gui, transString)
-	PopulateStats(i, gui, stats_x, y, transString .. " " .. StatsGetValue("playtime_str"))
-	GuiTooltipLamas(gui, 0, 10, 800, ShowTimeHoverTooltip)
-	stats_x = stats_x + 44 + width
-end
-
-function ShowTimeHoverTooltip(gui)		
+local function ShowTimeHoverTooltip(gui)		
 	local stats_list = {}
 	table.insert(stats_list, GameTextGetTranslatedOrNot("$menu_stats"))
 	table.insert(stats_list, GameTextGetTranslatedOrNot("$stat_time") .. " " .. StatsGetValue("playtime_str"))
@@ -74,6 +70,14 @@ function ShowTimeHoverTooltip(gui)
 	end
 end
 
+function ShowTime(i, gui, id, x, y)
+	local transString = GameTextGetTranslatedOrNot("$stat_time")
+	local width = GuiGetTextDimensions(gui, transString)
+	PopulateStats(i, gui, stats_x, y, transString .. " " .. StatsGetValue("playtime_str"))
+	GuiTooltipLamas(gui, 0, 10, 800, ShowTimeHoverTooltip)
+	stats_x = stats_x + 44 + width
+end
+
 function ShowPlayerBiome(i, gui, id, x, y)
 	player_x, player_y = get_player_pos()
 	local biome = BiomeMapGetName(player_x, player_y)
@@ -88,6 +92,23 @@ function ShowPlayerBiome(i, gui, id, x, y)
 		biome_name = biome_name .. _T.lamas_stats_stats_pw_west .. " "
 	end
 	PopulateStats(i, gui, stats_x, y, biome_name .. GameTextGetTranslatedOrNot(biome))
+end
+
+local function ShowPlayerPosTooltip(gui)
+	local player_par_x, player_par_y = GetParallelWorldPosition(player_x, player_y)
+	local tooltipname = _T.lamas_stats_stats_pw
+	local tooltip = _T.lamas_stats_stats_pw_main
+	if player_par_x > 0 then
+		tooltip = _T.lamas_stats_stats_pw_east .. " " .. player_par_x
+	elseif player_par_x < 0 then
+		tooltip = _T.lamas_stats_stats_pw_west .. " " .. player_par_x*-1
+	end
+	GuiText(gui, 0, 0, _T.lamas_stats_position_toggle)
+	if not pos_toggle then
+		GuiText(gui, 0, 0, "X: " .. tostring(math.floor(player_x)))
+		GuiText(gui, 0, 0, "Y: " .. tostring(math.floor(player_y)))
+	end
+	GuiText(gui, 0, 0, tooltipname .. " - " .. tooltip)
 end
 
 function ShowPlayerPos(i, gui, id, x, y)
@@ -110,30 +131,9 @@ function ShowPlayerPos(i, gui, id, x, y)
 	end
 end
 
-function ShowPlayerPosTooltip(gui)
-	local player_par_x, player_par_y = GetParallelWorldPosition(player_x, player_y)
-	local tooltipname = _T.lamas_stats_stats_pw
-	local tooltip = _T.lamas_stats_stats_pw_main
-	if player_par_x > 0 then
-		tooltip = _T.lamas_stats_stats_pw_east .. " " .. player_par_x
-	elseif player_par_x < 0 then
-		tooltip = _T.lamas_stats_stats_pw_west .. " " .. player_par_x*-1
-	end
-	GuiText(gui, 0, 0, _T.lamas_stats_position_toggle)
-	if not pos_toggle then
-		GuiText(gui, 0, 0, "X: " .. tostring(math.floor(player_x)))
-		GuiText(gui, 0, 0, "Y: " .. tostring(math.floor(player_y)))
-	end
-	GuiText(gui, 0, 0, tooltipname .. " - " .. tooltip)
-end
-
 function ShowStart(i, gui, id, x, y)
 	stats_x = x
 end
-
--- function ShowEnd()
-
--- end
 
 function GUI_Stats(gui, id, x, y)
 	for i,stat in ipairs(lamas_stats_main_menu_list) do
@@ -150,5 +150,3 @@ if ModSettingGet("lamas_stats.stats_show_fungal_cooldown") then
 end	
 if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
 if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
-
--- table.insert(lamas_stats_main_menu_list,ShowEnd)
