@@ -9,6 +9,7 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 * Show previous fungal shifts including results with flask
 * Show fungal shift cooldown
 * Show nearby and owned perks in a more convenient window (late-game QOL)
+* Suicide button if you become too OP
 ## Predicting functions (turned off by default)
 * Show next fungal shifts including flask resolutions
 * Show AP/LC recipes
