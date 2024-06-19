@@ -1,7 +1,10 @@
 local stats_x = nil
 local pos_toggle = false
 local player_x, player_y = get_player_pos()
+local player_par_x, player_par_y = GetParallelWorldPosition(player_x, player_y)
 local cooldown,transStringFungal
+local farthestWest = tonumber(GlobalsGetValue("lamas_stats_farthest_west", "0"))
+local farthestEast = tonumber(GlobalsGetValue("lamas_stats_farthest_east", "0"))
 
 function PopulateStats(i, gui, x, y, str)
 	if i > 2 then str = "|" .. str end
@@ -95,7 +98,6 @@ function ShowPlayerBiome(i, gui, id, x, y)
 end
 
 local function ShowPlayerPosTooltip(gui)
-	local player_par_x, player_par_y = GetParallelWorldPosition(player_x, player_y)
 	local tooltipname = _T.lamas_stats_stats_pw
 	local tooltip = _T.lamas_stats_stats_pw_main
 	if player_par_x > 0 then
@@ -109,12 +111,19 @@ local function ShowPlayerPosTooltip(gui)
 		GuiText(gui, 0, 0, "Y: " .. tostring(math.floor(player_y)))
 	end
 	GuiText(gui, 0, 0, tooltipname .. " - " .. tooltip)
+	if ModSettingGet("lamas_stats.stats_show_farthest_pw") then
+		if farthestWest > 0 or farthestEast > 0 then
+			GuiText(gui, 0, 0, _T.lamas_stats_farthest .. " " .. _T.lamas_stats_stats_pw_west .. ": " .. farthestWest)
+			GuiText(gui, 0, 0, _T.lamas_stats_farthest .. " " .. _T.lamas_stats_stats_pw_east .. ": " .. farthestEast)
+		end
+	end
 end
 
 function ShowPlayerPos(i, gui, id, x, y)
 	local transString = "|" .. _T.lamas_stats_position
 	local width = GuiGetTextDimensions(gui, transString)
 	player_x, player_y = get_player_pos()
+	player_par_x, player_par_y = GetParallelWorldPosition(player_x, player_y)
 	if GuiButton(gui, 105, stats_x, y, transString) then
 		pos_toggle = not pos_toggle
 	end
@@ -128,6 +137,18 @@ function ShowPlayerPos(i, gui, id, x, y)
 		stats_x = stats_x + 50
 		PopulateStats(1, gui, stats_x, y, "Y:" .. math.floor(player_y))
 		stats_x = stats_x + 50
+	end
+	if ModSettingGet("lamas_stats.stats_show_farthest_pw") then
+		if GameGetFrameNum() % 300 == 0 then
+			if player_par_x > farthestWest then	
+				farthestWest = player_par_x 
+				GlobalsSetValue("lamas_stats_farthest_west", farthestWest)
+			end
+			if player_par_x < farthestEast then	
+				farthestEast = player_par_x	* -1
+				GlobalsSetValue("lamas_stats_farthest_east", farthestEast)
+			end
+		end
 	end
 end
 

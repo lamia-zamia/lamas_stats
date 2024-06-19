@@ -56,27 +56,10 @@ function InputKeyUI(mod_id, gui, in_main_menu, im_id, setting)
 	mod_setting_tooltip( mod_id, gui, in_main_menu, setting )
 end
 
-
-
--- local _T = setmetatable({}, 
--- {
-	-- __index = function(t, k)
-	-- local currentLang = GameTextGetTranslatedOrNot("$current_language")
-	-- if not translations[currentLang] then
-		-- currentLang = "English"
-	-- end
-	-- if not translations[currentLang][k] then
-		-- print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, currentLang))
-	-- end
-	-- return translations[currentLang][k]
-	-- end
--- })
-
 function reminder_about_greedy_shift(mod_id, gui, in_main_menu, im_id, setting)
 	GuiColorSetForNextWidget(gui, 0.5, 0.5, 0.5, 1)
 	GuiText(gui, mod_setting_group_x_offset, 0, _T.GreedyShiftReminder)
 	GuiTooltip(gui,_T.GreedyShiftReminderDesc,"")
-	-- mod_setting_tooltip( mod_id, gui, in_main_menu, setting )
 end
 
 local mod_id = "lamas_stats"
@@ -122,6 +105,7 @@ local default =
 	["stats_show_player_pos_pw"] = true,
 	["stats_show_player_biome"] = false,
 	["KYS_Button"] = false,
+	["stats_show_farthest_pw"] = true,
 }
 
 function ResetSettings(mod_id, gui, in_main_menu, im_id, setting)
@@ -288,6 +272,25 @@ local function build_settings()
 						ui_name = _T.StatsShowFungalType,
 						value_default = default["stats_show_fungal_type"],
 						values = {{"time",_T.StatsShowFungalTypeTime}, {"image",_T.StatsShowFungalTypeImage}},
+						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						change_fn = mod_setting_change_callback,
+					},
+				},
+			},
+			{
+				category_id = "stats_show_custom_category",
+				ui_name = _T.StatsShowCustomCat,
+				ui_description = _T.StatsShowCustomCatDesc,
+				foldable = true,
+				_folded = true,
+				
+				settings = 
+				{
+					{
+						id = "stats_show_farthest_pw",
+						ui_name = _T.stats_show_farthest_pw,
+						ui_description = _T.stats_show_farthest_pwDesc,
+						value_default = default["stats_show_farthest_pw"],
 						scope =  MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
