@@ -3,7 +3,7 @@ Because I'm tired of inconsistencies between different mods.
 Almost everything is togglable and can be disabled.  
 By default this mod only serves as a QOL mod, but can be further expanded into an in-game noitool.  
   
-![alt text](https://github.com/xaxnas/lamas_stats/blob/main/showcase/overlay.png)
+![overlay](https://github.com/xaxnas/lamas_stats/blob/main/showcase/overlay.png)
 ## Basic functions
 * Show various stats on overlay or in hidden menu in a non-intrusive way, togglable by hotkey
 * Show previous fungal shifts including results with flask
@@ -24,10 +24,21 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 
 ## Showcase
 * [Settings](https://github.com/xaxnas/lamas_stats/blob/main/showcase/settings.png)
+
+  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/settings.png" width="300" />
 * [Fungal shift interface](https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal.png)
+
+  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal.png" width="300" />
 * [Fungal shift tooltip](https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal_tooltip.png)
+
+  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal_tooltip.png" width="300" />
 * [AP/LC Recipe](https://github.com/xaxnas/lamas_stats/blob/main/showcase/APLC.png)
+
+  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/APLC.png" width="300" />
 * [Perks interface](https://github.com/xaxnas/lamas_stats/blob/main/showcase/perks.png)
+  
+  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/perks.png" width="300" />
+
 
 ## Localization
 English, Russian
