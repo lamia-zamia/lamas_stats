@@ -23,22 +23,26 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 * Now compatible with Apotheosis!
 
 ## Showcase
-* [Settings](https://github.com/xaxnas/lamas_stats/blob/main/showcase/settings.png)
-
+<details>
+  <summary>Settings</summary>
   <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/settings.png" width="300" />
-* [Fungal shift interface](https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal.png)
-
+</details>
+<details>
+  <summary>Fungal shift interface</summary>
   <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal.png" width="300" />
-* [Fungal shift tooltip](https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal_tooltip.png)
-
+</details>
+<details>
+  <summary>Fungal shift tooltip</summary>
   <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal_tooltip.png" width="300" />
-* [AP/LC Recipe](https://github.com/xaxnas/lamas_stats/blob/main/showcase/APLC.png)
-
+</details>
+<details>
+  <summary>AP/LC Recipe</summary>
   <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/APLC.png" width="300" />
-* [Perks interface](https://github.com/xaxnas/lamas_stats/blob/main/showcase/perks.png)
-  
+</details>
+<details>
+  <summary>Perks interface</summary>
   <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/perks.png" width="300" />
-
-
+</details>
+  
 ## Localization
 English, Russian
