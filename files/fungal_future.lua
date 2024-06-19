@@ -28,6 +28,9 @@ function gui_fungal_shift_get_future_shifts()
 			future_shifts[i].failed = gui_fungal_shift_insert_future_shifts(i, seed_shifts.failed) 
 		else
 			future_shifts[i].failed = nil
+			if seed_shifts.from.flask then
+				future_shifts[i].if_fail = gui_fungal_shift_insert_future_shifts(i, gui_fungal_shift_get_seed_shifts(i, 1))
+			end
 		end
 	end
 end
@@ -46,23 +49,6 @@ function gui_fungal_shift_display_future_shifts()
 		gui_fungal_shift_display_from(future_shifts[i])
 		gui_fungal_shift_display_to(future_shifts[i])
 		GuiLayoutEnd(gui_menu)
-		
-		if future_shifts[i].failed ~= nil then --if there could be a failed attempt then say so
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, _T.lamas_stats_fungal_if_fail .. " ", fungal_shift_scale)
-			gui_fungal_shift_add_potion_icon()
-			GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot("$item_potion"),fungal_shift_scale)
-			GuiText(gui_menu, 0, 0, " " .. _T.lamas_stats_or .. " ", fungal_shift_scale)
-			gui_fungal_shift_add_color_potion_icon(future_shifts[i].to)
-			GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[future_shifts[i].to].name) .. ":", fungal_shift_scale)
-			GuiLayoutEnd(gui_menu)
-			
-			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
-			GuiText(gui_menu, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
-			gui_fungal_shift_display_from(future_shifts[i].failed)
-			gui_fungal_shift_display_to(future_shifts[i].failed)	
-			GuiLayoutEnd(gui_menu)
-		end
 		if i == current_shifts+1 and i < maximum_shifts then
 			GuiLayoutBeginHorizontal(gui_menu,0,0,0,0,0)
 			GuiText(gui_menu, 0, 0, "---- ",fungal_shift_scale) 
