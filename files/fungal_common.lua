@@ -148,21 +148,27 @@ function gui_fungal_show_aplc_recipes()
 	GuiTooltipLamas(gui_menu, 0, 0, guiZ, gui_fungal_show_aplc_recipes_tooltip)
 end
 
-function gui_fungal_show_aplc_recipes_tooltip()
-	gui_fungal_show_aplc_recipes_tooltip_add_recipe("midas_precursor", APLC_table.ap)
-	gui_fungal_show_aplc_recipes_tooltip_add_recipe("magic_liquid_hp_regeneration_unstable", APLC_table.lc)
+function gui_fungal_show_aplc_recipes_tooltip(gui)
+	gui_fungal_show_aplc_recipes_tooltip_add_recipe(gui, "midas_precursor", APLC_table.ap, APLC_table.app)
+	GuiLayoutAddVerticalSpacing(gui, 4)
+	gui_fungal_show_aplc_recipes_tooltip_add_recipe(gui, "magic_liquid_hp_regeneration_unstable", APLC_table.lc, APLC_table.lcp)
 end
 
-function gui_fungal_show_aplc_recipes_tooltip_add_recipe(mat_id, mat_table)
-	GuiLayoutBeginHorizontal(gui_menu, 0, 0)
-	GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[mat_id].name), fungal_shift_scale)
-	gui_fungal_shift_add_color_potion_icon(gui_menu, mat_id)
-	GuiText(gui_menu, 0, 0, "->", fungal_shift_scale)
-	for _,material in ipairs(mat_table) do
-		GuiText(gui_menu, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material].name), fungal_shift_scale)
-		gui_fungal_shift_add_color_potion_icon(gui_menu, material)
+function gui_fungal_show_aplc_recipes_tooltip_add_recipe(gui, mat_id, mat_table, mat_prob)
+	GuiLayoutBeginHorizontal(gui, 0, 0)
+	gui_fungal_shift_add_color_potion_icon(gui, mat_id)
+	GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[mat_id].name), fungal_shift_scale)
+	GuiText(gui, 0, 0, mat_prob .. "%", fungal_shift_scale)
+	GuiLayoutEnd(gui)
+	for i,material in ipairs(mat_table) do
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		GuiText(gui, 0, 0, "  -", fungal_shift_scale)
+		gui_fungal_shift_add_color_potion_icon(gui, material)
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material].name), fungal_shift_scale)
+		if i == 2 then GuiTextGray(gui, 0, 0, "^", fungal_shift_scale) end
+		GuiTextGray(gui, 0, 0, " (" .. _T.lamas_stats_ingame_name .. ": " .. material .. ")", fungal_shift_scale)
+		GuiLayoutEnd(gui)
 	end
-	GuiLayoutEnd(gui_menu)
 end
 --[[	Display From Tooltip]]
 function gui_fungal_shift_display_from_tooltip(gui, material)
