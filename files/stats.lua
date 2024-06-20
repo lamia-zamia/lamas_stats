@@ -94,7 +94,10 @@ function ShowPlayerBiome(i, gui, id, x, y)
 	elseif par_x < 0 then
 		biome_name = biome_name .. _T.lamas_stats_stats_pw_west .. " "
 	end
-	PopulateStats(i, gui, stats_x, y, biome_name .. GameTextGetTranslatedOrNot(biome))
+	local text = biome_name .. GameTextGetTranslatedOrNot(biome)
+	PopulateStats(i, gui, stats_x, y, text)
+	local width = GuiGetTextDimensions(gui, text)
+	stats_x = stats_x + 10 + width
 end
 
 local function ShowPlayerPosTooltip(gui)
@@ -166,10 +169,10 @@ function StatsTableInsert()
 	table.insert(lamas_stats_main_menu_list,ShowStart)
 	if ModSettingGet("lamas_stats.stats_showtime") then table.insert(lamas_stats_main_menu_list,ShowTime) end
 	if ModSettingGet("lamas_stats.stats_showkills") then table.insert(lamas_stats_main_menu_list,ShowKill) end
+	if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
+	if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
 	if ModSettingGet("lamas_stats.stats_show_fungal_cooldown") then 
 		if ModSettingGet("lamas_stats.stats_show_fungal_order") == "first" then table.insert(lamas_stats_main_menu_list,2,ShowFungal) 
 		else table.insert(lamas_stats_main_menu_list,ShowFungal) end
 	end	
-	if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
-	if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
 end
