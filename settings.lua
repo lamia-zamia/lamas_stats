@@ -67,6 +67,7 @@ mod_settings_version = 1
 
 local default = 
 {
+	["lamas_stats.setting_changed"] = true,
 	["input_key"] = "60",
 	["enabled_at_start"] = false,
 	["overlay_x"] = 2,
@@ -105,6 +106,7 @@ local default =
 	["stats_show_player_pos_pw"] = true,
 	["stats_show_player_biome"] = false,
 	["KYS_Button"] = false,
+	["KYS_Button_Hide"] = true,
 	["stats_show_farthest_pw"] = true,
 }
 
@@ -124,7 +126,6 @@ function ResetSettingsUI(mod_id, gui, in_main_menu, im_id, setting)
 	end
 end
 
---translations
 local function build_settings()
 	return {
 	{
@@ -409,7 +410,7 @@ local function build_settings()
 						id = "fungal_scale",
 						ui_name = _T.FungalScale,
 						value_default = default["fungal_scale"],
-						value_min = 0,
+						value_min = 0.7,
 						value_max = 1,
 						value_display_multiplier = 100,
 						value_display_formatting = " $0 %",
@@ -563,6 +564,14 @@ local function build_settings()
 							ui_name = _T.KYS_Button,
 							ui_description = _T.KYS_ButtonDesc,
 							value_default = default["KYS_Button"],
+							scope = MOD_SETTING_SCOPE_RUNTIME,
+							change_fn = mod_setting_change_callback,
+						},
+						{
+							id = "KYS_Button_Hide",
+							ui_name = _T.KYS_Button_Hide,
+							ui_description = _T.KYS_Button_HideDesc,
+							value_default = default["KYS_Button_Hide"],
 							scope = MOD_SETTING_SCOPE_RUNTIME,
 							change_fn = mod_setting_change_callback,
 						},

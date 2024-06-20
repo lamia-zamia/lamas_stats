@@ -74,6 +74,7 @@ local function PopulateButtons()
 	lamas_stats_main_menu_buttons = {}
 	if ModSettingGet("lamas_stats.enable_fungal") then
 		dofile_once("mods/lamas_stats/files/fungal.lua")
+		UpdateFungalVariables()
 		table.insert(lamas_stats_main_menu_buttons,
 		{
 			ui_name = "[" .. _T.FungalShifts .. "]",
@@ -85,6 +86,7 @@ local function PopulateButtons()
 	end
 	if ModSettingGet("lamas_stats.enable_perks") then
 		dofile_once("mods/lamas_stats/files/perks.lua")
+		gui_perks_refresh_perks()
 		table.insert(lamas_stats_main_menu_buttons,
 		{
 			ui_name = "[" .. _T.Perks .. "]",
@@ -126,6 +128,9 @@ function gui_kys_main_loop()
 	
 	GuiColorSetForNextWidget(gui_menu,1,0,0,1)
 	if GuiButton(gui_menu, id(), 0, 0, "[" .. _T.KYScat .. "]", 1) then
+		if ModSettingGet("lamas_stats.KYS_Button_Hide") then
+			ModSettingSetNextValue("lamas_stats.KYS_Button", false, false)
+		end
 		local gsc_id = EntityGetFirstComponentIncludingDisabled(player, "GameStatsComponent")
 		ComponentSetValue2(gsc_id, "extra_death_msg", _T.KYS_Suicide)
 		EntityKill(player)
@@ -140,6 +145,7 @@ local function PopulateStatsList()
 	lamas_stats_main_menu_list = {}
 	if ModSettingGet("lamas_stats.stats_enable") then
 		dofile_once("mods/lamas_stats/files/stats.lua")
+		StatsTableInsert()
 	end
 end
 
@@ -151,9 +157,6 @@ local function LamasStatsApplySettings()
 	PopulateButtons()
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		APLC_table = dofile_once("mods/lamas_stats/files/APLC.lua")
-	end
-	if ModSettingGet("lamas_stats.enable_fungal") then
-		UpdateFungalVariables()
 	end
 end
 
@@ -172,7 +175,7 @@ function lamas_stats_main_loop()
 	if InputIsKeyJustDown(ModSettingGet("lamas_stats.input_key")) then 
 		lamas_stats_menu_enabled = not lamas_stats_menu_enabled
 	end
-	
+	player = EntityGetWithTag("player_unit")[1]
 	--overlay
 	GuiStartFrameWithChecks(gui_top, gui_top_function)
 

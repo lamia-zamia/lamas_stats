@@ -131,6 +131,8 @@ translations =
 		KYS_ButtonDesc = "To show suicide button or no",
 		KYS_Suicide = "Suicide",
 		KYS_Suicide_Warn = "Are you sure? This button will kill you",
+		KYS_Button_Hide = "Hide button after use",
+		KYS_Button_HideDesc = "Will set setting above to off after use",
     },
 	["русский"] = {
 		Hotkey = "Горячая клавиша",
@@ -263,6 +265,8 @@ translations =
 		KYS_ButtonDesc = "Показывать кнопку суицида или нет",
 		KYS_Suicide = "Суицид",
 		KYS_Suicide_Warn = "Точно? Эта кнопка убьёт Мину",
+		KYS_Button_Hide = "Прятать кнопку после использования",
+		KYS_Button_HideDesc = "Выставит настройку выше на отключено после использования",
 	},
 }
 

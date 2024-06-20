@@ -162,12 +162,14 @@ function GUI_Stats(gui, id, x, y)
 	end
 end
 
-table.insert(lamas_stats_main_menu_list,ShowStart)
-if ModSettingGet("lamas_stats.stats_showtime") then table.insert(lamas_stats_main_menu_list,ShowTime) end
-if ModSettingGet("lamas_stats.stats_showkills") then table.insert(lamas_stats_main_menu_list,ShowKill) end
-if ModSettingGet("lamas_stats.stats_show_fungal_cooldown") then 
-	if ModSettingGet("lamas_stats.stats_show_fungal_order") == "first" then table.insert(lamas_stats_main_menu_list,2,ShowFungal) 
-	else table.insert(lamas_stats_main_menu_list,ShowFungal) end
-end	
-if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
-if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
+function StatsTableInsert()
+	table.insert(lamas_stats_main_menu_list,ShowStart)
+	if ModSettingGet("lamas_stats.stats_showtime") then table.insert(lamas_stats_main_menu_list,ShowTime) end
+	if ModSettingGet("lamas_stats.stats_showkills") then table.insert(lamas_stats_main_menu_list,ShowKill) end
+	if ModSettingGet("lamas_stats.stats_show_fungal_cooldown") then 
+		if ModSettingGet("lamas_stats.stats_show_fungal_order") == "first" then table.insert(lamas_stats_main_menu_list,2,ShowFungal) 
+		else table.insert(lamas_stats_main_menu_list,ShowFungal) end
+	end	
+	if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
+	if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
+end

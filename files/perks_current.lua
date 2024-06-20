@@ -96,6 +96,7 @@ function gui_perks_gather_stats()
 	reroll_count = GlobalsGetValue("TEMPLE_PERK_REROLL_COUNT", "0")
 	perks_current_max_width = ModSettingGet("lamas_stats.current_perks_percentage")
 	perks_current_scale = ModSettingGet("lamas_stats.current_perks_scale")
+	perks_current_icon_scale = 0.7 * perks_current_scale
 end
 
 function gui_perks_gather_stats_owned_perks()
