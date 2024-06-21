@@ -16,24 +16,67 @@ function gui_fungal_shift_add_color_potion_icon(gui, material)
 	gui_fungal_shift_add_potion_icon(gui, original_material_properties[material].icon)
 end
 
-function gui_fungal_shift_tooltip_diplay_failed_shift(gui, failed, to)
+function gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, to)
+	if ModIsEnabled("Apotheosis") then
+		GuiLayoutAddVerticalSpacing(gui, 4)
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		GuiTextGray(gui, 0, 0, "*" .. _T.lamas_stats_if, fungal_shift_scale)
+		gui_fungal_shift_add_potion_icon(gui)
+		GuiTextGray(gui, 0, 0, _T.lamas_stats_flask, fungal_shift_scale)
+		GuiTextGray(gui, 0, 0, "=", fungal_shift_scale)
+		gui_fungal_shift_add_color_potion_icon(gui, material.to)
+		GuiTextGray(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.to].name), fungal_shift_scale)
+		GuiTextGray(gui, 0, 0, ": " .. _T.lamas_stats_fungal_failed, fungal_shift_scale)
+		GuiLayoutEnd(gui)
+		return
+	end
+	if material.failed then
+		GuiLayoutAddVerticalSpacing(gui, 4)
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		GuiTextGray(gui, 0, 0, "*" .. _T.lamas_stats_fungal_if_fail, fungal_shift_scale)
+		gui_fungal_shift_add_potion_icon(gui)
+		GuiTextGray(gui, 0, 0, _T.lamas_stats_flask .. ":", fungal_shift_scale)
+		GuiLayoutEnd(gui)
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		for _,mat in ipairs(material.failed.from) do
+			gui_fungal_shift_add_color_potion_icon(gui, mat)
+			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[mat].name), fungal_shift_scale)
+		end
+		GuiTextGray(gui, 0, 0, "->", fungal_shift_scale)
+		gui_fungal_shift_add_color_potion_icon(gui, material.failed.to)
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.failed.to].name), fungal_shift_scale)
+		GuiLayoutEnd(gui)
+	end
+	local fail_mat = material.failed
+	if material.if_fail then fail_mat = material.if_fail end
+	if fail_mat.flask == "" then return end
+	GuiLayoutAddVerticalSpacing(gui, 4)
 	GuiLayoutBeginHorizontal(gui, 0, 0)
-	if failed.flask == "from" then 
+	GuiTextGray(gui, 0, 0, _T.lamas_stats_if, fungal_shift_scale)
+	gui_fungal_shift_add_potion_icon(gui)
+	GuiTextGray(gui, 0, 0, _T.lamas_stats_flask, fungal_shift_scale)
+	GuiTextGray(gui, 0, 0, "=", fungal_shift_scale)
+	gui_fungal_shift_add_color_potion_icon(gui, material.to)
+	GuiTextGray(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.to].name), fungal_shift_scale)
+	GuiTextGray(gui, 0, 0, ":", fungal_shift_scale)
+	GuiLayoutEnd(gui)
+	GuiLayoutBeginHorizontal(gui, 0, 0)
+	if fail_mat.flask == "from" then 
 		gui_fungal_shift_add_color_potion_icon(gui, to)
 		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[to].name), fungal_shift_scale)
 	else
-		for _,mat in ipairs(failed.from) do
+		for _,mat in ipairs(fail_mat.from) do
 			gui_fungal_shift_add_color_potion_icon(gui, mat)
 			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[mat].name), fungal_shift_scale)
 		end
 	end
 	GuiTextGray(gui, 0, 0, "->", fungal_shift_scale)
-	if failed.flask == "to" then
+	if fail_mat.flask == "to" then
 		gui_fungal_shift_add_color_potion_icon(gui, to)
 		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[to].name), fungal_shift_scale)
 	else
-		gui_fungal_shift_add_color_potion_icon(gui, failed.to)
-		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[failed.to].name), fungal_shift_scale)
+		gui_fungal_shift_add_color_potion_icon(gui, fail_mat.to)
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[fail_mat.to].name), fungal_shift_scale)
 	end
 	GuiLayoutEnd(gui)
 end
@@ -186,25 +229,7 @@ function gui_fungal_shift_display_from_tooltip(gui, material)
 		if current_shifts < material.number then
 			GuiText(gui, 0, 0, _T.lamas_stats_fungal_shift_possible .. "!", fungal_shift_scale)
 			GuiLayoutEnd(gui)
-			GuiLayoutAddVerticalSpacing(gui, 4)
-			GuiLayoutBeginHorizontal(gui, 0, 0)
-			GuiTextGray(gui, 0, 0, _T.lamas_stats_if, fungal_shift_scale)
-			gui_fungal_shift_add_potion_icon(gui)
-			GuiTextGray(gui, 0, 0, _T.lamas_stats_flask, fungal_shift_scale)
-			GuiTextGray(gui, 0, 0, "=", fungal_shift_scale)
-			gui_fungal_shift_add_color_potion_icon(gui, material.to)
-			GuiTextGray(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.to].name), fungal_shift_scale)
-			GuiTextGray(gui, 0, 0, ":", fungal_shift_scale)
-			GuiLayoutEnd(gui)
-			if ModIsEnabled("Apotheosis") then
-				GuiText(gui, 0, 0, _T.lamas_stats_fungal_failed, fungal_shift_scale)
-			else
-				if material.failed then
-					gui_fungal_shift_tooltip_diplay_failed_shift(gui, material.failed, material.to)
-				else
-					gui_fungal_shift_tooltip_diplay_failed_shift(gui, material.if_fail, material.to)
-				end
-			end
+			gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, material.to)
 		else
 			GuiText(gui, 0, 0, _T.lamas_stats_fungal_shift_used, fungal_shift_scale)
 			GuiLayoutEnd(gui)
@@ -306,15 +331,7 @@ function gui_fungal_shift_display_to_tooltip(gui, material)
 			GuiText(gui, 0, 0, _T.lamas_stats_fungal_shift_possible .. "!", fungal_shift_scale)
 			GuiLayoutEnd(gui)
 			if material.failed then
-				GuiLayoutAddVerticalSpacing(gui, 4)
-				GuiLayoutBeginHorizontal(gui, 0, 0)
-				GuiTextGray(gui, 0, 0, "*" .. _T.lamas_stats_fungal_if_fail, fungal_shift_scale)
-				gui_fungal_shift_add_potion_icon(gui)
-				GuiTextGray(gui, 0, 0, _T.lamas_stats_flask .. " " .. _T.lamas_stats_or, fungal_shift_scale)
-				gui_fungal_shift_add_color_potion_icon(gui, material.to)
-				GuiTextGray(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.to].name) .. ":", fungal_shift_scale)
-				GuiLayoutEnd(gui)
-				gui_fungal_shift_tooltip_diplay_failed_shift(gui, material.failed, material.to)
+				gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, material.to)
 			end
 			gui_fungal_shift_display_to_tooltip_greedy(gui, material)
 		else
