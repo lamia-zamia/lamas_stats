@@ -49,7 +49,7 @@ function gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, to)
 	end
 	local fail_mat = material.failed
 	if material.if_fail then fail_mat = material.if_fail end
-	if fail_mat.flask == "" then return end
+	if fail_mat.flask == "" and material.failed then return end 
 	GuiLayoutAddVerticalSpacing(gui, 4)
 	GuiLayoutBeginHorizontal(gui, 0, 0)
 	GuiTextGray(gui, 0, 0, _T.lamas_stats_if, fungal_shift_scale)
