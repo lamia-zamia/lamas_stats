@@ -21,7 +21,7 @@ function gui_fungal_shift_get_past_shifts()
 		past_shifts[i].to = past_materials[shift_number+1]
 	--[[	additional check for failed shifts, mainly if shift was happened using "from" flask into the same "to" material ]]
 		if seed_shifts.from.flask or seed_shifts.to.flask then
-			local temp_failed_shift = gui_fungal_shift_get_seed_shifts(i, 1) --getting next iteration of seed shift 
+			local temp_failed_shift = gui_fungal_shift_calculate_if_fail(i, seed_shifts)
 			local fullmatch = 0 --how many times there was an match between real shift and "failed" shift
 			for ii,mat in ipairs(temp_failed_shift.from.materials) do
 				local iter = 2*(ii - 1)

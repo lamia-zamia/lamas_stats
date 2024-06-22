@@ -1,4 +1,4 @@
-function gui_fungal_shift_insert_future_shifts(i, mats)
+local function gui_fungal_shift_insert_future_shifts(i, mats)
 	local arr = {}
 	arr.flask = ""
 	arr.number = i
@@ -25,11 +25,13 @@ function gui_fungal_shift_get_future_shifts()
 		local seed_shifts = gui_fungal_shift_get_seed_shifts(i)
 		future_shifts[i] = gui_fungal_shift_insert_future_shifts(i, seed_shifts)
 		if seed_shifts.failed ~= nil then 
-			future_shifts[i].failed = gui_fungal_shift_insert_future_shifts(i, seed_shifts.failed) 
+			local failed = gui_fungal_shift_calculate_if_fail(i, seed_shifts.failed)
+			future_shifts[i].failed = gui_fungal_shift_insert_future_shifts(i, failed)
 		else
 			future_shifts[i].failed = nil
-			if seed_shifts.from.flask then
-				future_shifts[i].if_fail = gui_fungal_shift_insert_future_shifts(i, gui_fungal_shift_get_seed_shifts(i, 1))
+			if seed_shifts.from.flask or (seed_shifts.to.flask and #seed_shifts.from.materials == 1) then
+				local if_fail = gui_fungal_shift_calculate_if_fail(i, seed_shifts)
+				future_shifts[i].if_fail = gui_fungal_shift_insert_future_shifts(i, if_fail)
 			end
 		end
 	end
