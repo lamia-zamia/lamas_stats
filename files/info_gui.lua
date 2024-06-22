@@ -100,7 +100,7 @@ local function PopulateButtons()
 	if ModSettingGet("lamas_stats.KYS_Button") then 
 		table.insert(lamas_stats_main_menu_buttons,
 		{
-			ui_name = "[" .. _T.KYScat .. "]",
+			ui_name = "[" .. _T.KYS_Suicide .. "]",
 			action = function()
 				gui_menu_function = gui_kys_main_loop
 				end,
@@ -125,9 +125,9 @@ function gui_kys_main_loop()
 	
 	GuiColorSetForNextWidget(gui_menu,1,1,0,1)
 	GuiText(gui_menu, 0, 0, _T.KYS_Suicide_Warn)
-	
+	GuiText(gui_menu, 0, 0, " ")
 	GuiColorSetForNextWidget(gui_menu,1,0,0,1)
-	if GuiButton(gui_menu, id(), 0, 0, "[" .. _T.KYScat .. "]", 1) then
+	if GuiButton(gui_menu, id(), 0, 0, "[" .. _T.KYS_Button .. "]", 1) then
 		if ModSettingGet("lamas_stats.KYS_Button_Hide") then
 			ModSettingSetNextValue("lamas_stats.KYS_Button", false, false)
 		end
