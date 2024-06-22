@@ -3,7 +3,7 @@ Because I'm tired of inconsistencies between different mods.
 Almost everything is togglable and can be disabled.  
 By default this mod only serves as a QOL mod, but can be further expanded into an in-game noitool.  
   
-![overlay](https://github.com/xaxnas/lamas_stats/blob/main/showcase/overlay.png)
+![overlay](showcase/overlay.png)
 ## Basic functions
 * Show various stats on overlay or in hidden menu in a non-intrusive way, togglable by hotkey
 * Show previous fungal shifts including results with flask
@@ -25,24 +25,31 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 ## Showcase
 <details>
   <summary>Settings</summary>
-  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/settings.png" width="300" />
+  <img src="showcase/settings.png" width="300" />
 </details>
 <details>
   <summary>Fungal shift interface</summary>
-  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal.png" width="300" />
+  <img src="showcase/fungal.png" width="300" />
 </details>
 <details>
   <summary>Fungal shift tooltip</summary>
-  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/fungal_tooltip.png" width="300" />
+  <img src="showcase/fungal_tooltip.png" width="300" />
 </details>
 <details>
   <summary>AP/LC Recipe</summary>
-  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/APLC.png" width="300" />
+  <img src="showcase/APLC.png" width="300" />
 </details>
 <details>
   <summary>Perks interface</summary>
-  <img src="https://github.com/xaxnas/lamas_stats/blob/main/showcase/perks.png" width="300" />
+  <img src="showcase/perks.png" width="300" />
 </details>
   
 ## Localization
-English, Russian
+* English
+* Russian (including modded)
+
+## Credits
+* [Kaedenn](https://github.com/Kaedenn) for code review and his [Fungal Shift Query](https://github.com/Kaedenn/noita-shift-query) for inspiring me to start this project
+* [Nathan](https://github.com/NathanSnail) for [luanxml](https://github.com/NathanSnail/luanxml) and inspirations
+* [Horscht](https://github.com/TheHorscht) for sharing his code and advises
+* [Noita discord server](https://discord.gg/SZtrP2r) community for all the help during the development
