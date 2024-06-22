@@ -113,17 +113,13 @@ function gui_fungal_shift_calculate_if_fail(i, current_shift)
 		while (gui_fungal_shift_calculate_if_fail_to_flask_check(if_fail, current_shift)) do
 			convert_tries = convert_tries + 1
 			if_fail = gui_fungal_shift_get_seed_shifts(i, convert_tries)
-		end --todo
+		end 
 	end
 	if current_shift.from.flask then
 		while (gui_fungal_shift_calculate_if_fail_from_flask_check(if_fail, current_shift)) do
 			convert_tries = convert_tries + 1
 			if_fail = gui_fungal_shift_get_seed_shifts(i, convert_tries)
 		end
-	end
-	if i == 5 then
-		debug_print_table(current_shift)
-		debug_print_table(if_fail)
 	end
 	return if_fail
 end
