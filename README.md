@@ -1,4 +1,4 @@
-# Lamas_stats
+# Lama's Stats
 Because I'm tired of inconsistencies between different mods.  
 Almost everything is togglable and can be disabled.  
 By default this mod only serves as a QOL mod, but can be further expanded into an in-game noitool.  
@@ -12,6 +12,7 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 * Suicide button if you become too OP
 ## Predicting functions (turned off by default)
 * Show next fungal shifts including flask resolutions
+* Predict failed shifts including nested fails
 * Show AP/LC recipes
 * Show perks in next holy mountain
 * Show perks reroll
