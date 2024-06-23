@@ -24,6 +24,7 @@ translations =
 		lamas_stats_fungal_shift_used = "Flask was used in shift",
 		lamas_stats_fungal_greedy = "If gold or holy grass is used in shift",
 		Perks = "Perks",
+		lamas_stats_nearby_perks = "Nearby perks",
 		lamas_stats_perks_next = "Predict",
 		lamas_stats_perks_reroll = "Reroll",
 		lamas_stats_perks_always_cast = "Will add next spell",
@@ -67,6 +68,7 @@ translations =
 		lamas_stats_fungal_greedy = "Если в сдвиге используется золото или божественная земля",
 		lamas_stats_fungal_failed = "Неудачно",
 		Perks = "Перки",
+		lamas_stats_nearby_perks = "Перки рядом",
 		lamas_stats_perks_next = "Предсказать",
 		lamas_stats_perks_reroll = "Реролл",
 		lamas_stats_perks_always_cast = "Добавит следующий спелл",
@@ -102,6 +104,7 @@ _T = setmetatable({},
 		print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, currentLang))
 		currentLang = "English"
 	end
-	return translations[currentLang][k]
+	if translations[currentLang][k] then return translations[currentLang][k]
+	else return "ERROR" end
 	end
 })

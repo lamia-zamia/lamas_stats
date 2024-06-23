@@ -23,7 +23,7 @@ function gui_perks_show_perks_on_screen(gui)
 	if perks_onscreen == nil then return end
 	if #perks_onscreen > 0 then
 		GuiZSetForNextWidget(gui, GuiZ)
-		GuiText(gui, 0, 0, "---- " .. _T.nearby_perks_cat .. " ----", perks_scale)
+		GuiText(gui, 0, 0, "---- " .. _T.lamas_stats_nearby_perks .. " ----", perks_scale)
 		
 		local width_icon = GuiGetImageDimensions(gui, perks_data["EXTRA_PERK"].perk_icon, perks_scale) 
 		GuiLayoutBeginHorizontal(gui,0,0, false)
