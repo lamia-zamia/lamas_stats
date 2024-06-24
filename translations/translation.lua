@@ -88,6 +88,50 @@ translations =
 		KYS_Suicide_Warn = "Точно? Эта кнопка убьёт Мину",
 		KYS_Button = "Да, сделать сеппуку",
 	},
+	["日本語"] = {
+		lamas_stat_return = "戻る",
+		lamas_stat_refresh_text = "リストを更新しました",
+		lamas_stat_current = "現在",
+		lamas_stats_progress_kills = "キル数:",
+		lamas_stats_progress_kills_innocent = "無力なキル:",
+		lamas_stats_fungal_cooldown = "CD",
+		lamas_stats_fungal_predict_error = "シフトの解決中に何か問題が発生しました",
+		lamas_stats_fungal_if_fail = "もし失敗したら",
+		lamas_stats_fungal_shift_failed = "キノコシフトが失敗しました",
+		lamas_stats_ingame_name = "マテリアルID",
+		FungalShifts = "キノコシフト",
+		lamas_stats_fungal_group_of = "グループ",
+		lamas_stats_fungal_next_shift = "次のシフト",
+		lamas_stats_fungal_failed = "失敗",
+		lamas_stats_flask = "フラスコ",
+		lamas_stats_or = "または",
+		lamas_stats_if = "もし",
+		lamas_stats_shift = "シフト",
+		lamas_stats_farthest = "最遠",
+		lamas_stats_fungal_shift_possible = "フラスコシフト可能",
+		lamas_stats_fungal_shift_used = "フラスコがシフトに使用されました",
+		lamas_stats_fungal_greedy = "金または神聖な草がシフトに使用される場合",
+		Perks = "パーク",
+		lamas_stats_nearby_perks = "近くのパーク",
+		lamas_stats_perks_next = "予測",
+		lamas_stats_perks_reroll = "リロール",
+		lamas_stats_perks_always_cast = "次の呪文を追加します",
+		lamas_stats_stats_pw = "ワールド",
+		lamas_stats_stats_pw_west = "西",
+		lamas_stats_stats_pw_east = "東",
+		lamas_stats_stats_pw_main = "メイン",
+		lamas_stats_hearts_find = "見つけたハート:",
+		lamas_stats_projectiles_shot = "発射したプロジェクタイル:",
+		lamas_stats_kicks = "キック:",
+		lamas_stats_damage_taken = "受けたダメージ:",
+		lamas_stats_position = "位置",
+		lamas_stats_position_toggle = "クリックで切り替え",
+		lamas_stats_location = "場所",
+		lamas_stats_unknown = "不明",
+		KYS_Suicide = "自殺",
+		KYS_Suicide_Warn = "本当に自殺しますか？ このボタンはあなたを殺します",
+		KYS_Button = "はい、切腹します",
+    },
 }
 
 _T = setmetatable({}, 
@@ -96,6 +140,9 @@ _T = setmetatable({},
 	local currentLang = GameTextGetTranslatedOrNot("$current_language")
 	if currentLang == "русский(Neonomi)" or currentLang == "русский(Сообщество)" then --compatibility with custom langs
 		currentLang = "русский"
+	end
+	if currentLang == "自然な日本語" then
+		currentLang = "日本語"
 	end
 	if not translations[currentLang] then
 		currentLang = "English"
