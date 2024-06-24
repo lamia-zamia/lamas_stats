@@ -48,6 +48,7 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 ## Localization
 * English
 * Russian (including modded)
+* Japanese (including modded)
 
 ## Credits
 * [Kaedenn](https://github.com/Kaedenn) for code review and his [Fungal Shift Query](https://github.com/Kaedenn/noita-shift-query) for inspiring me to start this project
