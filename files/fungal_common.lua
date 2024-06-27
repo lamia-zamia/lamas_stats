@@ -1,4 +1,5 @@
 dofile_once("data/scripts/magic/fungal_shift.lua") --for materials list
+local compatibility = nil
 
 local function SetColor(material)
 	GuiColorSetForNextWidget(gui_menu,material.red,material.green,material.blue,material.alpha)
@@ -17,7 +18,7 @@ function gui_fungal_shift_add_color_potion_icon(gui, material)
 end
 
 function gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, if_mat)
-	if ModIsEnabled("Apotheosis") then
+	if compatibility == "Apotheosis" or compatibility == "ImprovedFungalShift" then
 		if material.flask == "to" and #material.from > 1 then return end
 		GuiLayoutAddVerticalSpacing(gui, 4)
 		GuiLayoutBeginHorizontal(gui, 0, 0)
@@ -124,20 +125,37 @@ function gui_fungal_shift_calculate_if_fail(i, current_shift)
 	return if_fail
 end
 
+function gui_fungal_shift_decide_compatibility()
+	for i,mod in ipairs(active_mods) do
+		if mod == "Apotheosis" then compatibility = mod end
+		if mod == "ImprovedFungalShift" then compatibility = mod end
+	end
+end
+
 function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shifts based on seed (code is copied from game itself)
 	local _from, _to = nil, nil
 	local converted_any = false
 	local convert_tries = convert_tries or 0
 
 	while converted_any == false and convert_tries < maximum_shifts do
-		local seed2 = 42345 + iter - 1 + 1000*convert_tries --minus one for consistency with other objects
-		if ModIsEnabled("Apotheosis") then --aphotheosis uses old mechanic
+		local seed1 = 42345 + iter - 1 + 1000*convert_tries --minus one for consistency with other objects
+		local seed2 = seed1
+		if compatibility == "Apotheosis" or compatibility == "ImprovedFungalShift" then --old seeds
+			seed1 = 42345 + iter - 1 + convert_tries
 			seed2 = 58925 + iter - 1 + convert_tries
 		end
-		SetRandomSeed(89346, seed2)
-		local rnd = random_create( 9123, seed2 )
-		local from = pick_random_from_table_weighted(rnd, materials_from)
-		local to = pick_random_from_table_weighted(rnd, materials_to)
+		SetRandomSeed(89346, seed1)
+		local rnd = random_create( 9123, seed2)
+		local from_table = materials_from
+		if compatibility == "ImprovedFungalShift" and ModSettingGet("ImprovedFungalShift.expanded_from_list") then
+			from_table = expanded_materials_from
+		end
+		local from = pick_random_from_table_weighted(rnd, from_table)
+		local to_table = materials_to
+		if compatibility == "ImprovedFungalShift" and ModSettingGet("ImprovedFungalShift.expanded_to_list") then
+			to_table = expanded_materials_to
+		end
+		local to = pick_random_from_table_weighted(rnd, to_table)
 
 		_from = {
 			flask = false,
@@ -156,7 +174,8 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 		_failed = nil
 
 		-- if a potion or pouch is equipped, randomly use main material from it as one of the materials
-		if random_nexti( rnd, 1, 100 ) <= 75 then -- chance to use flask
+		local guaranteed_shift = compatibility == "ImprovedFungalShift" 
+		if random_nexti( rnd, 1, 100 ) <= 75 or guaranteed_shift then -- chance to use flask
 			if random_nexti( rnd, 1, 100 ) <= 50 then -- which side will use flask
 				_from.flask = true
 			else
@@ -412,3 +431,5 @@ function gui_fungal_shift_display_to(gui, material)
 	GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_to_tooltip, material)
 	GuiText(gui, 0, 0, "", fungal_shift_scale)
 end
+
+gui_fungal_shift_decide_compatibility()

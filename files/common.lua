@@ -6,6 +6,11 @@ pile_png = "mods/lamas_stats/files/pile.png"
 solid_static_png = "mods/lamas_stats/files/solid_static.png"
 screen_png = "mods/lamas_stats/files/9piece0_more_transparent.png"
 virtual_png_dir = "mods/lamas_stats/files/virtual/"
+fungal_cooldown = 60*60*5
+if ModIsEnabled("ImprovedFungalShift") then
+	fungal_cooldown = (60 * ModSettingGet("ImprovedFungalShift.shift_cooldown")) + 60
+end
+active_mods = ModGetActiveModIDs()
 
 function UpdateCommonVariables()
 	worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
@@ -29,7 +34,7 @@ function GetFungalCooldown()
 
     local frame = GameGetFrameNum()
 	
-	seconds = math.floor((60*60*5 - (frame - last_frame)) / 60)
+	seconds = math.floor((fungal_cooldown - (frame - last_frame)) / 60)
 	if seconds > 0 then
 		return seconds
 	else 
