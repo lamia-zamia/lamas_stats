@@ -174,7 +174,7 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 		_failed = nil
 
 		-- if a potion or pouch is equipped, randomly use main material from it as one of the materials
-		local guaranteed_shift = compatibility == "ImprovedFungalShift" or ModIsEnabled("lamas_fungal_shifts")
+		local guaranteed_shift = compatibility == "ImprovedFungalShift" or (ModIsEnabled("lamas_fungal_shifts") and ModSettingGet("lamas_fungal_shifts.guaranteed_fungal_shift"))
 		if guaranteed_shift or random_nexti( rnd, 1, 100 ) <= 75 then -- chance to use flask
 			if random_nexti( rnd, 1, 100 ) <= 50 then -- which side will use flask
 				_from.flask = true
