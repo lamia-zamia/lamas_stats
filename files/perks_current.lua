@@ -119,7 +119,13 @@ function gui_perks_get_perks_on_screen()
 	for i,perk_entity in ipairs(all_perks) do
 		local entity_x,entity_y = EntityGetTransform(perk_entity)
 		local perkComponent = EntityGetFirstComponent(perk_entity, "VariableStorageComponent")
-		local perk_id = ComponentGetValue2(perkComponent, "value_string")
+		local perk_id = nil
+		
+		if perkComponent == nil then 
+			perk_id = "lamas_unknown"
+		else
+			perk_id = ComponentGetValue2(perkComponent, "value_string")
+		end
 		perks_onscreen[i] = {}
 		perks_onscreen[i].perk_id = perk_id
 		perks_onscreen[i].x = entity_x
