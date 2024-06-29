@@ -69,6 +69,7 @@ local translations =
 		current_perks_percentageDesc = "How many percent of the screen width to move to a new line after",
 		current_perks_scale = "Current scale",
 		current_perks_scaleDesc = "You can make current perks smaller",
+		current_perks_hide_vanilla = "Hide vanilla's perk HUD",
 		EnablefuturePerks = "Predict future",
 		EnablefuturePerksDesc = "Shows perks that's going to spawn in the next holy mountain.\nPerks spawn on first visit, \nif you skip holy mountain the next mountain will spawn the perks in list.\nAlso predicts rerolls",
 		enable_nearby_perks = "Show nearby perks",
@@ -165,6 +166,7 @@ local translations =
 		current_perks_percentageDesc = "После скольки процентов от ширины экрана переходить на новую строку",
 		current_perks_scale = "Масштаб текущих",
 		current_perks_scaleDesc = "Можно сделать текущие перки меньше",
+		current_perks_hide_vanilla = "Не показывать иконки перков ваниллы",
 		EnablefuturePerks = "Рассчитать будущие",
 		EnablefuturePerksDesc = "Показывает перки, которые будут заспавлены в будущей горе.\nПерки спавнятся при первом визите, даже если пропустить гору и пойти в следующий\n - заспавнится то, что в списке.\nТак же предсказывает рероллы",
 		enable_nearby_perks = "Показывать перки рядом",
@@ -261,6 +263,7 @@ local translations =
 		current_perks_percentageDesc = "画面幅の何パーセントで新しい行に移動するか",
 		current_perks_scale = "現在のスケール",
 		current_perks_scaleDesc = "現在のパークを小さくすることができます",
+		current_perks_hide_vanilla = "バニラのパークHUDを非表示",
 		EnablefuturePerks = "未来を予測",
 		EnablefuturePerksDesc = "次のホーリーマウンテンに出現するパークを表示します。\n初回訪問時にパークがスポーンし、\nホーリーマウンテンをスキップすると次の山にリストのパークがスポーンします。\nリロールも予測します。",
 		enable_nearby_perks = "近くのパークを表示",
@@ -420,6 +423,7 @@ local default =
 	["KYS_Button"] = false,
 	["KYS_Button_Hide"] = true,
 	["stats_show_farthest_pw"] = true,
+	["current_perks_hide_vanilla"] = false,
 }
 
 function ResetSettings(mod_id, gui, in_main_menu, im_id, setting)
@@ -795,6 +799,12 @@ local function build_settings()
 								value_display_formatting = " $0 %",
 								scope = MOD_SETTING_SCOPE_RUNTIME,
 								change_fn = mod_setting_change_callback,
+							},
+							{
+								id = "current_perks_hide_vanilla",
+								ui_name = _T.current_perks_hide_vanilla,
+								value_default = default["current_perks_hide_vanilla"],
+								scope = MOD_SETTING_SCOPE_RUNTIME_RESTART,
 							},
 						},
 					},

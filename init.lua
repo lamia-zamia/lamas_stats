@@ -3,24 +3,9 @@ dofile_once("mods/lamas_stats/files/common.lua")
 
 original_material_properties = {} --table of material names and colors, populates from materials.xml
 
---[[	custom functions that need to be done during init ]]
-function AppendFunction(file, search, add)
-	local content = ModTextFileGetContent(file)
-	local first, last = content:find(search, 0, true)
-	local before = content:sub(1, last)
-	local after = content:sub(last + 1)
-	local new = before .. "\n" .. add .. "\n" .. after
-	ModTextFileSetContent(file, new)
-end
-
-
 --[[	game hooks start here]]
 function OnModPreInit()
-	
-	if ModSettingGet("lamas_stats.enable_perks_autoupdate") then --hooking perks refresh into game events
-		AppendFunction("data/scripts/perks/perk.lua", "if ( no_perk_entity == false ) then", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
-		AppendFunction("data/scripts/perks/perk.lua", "perk_spawn( x, y, perk_id )", "ModSettingSet(\"lamas_stats.enable_perks_autoupdate_flag\", true)")
-	end
+	dofile_once("mods/lamas_stats/files/appens_to_gamefiles.lua")
 end
 
 function OnMagicNumbersAndWorldSeedInitialized()
@@ -29,6 +14,7 @@ end
 
 function OnPlayerSpawned(player_entity)
 	dofile_once("mods/lamas_stats/files/info_gui.lua") --loading main gui file
+	dofile_once("mods/lamas_stats/files/perks_vanilla_icons.lua")
 end
 
 function OnWorldPostUpdate()
