@@ -803,6 +803,7 @@ local function build_settings()
 							{
 								id = "current_perks_hide_vanilla",
 								ui_name = _T.current_perks_hide_vanilla,
+								ui_description = "It will break the removable perks mod, may fix later",
 								value_default = default["current_perks_hide_vanilla"],
 								scope = MOD_SETTING_SCOPE_RUNTIME_RESTART,
 							},
