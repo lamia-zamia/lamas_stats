@@ -33,9 +33,7 @@ function gui_fungal_shift_get_past_shifts()
 				end
 			end
 			if fullmatch == #temp_failed_shift.from.materials then
-				if not ModIsEnabled("Apotheosis") then
-					past_shifts[i].flask = "from_fail" 
-				end
+				past_shifts[i].flask = "from_fail" 
 				past_shifts[i].from = temp_failed_shift.from.materials
 				shift_number = shift_number + (#past_shifts[i].from) * 2 
 				goto continue
@@ -65,6 +63,12 @@ function gui_fungal_shift_get_past_shifts()
 			if past_materials[shift_number] ~= mat then
 				if seed_shifts.from.flask then
 					past_shifts[i].flask = "from" 
+					if past_materials[shift_number] == "apotheosis_cursed_liquid_red_static" or past_materials[shift_number] == "apotheosis_cursed_liquid_red" then
+						table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red_static")
+						table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red")
+						shift_number = shift_number + 4
+						break
+					end
 					if j == 1 then --foolproofing cases where first material matching shifted material
 						table.insert(past_shifts[i].from, past_materials[shift_number])
 						shift_number = shift_number + 2 

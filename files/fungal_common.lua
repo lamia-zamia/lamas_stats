@@ -18,7 +18,7 @@ function gui_fungal_shift_add_color_potion_icon(gui, material)
 end
 
 function gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, if_mat)
-	if compatibility == "Apotheosis" or compatibility == "ImprovedFungalShift" then
+	if compatibility == "ImprovedFungalShift" then
 		if material.flask == "to" and #material.from > 1 then return end
 		GuiLayoutAddVerticalSpacing(gui, 4)
 		GuiLayoutBeginHorizontal(gui, 0, 0)
@@ -127,7 +127,6 @@ end
 
 function gui_fungal_shift_decide_compatibility()
 	for i,mod in ipairs(active_mods) do
-		if mod == "Apotheosis" then compatibility = mod end
 		if mod == "ImprovedFungalShift" then compatibility = mod end
 	end
 end
@@ -140,7 +139,7 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 	while converted_any == false and convert_tries < maximum_shifts do
 		local seed1 = 42345 + iter - 1 + 1000*convert_tries --minus one for consistency with other objects
 		local seed2 = seed1
-		if compatibility == "Apotheosis" or compatibility == "ImprovedFungalShift" then --old seeds
+		if compatibility == "ImprovedFungalShift" then --old seeds
 			seed1 = 42345 + iter - 1 + convert_tries
 			seed2 = 58925 + iter - 1 + convert_tries
 		end
@@ -195,21 +194,12 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 		end
 		
 		local same_mat = 0
-		local apotheosis_cursed_liquid_red_arr = {}
 		
 		-- local failed_flag = false
 		for i=1, #_from.materials do
 			if _from.materials[i] == _to.material then
 				same_mat = same_mat + 1
 			end	
-			
-			if ModIsEnabled("Apotheosis") then --damn it's ugly
-				if _from.materials[i] == "apotheosis_cursed_liquid_red_static" or _from.materials[i] == "apotheosis_cursed_liquid_red" then
-					table.insert(apotheosis_cursed_liquid_red_arr, _from.materials[i])
-					table.insert(apotheosis_cursed_liquid_red_arr,"apotheosis_cursed_liquid_red_static")
-					table.insert(apotheosis_cursed_liquid_red_arr,"apotheosis_cursed_liquid_red")
-				end
-			end
 		end
 		
 		if same_mat == #_from.materials then --if conversion failed
@@ -217,22 +207,13 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 				_failed = gui_fungal_shift_get_seed_shifts(iter, convert_tries + 1)
 				converted_any = true
 			else
-				if ModIsEnabled("Apotheosis") then --damn it's ugly
-					_from = {materials ={"fail"}}
-					_to = {material = "fail"}
-					_failed = nil
-					converted_any = true
-				end
+				--here was compatibility with apo
 			end
 		else
 			converted_any = true
 		end
 		
 		convert_tries = convert_tries + 1
-		
-		if apotheosis_cursed_liquid_red_arr[1] then --if it was cured liquid from apo
-			_from.materials = apotheosis_cursed_liquid_red_arr
-		end
 	end
 
 	if not converted_any then
@@ -347,31 +328,29 @@ function gui_fungal_shift_display_from(gui, material)
 end
 --[[	Display To Tooltip]]
 function gui_fungal_shift_display_to_tooltip_greedy(gui, material)
-	if not ModIsEnabled("Apotheosis") then
-		local gold = ModSettingGet("lamas_stats.enable_fungal_greedy_gold")
-		local grass = ModSettingGet("lamas_stats.enable_fungal_greedy_grass")
-		if gold or grass then 
-			GuiLayoutAddVerticalSpacing(gui, 4)
-		else return end
-		if ModSettingGet("lamas_stats.enable_fungal_greedy_tip") then
-			GuiTextGray(gui, 0, 0, _T.lamas_stats_fungal_greedy, fungal_shift_scale)
-		end
-		if gold then
-			GuiLayoutBeginHorizontal(gui, 0, 0)
-			gui_fungal_shift_add_color_potion_icon(gui, "gold")
-			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$mat_gold") .. " ->", fungal_shift_scale)
-			gui_fungal_shift_add_color_potion_icon(gui, material.greedy_mat)
-			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.greedy_mat].name), fungal_shift_scale)
-			GuiLayoutEnd(gui)
-		end
-		if grass then
-			GuiLayoutBeginHorizontal(gui, 0, 0)
-			gui_fungal_shift_add_color_potion_icon(gui, "grass_holy")
-			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$mat_grass_holy") .. " ->", fungal_shift_scale)
-			gui_fungal_shift_add_color_potion_icon(gui, material.grass_holy)
-			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.grass_holy].name), fungal_shift_scale)
-			GuiLayoutEnd(gui)
-		end
+	local gold = ModSettingGet("lamas_stats.enable_fungal_greedy_gold")
+	local grass = ModSettingGet("lamas_stats.enable_fungal_greedy_grass")
+	if gold or grass then 
+		GuiLayoutAddVerticalSpacing(gui, 4)
+	else return end
+	if ModSettingGet("lamas_stats.enable_fungal_greedy_tip") then
+		GuiTextGray(gui, 0, 0, _T.lamas_stats_fungal_greedy, fungal_shift_scale)
+	end
+	if gold then
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		gui_fungal_shift_add_color_potion_icon(gui, "gold")
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$mat_gold") .. " ->", fungal_shift_scale)
+		gui_fungal_shift_add_color_potion_icon(gui, material.greedy_mat)
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.greedy_mat].name), fungal_shift_scale)
+		GuiLayoutEnd(gui)
+	end
+	if grass then
+		GuiLayoutBeginHorizontal(gui, 0, 0)
+		gui_fungal_shift_add_color_potion_icon(gui, "grass_holy")
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot("$mat_grass_holy") .. " ->", fungal_shift_scale)
+		gui_fungal_shift_add_color_potion_icon(gui, material.grass_holy)
+		GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.grass_holy].name), fungal_shift_scale)
+		GuiLayoutEnd(gui)
 	end
 end
 
