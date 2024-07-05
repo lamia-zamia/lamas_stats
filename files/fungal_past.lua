@@ -91,13 +91,14 @@ function gui_fungal_shift_get_past_shifts()
 end
 
 function gui_fungal_shift_display_past_shifts(gui)
-	for _,past_shift in ipairs(past_shifts) do
-		if past_shift.flask ~= "lamas_failed_shift" then 
+	for i=show_shift_start_from,#past_shifts,1 do
+		if past_shifts[i].flask ~= "lamas_failed_shift" then 
 			GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
-			GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(past_shift.number) .. ": ", fungal_shift_scale)
-			gui_fungal_shift_display_from(gui, past_shift)
-			gui_fungal_shift_display_to(gui, past_shift)
+			GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(past_shifts[i].number) .. ": ", fungal_shift_scale)
+			gui_fungal_shift_display_from(gui, past_shifts[i])
+			gui_fungal_shift_display_to(gui, past_shifts[i])
 			GuiLayoutEnd(gui)	
 		end
+		if i % show_shifts_per_screen == 0 then break end
 	end	
 end

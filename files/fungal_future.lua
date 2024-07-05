@@ -38,13 +38,15 @@ function gui_fungal_shift_get_future_shifts()
 end
 
 function gui_fungal_shift_display_future_shifts(gui)
+	if current_shifts > (show_shift_start_from + show_shifts_per_screen - 2) then return end
+	local start = current_shifts + 1
+	if start < show_shift_start_from then start = show_shift_start_from end
 	local nextshifttext = _T.lamas_stats_fungal_next_shift
-	
 	if current_shifts < maximum_shifts then
 		GuiText(gui, 0, 0, "---- " .. nextshifttext .. " ----",fungal_shift_scale)
 	end
 
-	for i=current_shifts+1,maximum_shifts,1 do
+	for i=start,maximum_shifts,1 do
 		GuiLayoutBeginHorizontal(gui,0,0,0,0,0)
 		GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(future_shifts[i].number) .. ": ", fungal_shift_scale)
 		
@@ -57,5 +59,6 @@ function gui_fungal_shift_display_future_shifts(gui)
 			GuiText(gui, GuiGetTextDimensions(gui, nextshifttext, fungal_shift_scale), 0, " ----",fungal_shift_scale)
 			GuiLayoutEnd(gui)
 		end
+		if i % show_shifts_per_screen == 0 then break end
 	end	
 end

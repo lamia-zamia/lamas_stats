@@ -6,6 +6,7 @@ pile_png = "mods/lamas_stats/files/pile.png"
 solid_static_png = "mods/lamas_stats/files/solid_static.png"
 screen_png = "mods/lamas_stats/files/9piece0_more_transparent.png"
 virtual_png_dir = "mods/lamas_stats/files/virtual/"
+
 fungal_cooldown = 60*60*5
 if ModIsEnabled("ImprovedFungalShift") then
 	fungal_cooldown = (60 * ModSettingGet("ImprovedFungalShift.shift_cooldown")) + 60
@@ -14,12 +15,8 @@ active_mods = ModGetActiveModIDs()
 
 function UpdateCommonVariables()
 	worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
-	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
 	player = EntityGetWithTag("player_unit")[1]
 	maximum_shifts = ModSettingGet("lamas_stats.fungal_shift_max")
-	-- if ModIsEnabled("Apotheosis") then --aphotheosis
-	-- 	maximum_shifts = maximum_shifts + 1
-	-- end
 end
 
 function GetFungalCooldown()
