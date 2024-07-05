@@ -42,7 +42,7 @@ function gui_fungal_shift_display_future_shifts(gui)
 	local start = current_shifts + 1
 	if start < show_shift_start_from then start = show_shift_start_from end
 	local nextshifttext = _T.lamas_stats_fungal_next_shift
-	if current_shifts < maximum_shifts then
+	if (current_shifts < maximum_shifts) and (current_shifts > show_shift_start_from - 2) then
 		GuiText(gui, 0, 0, "---- " .. nextshifttext .. " ----",fungal_shift_scale)
 	end
 
