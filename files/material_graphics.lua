@@ -1,8 +1,11 @@
-local function lamas_stats_make_custom_potions(material, png)
+local original_material_properties = {}
+
+local function lamas_stats_make_custom_potions(name, material, png)
 	if ModImageMakeEditable ~= nil then -- needed to avoid error if this file is hotloaded after init
+		-- print(material)
 		local png_img_id, png_img_w, png_img_h = ModImageMakeEditable(png,0,0)
 		local material_img_id, material_img_w, material_img_h = ModImageMakeEditable(material,0,0)
-		local virtual_path = virtual_png_dir .. material
+		local virtual_path = virtual_png_dir .. name .. ".png"
 		local custom_img_id = ModImageMakeEditable(virtual_path, png_img_w, png_img_h)
 		for y=0, png_img_h do 
 			local text_y = y
@@ -17,6 +20,9 @@ local function lamas_stats_make_custom_potions(material, png)
 			end
 		end
 		return virtual_path
+	else
+		print("couldn't make custom image from " .. material)
+		return potion_png
 	end
 end
 
@@ -34,9 +40,9 @@ local function lamas_stats_set_icon(elem, graphics)
 	else
 		local tags = elem.attr["tags"]
 		if tags ~= nil and string.find(tags, "static") then 
-			original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(graphics.attr["texture_file"], solid_static_png)
+			original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(elem.attr["name"], graphics.attr["texture_file"], solid_static_png)
 		elseif elem.attr["liquid_sand"] == "1" then 
-			original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(graphics.attr["texture_file"], pile_png)
+			original_material_properties[elem.attr["name"]].icon = lamas_stats_make_custom_potions(elem.attr["name"], graphics.attr["texture_file"], pile_png)
 		else original_material_properties[elem.attr["name"]].icon = potion_png end
 	end
 end
@@ -87,6 +93,8 @@ local function lamas_stats_gather_material() --function to get table of material
 	original_material_properties["lamas_failed_shift"].color.green = 0
 	original_material_properties["lamas_failed_shift"].color.blue = 0
 	original_material_properties["lamas_failed_shift"].color.alpha = 1
+
+	return original_material_properties
 end
 
 return lamas_stats_gather_material()

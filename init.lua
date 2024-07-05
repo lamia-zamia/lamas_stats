@@ -9,7 +9,7 @@ function OnModPreInit()
 end
 
 function OnMagicNumbersAndWorldSeedInitialized()
-	lamas_stats_gather_material_name_table = dofile_once("mods/lamas_stats/files/material_graphics.lua")
+	original_material_properties = dofile_once("mods/lamas_stats/files/material_graphics.lua")
 end
 
 function OnPlayerSpawned(player_entity)
