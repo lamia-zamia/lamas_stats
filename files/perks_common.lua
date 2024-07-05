@@ -19,7 +19,7 @@ local function gui_perks_collate_data_perks() --one-time function for gathering 
 	perks_data["lamas_unknown"].ui_name = _T.lamas_stats_unknown
 	perks_data["lamas_unknown"].ui_description = _T.lamas_stats_unknown
 	perks_data["lamas_unknown"].perk_icon = perk_png
-    return perks_data
+	return perks_data
 end
 perks_data = gui_perks_collate_data_perks()
 
@@ -31,6 +31,6 @@ local function gui_perks_collate_data_actions() --one-time function for gatherin
 		actions_data[action.id].name = action.name
 		actions_data[action.id].description = action.description
 	end
-    return actions_data
+	return actions_data
 end
 actions_data = gui_perks_collate_data_actions()

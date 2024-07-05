@@ -1,6 +1,6 @@
 translations =
 {
-    ["English"] = {
+	["English"] = {
 		lamas_stat_return = "Return",
 		lamas_stat_refresh_text = "List updated",
 		lamas_stat_current = "Current",
@@ -43,7 +43,7 @@ translations =
 		KYS_Suicide = "Suicide",
 		KYS_Suicide_Warn = "Are you sure? This button will kill you",
 		KYS_Button = "Yes, commit seppuku",
-    },
+	},
 	["русский"] = {
 		lamas_stat_return = "Назад",
 		lamas_stat_refresh_text = "Список обновлён",
@@ -131,7 +131,7 @@ translations =
 		KYS_Suicide = "自殺",
 		KYS_Suicide_Warn = "本当に自殺しますか？ このボタンはあなたを殺します",
 		KYS_Button = "はい、切腹します",
-    },
+	},
 }
 
 _T = setmetatable({}, 

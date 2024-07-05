@@ -41,7 +41,7 @@ function gui_fungal_shift_get_past_shifts()
 		end
 	--[[	excluding same materials ]]
 		for _,mat in ipairs(seed_shifts.from.materials ) do --adding materials that was shifted except for same material
-			if #seed_shifts.from.materials  > 1 then 
+			if #seed_shifts.from.materials > 1 then 
 				if mat ~= past_shifts[i].to then
 					table.insert(unique_from, mat)
 				end
