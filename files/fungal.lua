@@ -4,7 +4,7 @@ dofile_once("mods/lamas_stats/files/fungal_future.lua")
 
 current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))
 past_shifts,future_shifts = nil
-show_shifts_per_screen = 20 --todo settings
+show_shifts_per_screen = ModSettingGet("lamas_stats.fungal_shift_max")
 show_shift_start_from = 1
 local show_arrows = false
 
@@ -80,6 +80,7 @@ function gui_fungal_shift_get_shifts()
 end
 
 function UpdateFungalVariables()
+	show_shifts_per_screen = ModSettingGet("lamas_stats.fungal_shift_max")
 	if (current_shifts > show_shifts_per_screen) or (future_shifts ~= nil and maximum_shifts > show_shifts_per_screen) then
 		show_arrows = true
 	else show_arrows = false end

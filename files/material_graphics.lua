@@ -5,7 +5,7 @@ local function lamas_stats_make_custom_potions(name, material, png)
 		-- print(material)
 		local png_img_id, png_img_w, png_img_h = ModImageMakeEditable(png,0,0)
 		local material_img_id, material_img_w, material_img_h = ModImageMakeEditable(material,0,0)
-		local virtual_path = virtual_png_dir .. name .. ".png"
+		local virtual_path = virtual_dir .. name .. ".png"
 		local custom_img_id = ModImageMakeEditable(virtual_path, png_img_w, png_img_h)
 		for y=0, png_img_h do 
 			local text_y = y

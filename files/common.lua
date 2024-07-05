@@ -5,18 +5,35 @@ potion_png = "data/items_gfx/potion.png"
 pile_png = "mods/lamas_stats/files/pile.png"
 solid_static_png = "mods/lamas_stats/files/solid_static.png"
 screen_png = "mods/lamas_stats/files/9piece0_more_transparent.png"
-virtual_png_dir = "mods/lamas_stats/files/virtual/"
-
-fungal_cooldown = 60*60*5
-if ModIsEnabled("ImprovedFungalShift") then
-	fungal_cooldown = (60 * ModSettingGet("ImprovedFungalShift.shift_cooldown")) + 60
-end
+virtual_dir = "mods/lamas_stats/files/virtual/"
 active_mods = ModGetActiveModIDs()
+
+function GetDataFromFile(file, pattern)
+	local content = ModTextFileGetContent(file)
+	local match = content:match(pattern)
+	if not match then
+		print("Lama's Stats ERROR: Couldn't find a match \"" .. pattern .. "\" in " .. file)
+		return nil
+	end
+	local evalfile = virtual_dir .. "eval.lua"
+	ModTextFileSetContent(evalfile, "return " .. match)
+	local f, err = loadfile(evalfile)
+    if not f then
+        print("Lama's Stats ERROR: " .. err)
+		return nil
+    end
+    return f()
+end
+
+fungal_cooldown = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if frame < last_frame %+ (.-) and not debug_no_limits then")
+if not fungal_cooldown then
+	fungal_cooldown = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if frame < last_frame %+ (.-) then") or 0
+end
+maximum_shifts = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if iter >= (.-) and not debug_no_limits then") or 100
 
 function UpdateCommonVariables()
 	worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
 	player = EntityGetWithTag("player_unit")[1]
-	maximum_shifts = ModSettingGet("lamas_stats.fungal_shift_max")
 end
 
 function GetFungalCooldown()

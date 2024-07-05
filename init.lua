@@ -1,11 +1,14 @@
 dofile_once("data/scripts/lib/utilities.lua")
-dofile_once("mods/lamas_stats/files/common.lua")
 
 original_material_properties = {} --table of material names and colors, populates from materials.xml
 
 --[[	game hooks start here]]
 function OnModPreInit()
 	dofile_once("mods/lamas_stats/files/appens_to_gamefiles.lua")
+end
+
+function OnModPostInit()
+	dofile_once("mods/lamas_stats/files/common.lua")
 end
 
 function OnMagicNumbersAndWorldSeedInitialized()
