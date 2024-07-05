@@ -377,6 +377,18 @@ function reminder_about_greedy_shift(mod_id, gui, in_main_menu, im_id, setting)
 	GuiTooltip(gui,_T.GreedyShiftReminderDesc,"")
 end
 
+local function mod_setting_number_integer( mod_id, gui, in_main_menu, im_id, setting )
+	local value = ModSettingGetNextValue( mod_setting_get_id(mod_id,setting) )
+	local value_new = GuiSlider( gui, im_id, mod_setting_group_x_offset, 0, setting.ui_name, value, setting.value_min, setting.value_max, setting.value_default, setting.value_display_multiplier or 1, setting.value_display_formatting or "", 64 )
+	value_new = math.floor(value_new + 0.5)
+	if value ~= value_new then
+		ModSettingSetNextValue( mod_setting_get_id(mod_id,setting), value_new, false )
+		mod_setting_handle_change_callback( mod_id, gui, in_main_menu, setting, value, value_new )
+	end
+
+	mod_setting_tooltip( mod_id, gui, in_main_menu, setting )
+end
+
 local mod_id = "lamas_stats"
 mod_settings_version = 1
 
@@ -476,6 +488,7 @@ local function build_settings()
 				value_max = 100,
 				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
+				ui_fn = mod_setting_number_integer,
 			},
 			{
 				id = "overlay_y",
@@ -486,6 +499,7 @@ local function build_settings()
 				value_max = 100,
 				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
+				ui_fn = mod_setting_number_integer,
 			},
 		},
 	},
@@ -679,6 +693,7 @@ local function build_settings()
 						value_max = 100,
 						scope =  MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
+						ui_fn = mod_setting_number_integer,
 					},
 					{
 						id = "enable_fungal_past",
@@ -868,6 +883,7 @@ local function build_settings()
 								value_max = 13,
 								scope = MOD_SETTING_SCOPE_RUNTIME,
 								change_fn = mod_setting_change_callback,
+								ui_fn = mod_setting_number_integer,
 							},
 						},
 					},
