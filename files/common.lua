@@ -18,11 +18,11 @@ function GetDataFromFile(file, pattern)
 	local evalfile = virtual_dir .. "eval.lua"
 	ModTextFileSetContent(evalfile, "return " .. match)
 	local f, err = loadfile(evalfile)
-    if not f then
-        print("Lama's Stats ERROR: " .. err)
+	if not f then
+		print("Lama's Stats ERROR: " .. err)
 		return nil
-    end
-    return f()
+	end
+	return f()
 end
 
 fungal_cooldown = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if frame < last_frame %+ (.-) and not debug_no_limits then")
@@ -37,8 +37,8 @@ function UpdateCommonVariables()
 end
 
 function GetFungalCooldown()
-    local last_frame = tonumber(GlobalsGetValue("fungal_shift_last_frame", "-1"))
-    if last_frame == -1 then 
+	local last_frame = tonumber(GlobalsGetValue("fungal_shift_last_frame", "-1"))
+	if last_frame == -1 then 
 		return 0 
 	end
 	
@@ -46,7 +46,7 @@ function GetFungalCooldown()
 		return 0
 	end
 
-    local frame = GameGetFrameNum()
+	local frame = GameGetFrameNum()
 	
 	seconds = math.floor((fungal_cooldown - (frame - last_frame)) / 60)
 	if seconds > 0 then

@@ -3,7 +3,7 @@ local waitingForKey = false --flag for async waiting for keypress
 
 local translations =
 {
-    ["English"] = {
+	["English"] = {
 		Hotkey = "Hotkey",
 		HotkeyDesc = "Hotkey to enable overlay",
 		Overlay = "Overlay",
@@ -99,7 +99,7 @@ local translations =
 		KYS_ButtonDesc = "To show suicide button or no",
 		KYS_Button_Hide = "Hide button after use",
 		KYS_Button_HideDesc = "Will set setting above to off after use",
-    },
+	},
 	["русский"] = {
 		Hotkey = "Горячая клавиша",
 		HotkeyDesc = "Горячая клавиша для включения оверлея",
@@ -293,7 +293,7 @@ local translations =
 		KYS_ButtonDesc = "自殺ボタンを表示するかどうか",
 		KYS_Button_Hide = "使用後にボタンを隠す",
 		KYS_Button_HideDesc = "使用後に上記の設定をオフにする",
-    },
+	},
 }
 
 local _T = setmetatable({}, 
@@ -516,7 +516,7 @@ local function build_settings()
 				id = "stats_enable",
 				ui_name = _T.StatsEnable,
 				value_default = default["stats_enable"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 				
 			},
@@ -525,7 +525,7 @@ local function build_settings()
 				ui_name = _T.StatsPosition,
 				value_default = default["stats_position"],
 				values = {{"merged",_T.StatsInMenu}, {"on top",_T.StatsOnOverlay}},
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -533,14 +533,14 @@ local function build_settings()
 				ui_name = _T.StatsShowTime,
 				ui_description = _T.StatsShowTimeDesc,
 				value_default = default["stats_showtime"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
 				id = "stats_showkills",
 				ui_name = _T.StatsShowKills,
 				value_default = default["stats_showkills"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -548,7 +548,7 @@ local function build_settings()
 				ui_name = _T.StatsShowKillsInnocent,
 				ui_description = _T.StatsShowKillsInnocentDesc,
 				value_default = default["stats_show_innocent"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -556,7 +556,7 @@ local function build_settings()
 				ui_name = _T.stats_show_player_pos,
 				ui_description = _T.stats_show_player_posDesc,
 				value_default = default["stats_show_player_pos"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -564,7 +564,7 @@ local function build_settings()
 				ui_name = _T.stats_show_player_pos_pw,
 				ui_description = _T.stats_show_player_pos_pwDesc,
 				value_default = default["stats_show_player_pos_pw"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -572,7 +572,7 @@ local function build_settings()
 				ui_name = _T.stats_show_player_biome,
 				ui_description = _T.stats_show_player_biomeDesc,
 				value_default = default["stats_show_player_biome"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -587,7 +587,7 @@ local function build_settings()
 						id = "stats_show_fungal_cooldown",
 						ui_name = _T.StatsShowFungalCooldown,
 						value_default = default["stats_show_fungal_cooldown"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -595,7 +595,7 @@ local function build_settings()
 						ui_name = _T.StatsShowFungalOrder,
 						value_default = default["stats_show_fungal_order"],
 						values = {{"first",_T.StatsShowFungalOrderFirst}, {"last",_T.StatsShowFungalOrderLast}},
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -603,7 +603,7 @@ local function build_settings()
 						ui_name = _T.StatsShowFungalType,
 						value_default = default["stats_show_fungal_type"],
 						values = {{"time",_T.StatsShowFungalTypeTime}, {"image",_T.StatsShowFungalTypeImage}},
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 				},
@@ -622,7 +622,7 @@ local function build_settings()
 						ui_name = _T.stats_show_farthest_pw,
 						ui_description = _T.stats_show_farthest_pwDesc,
 						value_default = default["stats_show_farthest_pw"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 				},
@@ -642,7 +642,7 @@ local function build_settings()
 				id = "lamas_menu_header",
 				ui_name = _T.LamasMenuName,
 				value_default = default["lamas_menu_header"],
-				scope =  MOD_SETTING_SCOPE_RUNTIME,
+				scope = MOD_SETTING_SCOPE_RUNTIME,
 				change_fn = mod_setting_change_callback,
 			},
 			{
@@ -664,7 +664,7 @@ local function build_settings()
 						id = "enable_fungal",
 						ui_name = _T.EnableFungalModule,
 						value_default = default["enable_fungal"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -672,7 +672,7 @@ local function build_settings()
 						ui_name = _T.enable_fungal_recipes,
 						ui_description = _T.enable_fungal_recipesDesc,
 						value_default = default["enable_fungal_recipes"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -681,7 +681,7 @@ local function build_settings()
 						ui_description = _T.FungalGroupTypeDesc,
 						value_default = default["fungal_group_type"],
 						values = {{"group",_T.FungalGroupTypeTrue}, {"full",_T.FungalGroupTypeFalse}},
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -691,7 +691,7 @@ local function build_settings()
 						value_default = default["fungal_shift_max"],
 						value_min = 10,
 						value_max = 40,
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 						ui_fn = mod_setting_number_integer,
 					},
@@ -699,14 +699,14 @@ local function build_settings()
 						id = "enable_fungal_past",
 						ui_name = _T.EnableFungalPast,
 						value_default = default["enable_fungal_past"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
 						id = "enable_fungal_future",
 						ui_name = _T.EnableFungalFuture,
 						value_default = default["enable_fungal_future"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -714,7 +714,7 @@ local function build_settings()
 						ui_name = _T.EnableFungalGreedyTip,
 						ui_description = _T.EnableFungalGreedyTipDesc,
 						value_default = default["enable_fungal_greedy_tip"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -727,14 +727,14 @@ local function build_settings()
 						id = "enable_fungal_greedy_gold",
 						ui_name = _T.EnableFungalGreedyGold,
 						value_default = default["enable_fungal_greedy_gold"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
 						id = "enable_fungal_greedy_grass",
 						ui_name = _T.EnableFungalGreedyGrass,
 						value_default = default["enable_fungal_greedy_grass"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -745,7 +745,7 @@ local function build_settings()
 						value_max = 1,
 						value_display_multiplier = 100,
 						value_display_formatting = " $0 %",
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 				},
@@ -764,7 +764,7 @@ local function build_settings()
 						ui_name = _T.EnablePerks,
 						ui_description = _T.EnablePerksDesc,
 						value_default = default["enable_perks"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME,
+						scope = MOD_SETTING_SCOPE_RUNTIME,
 						change_fn = mod_setting_change_callback,
 					},
 					{
@@ -772,7 +772,7 @@ local function build_settings()
 						ui_name = _T.EnablePerksAutoUpdate,
 						ui_description = _T.EnablePerksAutoUpdateDesc,
 						value_default = default["enable_perks_autoupdate"],
-						scope =  MOD_SETTING_SCOPE_RUNTIME_RESTART,
+						scope = MOD_SETTING_SCOPE_RUNTIME_RESTART,
 					},
 					{
 						category_id = "current_perks_cat",
@@ -788,7 +788,7 @@ local function build_settings()
 								ui_name = _T.EnableCurrentPerks,
 								ui_description = _T.EnableCurrentPerksDesc,
 								value_default = default["enable_current_perks"],
-								scope =  MOD_SETTING_SCOPE_RUNTIME,
+								scope = MOD_SETTING_SCOPE_RUNTIME,
 								change_fn = mod_setting_change_callback,
 							},
 							{
@@ -800,7 +800,7 @@ local function build_settings()
 								value_max = 0.8,
 								value_display_multiplier = 100,
 								value_display_formatting = " $0 %",
-								scope =  MOD_SETTING_SCOPE_RUNTIME,
+								scope = MOD_SETTING_SCOPE_RUNTIME,
 								change_fn = mod_setting_change_callback,
 							},
 							{
@@ -871,7 +871,7 @@ local function build_settings()
 								ui_name = _T.EnablefuturePerks,
 								ui_description = _T.EnablefuturePerksDesc,
 								value_default = default["enable_future_perks"],
-								scope =  MOD_SETTING_SCOPE_RUNTIME,
+								scope = MOD_SETTING_SCOPE_RUNTIME,
 								change_fn = mod_setting_change_callback,
 							},
 							{
