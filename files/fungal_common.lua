@@ -147,15 +147,24 @@ function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shift
 		local rnd = random_create( 9123, seed2)
 		local from_table = materials_from
 		if compatibility == "ImprovedFungalShift" and ModSettingGet("ImprovedFungalShift.expanded_from_list") then
+---@diagnostic disable-next-line: undefined-global
 			from_table = expanded_materials_from
 		end
 		local from = pick_random_from_table_weighted(rnd, from_table)
+		if from == nil then 
+			print("error trying to get from table")
+			return 
+		end
 		local to_table = materials_to
 		if compatibility == "ImprovedFungalShift" and ModSettingGet("ImprovedFungalShift.expanded_to_list") then
+---@diagnostic disable-next-line: undefined-global
 			to_table = expanded_materials_to
 		end
 		local to = pick_random_from_table_weighted(rnd, to_table)
-
+		if to == nil then 
+			print("error trying to get to table")
+			return 
+		end
 		_from = {
 			flask = false,
 			-- probability = from.probability,
@@ -230,7 +239,7 @@ function gui_fungal_show_aplc_recipes(gui)
 	gui_fungal_shift_add_color_potion_icon(gui, "midas_precursor")
 	gui_fungal_shift_add_color_potion_icon(gui, "magic_liquid_hp_regeneration_unstable")
 	GuiText(gui, 0, 0, "]", fungal_shift_scale)
-	GuiEndAutoBoxNinePiece(gui,0,0,0,0,0,empty_png,empty_png)
+	GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
 	GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_show_aplc_recipes_tooltip)
 end
 
@@ -294,7 +303,7 @@ function gui_fungal_shift_display_from(gui, material)
 			else 
 				GuiTextRed(gui, 0, 0, _T.lamas_stats_flask, fungal_shift_scale)
 				GuiText(gui, 0, 0, "*", fungal_shift_scale)
-				GuiEndAutoBoxNinePiece(gui,0,0,0,0,0,empty_png,empty_png)
+				GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
 				GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_from_tooltip, material)
 				return
 			end
@@ -323,7 +332,7 @@ function gui_fungal_shift_display_from(gui, material)
 		gui_fungal_shift_add_color_potion_icon(gui, mat)
 	end
 
-	GuiEndAutoBoxNinePiece(gui,0,0,0,0,0,empty_png,empty_png)
+	GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
 	GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_from_tooltip, material)
 end
 --[[	Display To Tooltip]]
@@ -394,7 +403,7 @@ function gui_fungal_shift_display_to(gui, material)
 			else
 				GuiText(gui, 0, 0, _T.lamas_stats_flask, fungal_shift_scale)
 				GuiText(gui, 0, 0, "* ", fungal_shift_scale)
-				GuiEndAutoBoxNinePiece(gui,0,0,0,0,0,empty_png,empty_png)
+				GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
 				GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_to_tooltip, material)
 				return
 			end
@@ -406,7 +415,7 @@ function gui_fungal_shift_display_to(gui, material)
 	GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.to].name), fungal_shift_scale)
 	gui_fungal_shift_add_color_potion_icon(gui, material.to)
 	
-	GuiEndAutoBoxNinePiece(gui,0,0,0,0,0,empty_png,empty_png)
+	GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
 	GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_to_tooltip, material)
 	GuiText(gui, 0, 0, "", fungal_shift_scale)
 end

@@ -16,7 +16,7 @@ function gui_fungal_shift()
 	end
 	GuiBeginAutoBox(gui_menu)
 	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y, false, 0, 0) --layer1
-	local guiZ = 900
+	guiZ = 900
 	GuiZSet(gui_menu,guiZ)
 
 	GuiLayoutBeginHorizontal(gui_menu, 0, 0, false)
@@ -29,7 +29,7 @@ function gui_fungal_shift()
 		else
 			GuiTextGray(gui_menu, 0, 0, " <", fungal_shift_scale)
 		end
-		GuiText(gui_menu, 0, 0, show_shift_start_from + show_shifts_per_screen - 1, fungal_shift_scale)
+		GuiText(gui_menu, 0, 0, tostring(show_shift_start_from + show_shifts_per_screen - 1), fungal_shift_scale)
 		if (show_shift_start_from + show_shifts_per_screen) <= maximum_shifts then
 			if GuiButton(gui_menu, id(), 0, 0, " >", fungal_shift_scale) then
 				show_shift_start_from = show_shift_start_from + show_shifts_per_screen
@@ -84,6 +84,6 @@ function UpdateFungalVariables()
 	if (current_shifts > show_shifts_per_screen) or (future_shifts ~= nil and maximum_shifts > show_shifts_per_screen) then
 		show_arrows = true
 	else show_arrows = false end
-	fungal_shift_scale = ModSettingGet("lamas_stats.fungal_scale")
+	fungal_shift_scale = tonumber(ModSettingGet("lamas_stats.fungal_scale"))
 	gui_fungal_shift_get_shifts()
 end
