@@ -2,7 +2,6 @@ local original_material_properties = {}
 
 local function lamas_stats_make_custom_potions(name, material, png)
 	if ModImageMakeEditable ~= nil then -- needed to avoid error if this file is hotloaded after init
-		-- print(material)
 		local png_img_id, png_img_w, png_img_h = ModImageMakeEditable(png,0,0)
 		local material_img_id, material_img_w, material_img_h = ModImageMakeEditable(material,0,0)
 		local virtual_path = virtual_dir .. name .. ".png"
