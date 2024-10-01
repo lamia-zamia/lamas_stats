@@ -1,4 +1,4 @@
-dofile_once("mods/lamas_stats/translations/translation.lua")
+_T = dofile_once("mods/lamas_stats/translations/translation.lua")
 empty_png = "data/ui_gfx/empty.png"
 fungal_png = "data/ui_gfx/status_indicators/fungal_shift.png"
 potion_png = "data/items_gfx/potion.png"

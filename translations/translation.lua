@@ -1,4 +1,4 @@
-translations =
+local translations =
 {
 	["English"] = {
 		lamas_stat_return = "Return",
@@ -134,7 +134,7 @@ translations =
 	},
 }
 
-_T = setmetatable({}, 
+local _T = setmetatable({}, 
 {
 	__index = function(t, k)
 	local currentLang = GameTextGetTranslatedOrNot("$current_language")
@@ -155,3 +155,5 @@ _T = setmetatable({},
 	else return "ERROR" end
 	end
 })
+
+return _T
