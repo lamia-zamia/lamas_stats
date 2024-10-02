@@ -40,39 +40,6 @@ function ShowFungal(i, gui, id, x, y)
 	end
 end
 
-local function ShowKillTooltip(gui)
-	GuiText(gui, 0, 0, _T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
-	GuiText(gui, 0, 0, _T.lamas_stats_progress_kills_innocent .. " " .. GlobalsGetValue("HELPLESS_KILLS",0))
-end
-
-function ShowKill(i, gui, id, x, y)
-	local transString = _T.lamas_stats_progress_kills
-	local width = GuiGetTextDimensions(gui, transString)
-	PopulateStats(i, gui, stats_x, y, transString .. " " .. StatsGetValue("enemies_killed"))
-	if ModSettingGet("lamas_stats.stats_show_innocent") then
-		GuiTooltipLamas(gui, 0, 10, 800, ShowKillTooltip)
-	end
-	stats_x = stats_x + 30 + width
-end
-
-local function ShowTimeHoverTooltip(gui)		
-	local stats_list = {}
-	table.insert(stats_list, GameTextGetTranslatedOrNot("$menu_stats"))
-	table.insert(stats_list, GameTextGetTranslatedOrNot("$stat_time") .. " " .. StatsGetValue("playtime_str"))
-	table.insert(stats_list, GameTextGetTranslatedOrNot("$stat_places_visited") .. " " .. StatsGetValue("places_visited"))
-	table.insert(stats_list, GameTextGetTranslatedOrNot("$stat_gold") .. " " .. StatsGetValue("gold_all"))
-	table.insert(stats_list, GameTextGetTranslatedOrNot("$stat_items_found") .. " " .. StatsGetValue("items"))
-	table.insert(stats_list, _T.lamas_stats_hearts_find .. " " .. StatsGetValue("heart_containers"))
-	table.insert(stats_list, _T.lamas_stats_projectiles_shot .. " " .. StatsGetValue("projectiles_shot"))
-	table.insert(stats_list, _T.lamas_stats_kicks .. " " .. StatsGetValue("kicks"))
-	table.insert(stats_list, _T.lamas_stats_damage_taken .. " " .. math.ceil(StatsGetValue("damage_taken") * 25))
-	-- table.insert(stats_list, GameTextGetTranslatedOrNot("$action_teleportation") .. ": " .. StatsGetValue("teleports")) --this is bugged
-	
-	for _,text in ipairs(stats_list) do
-		GuiText(gui, 0, 0, text)
-	end
-end
-
 function ShowPlayerBiome(i, gui, id, x, y)
 	player_x, player_y = get_player_pos()
 	local biome = BiomeMapGetName(player_x, player_y)
@@ -158,8 +125,6 @@ function GUI_Stats(gui, id, x, y)
 end
 
 function StatsTableInsert()
-	table.insert(lamas_stats_main_menu_list,ShowStart)
-	if ModSettingGet("lamas_stats.stats_showkills") then table.insert(lamas_stats_main_menu_list,ShowKill) end
 	if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
 	if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end
 	if ModSettingGet("lamas_stats.stats_show_fungal_cooldown") then 

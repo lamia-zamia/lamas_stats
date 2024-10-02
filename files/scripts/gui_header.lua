@@ -2,7 +2,8 @@
 local header = {
 	header = {
 		pos_x = 13,
-		pos_y = 8
+		-- pos_y = 8
+		pos_y = 60
 	}
 }
 

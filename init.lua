@@ -1,3 +1,4 @@
+_T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation strings
 local gui = dofile_once("mods/lamas_stats/files/scripts/gui_main.lua") ---@type LS_Gui
 
 -- original_material_properties = {} --table of material names and colors, populates from materials.xml
