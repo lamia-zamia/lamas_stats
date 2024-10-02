@@ -17,7 +17,7 @@ end
 
 ---After OnModPostInit
 function OnMagicNumbersAndWorldSeedInitialized()
-	-- original_material_properties = dofile_once("mods/lamas_stats/files/material_graphics.lua")
+	gui.mat:parse()
 end
 
 ---Idk why it's called before initialized

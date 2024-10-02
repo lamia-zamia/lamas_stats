@@ -1,59 +1,11 @@
 _T = dofile_once("mods/lamas_stats/translations/translation.lua")
-empty_png = "data/ui_gfx/empty.png"
-fungal_png = "data/ui_gfx/status_indicators/fungal_shift.png"
 potion_png = "data/items_gfx/potion.png"
 pile_png = "mods/lamas_stats/files/pile.png"
 solid_static_png = "mods/lamas_stats/files/solid_static.png"
-screen_png = "mods/lamas_stats/files/9piece0_more_transparent.png"
 virtual_dir = "mods/lamas_stats/files/virtual/"
-active_mods = ModGetActiveModIDs()
-
-function GetDataFromFile(file, pattern)
-	local content = ModTextFileGetContent(file)
-	local match = content:match(pattern)
-	if not match then
-		print("Lama's Stats ERROR: Couldn't find a match \"" .. pattern .. "\" in " .. file)
-		return nil
-	end
-	local evalfile = virtual_dir .. "eval.lua"
-	ModTextFileSetContent(evalfile, "return " .. match)
-	local f, err = loadfile(evalfile)
-	if not f then
-		print("Lama's Stats ERROR: " .. err)
-		return nil
-	end
-	return f()
-end
-
-fungal_cooldown = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if frame < last_frame %+ (.-) and not debug_no_limits then")
-if not fungal_cooldown then
-	fungal_cooldown = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if frame < last_frame %+ (.-) then") or 0
-end
-maximum_shifts = GetDataFromFile("data/scripts/magic/fungal_shift.lua", "if iter >= (.-) and not debug_no_limits then") or 100
 
 function UpdateCommonVariables()
 	worldcomponent = EntityGetFirstComponent(GameGetWorldStateEntity(),"WorldStateComponent") --get component of worldstate
-	player = EntityGetWithTag("player_unit")[1]
-end
-
-function GetFungalCooldown()
-	local last_frame = tonumber(GlobalsGetValue("fungal_shift_last_frame", "-1"))
-	if last_frame == -1 then 
-		return 0 
-	end
-	
-	if tonumber(GlobalsGetValue("fungal_shift_iteration", "0")) >= maximum_shifts then
-		return 0
-	end
-
-	local frame = GameGetFrameNum()
-	
-	seconds = math.floor((fungal_cooldown - (frame - last_frame)) / 60)
-	if seconds > 0 then
-		return seconds
-	else 
-		return 0
-	end
 end
 
 function GuiTextGray(gui, x, y, text, scale)

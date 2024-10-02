@@ -1,9 +1,8 @@
----https://github.com/NathanSnail/luanxml
 ---@alias int integer
 ---@alias bool boolean
 ---@alias str string
 ---@alias token_type "string" | "<" | ">" | "/" | "="
----@alias error_type "missing_attribute_value" | "missing_element_close" | "missing_equals_sign" | "missing_element_name" | "missing_tag_open" | "mismatched_closing_tag" | "missing_token" | "missing_element"
+---@alias error_type "missing_attribute_value" | "missing_element_close" | "missing_equals_sign" | "missing_element_name" | "missing_tag_open" | "mismatched_closing_tag" | "missing_token" | "missing_element" | "duplicate_attribute"
 ---@alias error_fn fun(type: error_type, msg: str)
 
 ---@class (exact) token
@@ -16,7 +15,7 @@
 ---@field row int
 ---@field col int
 
----@class (exact) tokenizer
+---@class (exact) tokenizer: tokenizer_funcs
 ---@field data str
 ---@field cur_idx int
 ---@field cur_row int
@@ -25,28 +24,17 @@
 ---@field prev_col int
 ---@field len int
 
----@class (exact) parser
----@field tok tokenizer_blob
+---@class (exact) parser: parser_funcs
+---@field tok tokenizer
 ---@field errors error[]
 ---@field error_reporter error_fn
 
----@alias parser_blob parser_funcs | parser
----@alias tokenizer_blob tokenizer_funcs | tokenizer
----@alias element_blob element_funcs | element
-
----@class (exact) element
+---@class (exact) element: element_funcs
 ---@field content str[]?
----@field children element_blob[]
+---@field children element[]
 ---@field attr table<string, string>
 ---@field name str
 ---@field errors error[]
-
-local ffi = nil
-if require then
-	pcall(function()
-		ffi = require("ffi")
-	end)
-end
 
 ---@param str str
 ---@param start_idx int
@@ -93,18 +81,21 @@ end
 
 ---@class nxml
 local nxml = {}
+---@type fun(type: error_type, msg: str)?
+nxml.error_handler = nil
 
 ---@class tokenizer_funcs
 local TOKENIZER_FUNCS = {}
 local TOKENIZER_MT = {
 	__index = TOKENIZER_FUNCS,
-	__tostring = function(self) return "natif.nxml.tokenizer" end
+	__tostring = function(_)
+		return "natif.nxml.tokenizer"
+	end,
 }
 
 ---@param cstring str
----@param len int
----@return tokenizer_blob
-local function new_tokenizer(cstring, len)
+---@return tokenizer
+local function new_tokenizer(cstring)
 	---@type tokenizer
 	local tokenizer = {
 		data = cstring,
@@ -113,8 +104,10 @@ local function new_tokenizer(cstring, len)
 		cur_col = 1,
 		prev_row = 1,
 		prev_col = 1,
-		len = len
+		len = #cstring,
 	}
+	-- idk why luals doesn't like this
+	---@diagnostic disable-next-line: return-type-mismatch
 	return setmetatable(tokenizer, TOKENIZER_MT)
 end
 
@@ -123,7 +116,7 @@ local ws = {
 	[string.byte(" ")] = true,
 	[string.byte("\t")] = true,
 	[string.byte("\n")] = true,
-	[string.byte("\r")] = true
+	[string.byte("\r")] = true,
 }
 
 ---@param char int
@@ -145,14 +138,14 @@ local punct = {
 ---@return bool
 function TOKENIZER_FUNCS:is_whitespace_or_punctuation(char)
 	local n = tonumber(char)
-	--- We can disable here because is_whitespace(!int) -> false
+	-- We can disable here because is_whitespace(!int) -> false
 	---@diagnostic disable-next-line: param-type-mismatch
 	return self:is_whitespace(n) or punct[n] or false
 end
 
 ---@param n int? 1
 function TOKENIZER_FUNCS:move(n)
-	---@cast self tokenizer_blob
+	---@cast self tokenizer
 	n = n or 1
 	local prev_idx = self.cur_idx
 	self.cur_idx = self.cur_idx + n
@@ -173,10 +166,12 @@ end
 ---@param n int? 1
 ---@return int
 function TOKENIZER_FUNCS:peek(n)
-	---@cast self tokenizer_blob
+	---@cast self tokenizer
 	n = n or 1
 	local idx = self.cur_idx + n
-	if idx >= self.len then return 0 end
+	if idx >= self.len then
+		return 0
+	end
 
 	return str_index(self.data, idx)
 end
@@ -187,21 +182,25 @@ function TOKENIZER_FUNCS:match_string(str)
 	local len = #str
 
 	for i = 0, len - 1 do
-		if self:peek(i) ~= str_index(str, i) then return false end
+		if self:peek(i) ~= str_index(str, i) then
+			return false
+		end
 	end
 	return true
 end
 
 ---@return bool
 function TOKENIZER_FUNCS:eof()
-	---@cast self tokenizer_blob
+	---@cast self tokenizer
 	return self.cur_idx >= self.len
 end
 
 ---@return int
 function TOKENIZER_FUNCS:cur_char()
-	---@cast self tokenizer_blob
-	if self:eof() then return 0 end
+	---@cast self tokenizer
+	if self:eof() then
+		return 0
+	end
 	return str_index(self.data, self.cur_idx)
 end
 
@@ -242,11 +241,11 @@ end
 
 ---@return str
 function TOKENIZER_FUNCS:read_quoted_string()
-	---@cast self tokenizer_blob
+	---@cast self tokenizer
 	local start_idx = self.cur_idx
 	local len = 0
 
-	while not self:eof() and self:cur_char() ~= string.byte("\"") do
+	while not self:eof() and self:cur_char() ~= string.byte('"') do
 		len = len + 1
 		self:move()
 	end
@@ -257,7 +256,7 @@ end
 
 ---@return str
 function TOKENIZER_FUNCS:read_unquoted_string()
-	---@cast self tokenizer_blob
+	---@cast self tokenizer
 	local start_idx = self.cur_idx - 1 -- first char is move()d
 	local len = 1
 
@@ -274,7 +273,7 @@ local C_LT = string.byte("<")
 local C_GT = string.byte(">")
 local C_SLASH = string.byte("/")
 local C_EQ = string.byte("=")
-local C_QUOTE = string.byte("\"")
+local C_QUOTE = string.byte('"')
 
 ---@return token?
 function TOKENIZER_FUNCS:next_token()
@@ -283,7 +282,9 @@ function TOKENIZER_FUNCS:next_token()
 	self.prev_row = self.cur_row
 	self.prev_col = self.cur_col
 
-	if self:eof() then return nil end
+	if self:eof() then
+		return nil
+	end
 
 	local c = self:cur_char()
 	self:move()
@@ -321,19 +322,24 @@ end
 local PARSER_FUNCS = {}
 local PARSER_MT = {
 	__index = PARSER_FUNCS,
-	__tostring = function(self) return "natif.nxml.parser" end
+	__tostring = function(_)
+		return "natif.nxml.parser"
+	end,
 }
 
----@param tokenizer tokenizer_blob
----@param error_reporter fun(type, msg)?
+---@param tokenizer tokenizer
+---@param error_reporter fun(type: error_type, msg: str)?
 ---@return parser | parser_funcs parser
 local function new_parser(tokenizer, error_reporter)
 	---@type parser
 	local parser = {
 		tok = tokenizer,
 		errors = {},
-		error_reporter = error_reporter or function(type, msg) print("parser error: [" .. type .. "] " .. msg) end
+		error_reporter = error_reporter or function(type, msg)
+			print("parser error: [" .. type .. "] " .. msg)
+		end,
 	}
+	-- why does luals not care about here?
 	return setmetatable(parser, PARSER_MT)
 end
 
@@ -349,7 +355,7 @@ local XML_ELEMENT_MT = {
 ---@param type error_type
 ---@param msg str
 function PARSER_FUNCS:report_error(type, msg)
-	---@cast self parser_blob
+	---@cast self parser
 	self.error_reporter(type, msg)
 	---@type error
 	local error = { type = type, msg = msg, row = self.tok.prev_row, col = self.tok.prev_col }
@@ -359,7 +365,7 @@ end
 ---@param attr_table table<str, str>
 ---@param name str
 function PARSER_FUNCS:parse_attr(attr_table, name)
-	---@cast self parser_blob
+	---@cast self parser
 	local tok = self.tok:next_token()
 	if not tok then
 		self:report_error("missing_token", string.format("parsing attribute '%s' - did not find a token", name))
@@ -374,21 +380,32 @@ function PARSER_FUNCS:parse_attr(attr_table, name)
 		end
 
 		if tok.type == "string" then
+			if attr_table[name] ~= nil then
+				self:report_error(
+					"duplicate_attribute",
+					string.format("parsing attribute '%s' - attribute already exists", name)
+				)
+				return
+			end
 			attr_table[name] = tok.value
 		else
-			self:report_error("missing_attribute_value",
-				string.format("parsing attribute '%s' - expected a string after =, but did not find one", name))
+			self:report_error(
+				"missing_attribute_value",
+				string.format("parsing attribute '%s' - expected a string after =, but did not find one", name)
+			)
 		end
 	else
-		self:report_error("missing_equals_sign",
-			string.format("parsing attribute '%s' - did not find equals sign after attribute name", name))
+		self:report_error(
+			"missing_equals_sign",
+			string.format("parsing attribute '%s' - did not find equals sign after attribute name", name)
+		)
 	end
 end
 
 ---@param skip_opening_tag bool
----@return element_blob?
+---@return element?
 function PARSER_FUNCS:parse_element(skip_opening_tag)
-	---@cast self parser_blob
+	---@cast self parser
 	local tok
 	if not skip_opening_tag then
 		tok = self.tok:next_token()
@@ -438,7 +455,9 @@ function PARSER_FUNCS:parse_element(skip_opening_tag)
 		end
 	end
 
-	if self_closing then return elem end
+	if self_closing then
+		return elem
+	end
 
 	while true do
 		tok = self.tok:next_token()
@@ -451,28 +470,39 @@ function PARSER_FUNCS:parse_element(skip_opening_tag)
 
 				local end_name = self.tok:next_token()
 				if not end_name then
-					self:report_error("missing_token",
-						string.format("parsing element '%s' - did not find a token", elem_name))
+					self:report_error(
+						"missing_token",
+						string.format("parsing element '%s' - did not find a token", elem_name)
+					)
 					return
 				end
 				if end_name.type == "string" and end_name.value == elem_name then
 					local close_greater = self.tok:next_token()
 					if not close_greater then
-						self:report_error("missing_token",
-							string.format("parsing element '%s' - did not find a token", elem_name))
+						self:report_error(
+							"missing_token",
+							string.format("parsing element '%s' - did not find a token", elem_name)
+						)
 						return
 					end
 
 					if close_greater.type == ">" then
 						return elem
 					else
-						self:report_error("missing_element_close",
-							string.format("no closing '>' found for element '%s'", elem_name))
+						self:report_error(
+							"missing_element_close",
+							string.format("no closing '>' found for element '%s'", elem_name)
+						)
 					end
 				else
-					self:report_error("mismatched_closing_tag",
-						string.format("closing element is in wrong order - expected '</%s>', but instead got '%s'",
-							elem_name, tostring(end_name.value)))
+					self:report_error(
+						"mismatched_closing_tag",
+						string.format(
+							"closing element is in wrong order - expected '</%s>', but instead got '%s'",
+							elem_name,
+							tostring(end_name.value)
+						)
+					)
 				end
 				return elem
 			else
@@ -490,18 +520,18 @@ function PARSER_FUNCS:parse_element(skip_opening_tag)
 	end
 end
 
----@return element_blob[]
+---@return element[]
 function PARSER_FUNCS:parse_elements()
-	---@cast self parser_blob
+	---@cast self parser
 	local tok = self.tok:next_token()
-	---@type element_blob[]
+	---@type element[]
 	local elems = {}
 	local elems_i = 1
 
 	while tok and tok.type == "<" do
 		local next_element = self:parse_element(true)
 		if not next_element then
-			self.error_reporter("missing_element", "parse_element returned nil while parsing elements")
+			self:report_error("missing_element", "parse_element returned nil while parsing elements")
 			return elems
 		end
 		elems[elems_i] = next_element
@@ -519,12 +549,143 @@ local function is_punctuation(str)
 	return str == "/" or str == "<" or str == ">" or str == "="
 end
 
+---Copies attributes from `source` to `dest` if dest doesn't have a value
+---@param dest element
+---@param source element
+local function merge_element(dest, source)
+	for attr_name, attr_value in pairs(source.attr) do
+		if dest:get(attr_name) == nil then
+			dest:set(attr_name, attr_value)
+		end
+	end
+end
+
+---Merge the content of the base file into the child tree
+---@param root element
+---@param base_element element
+---@param base_file element
+local function merge_xml(root, base_element, base_file)
+	local index = 1
+	local counts = {}
+	for elem in base_file:each_child() do
+		if not counts[elem.name] then
+			counts[elem.name] = 0
+		end
+		counts[elem.name] = counts[elem.name] + 1
+		local modifications = base_element:nth_of(elem.name, counts[elem.name])
+		if modifications then
+			merge_element(modifications, elem)
+			--[[if #elem.children > 0 then
+				merge_xml(root, base, elem)
+			end]]
+		else
+			table.insert(base_element.children, index, elem)
+			index = index + 1
+		end
+	end
+
+	for attr_name, attr_value in pairs(base_file.attr) do
+		if not root:get(attr_name) then
+			root:set(attr_name, attr_value)
+		elseif attr_name == "tags" then
+			local tags = root:get("tags") .. "," .. attr_value
+			local tag_list = {}
+			local tag_table = {}
+			for tag in tags:gmatch("([^,]+)") do
+				if tag ~= "" and not tag_table[tag] then
+					table.insert(tag_list, tag)
+					tag_table[tag] = 1
+				end
+			end
+			tags = table.concat(tag_list, ",")
+			root:set(attr_name, tags)
+		end
+	end
+
+	--[[
+	TODO:
+	local to_remove = {}
+	for idx, elem in ipairs(parent.children) do
+		if elem.attr._remove_from_base == "1" then
+			table.insert(to_remove, 1, idx)
+		end
+	end
+	for _, idx in ipairs(to_remove) do
+		table.remove(parent.children, idx)
+	end
+]]
+end
+
+---Expands the Base files for an entity xml
+---**WARN: This is not 100% identical to Nollas implementation, _remove_from_base does not work**
+---
+---@param read (fun(path: str): str)? `ModTextFileGetContent`
+---@param exists (fun(path: str): bool)? `ModDoesFileExist`
+function XML_ELEMENT_FUNCS:expand_base(read, exists)
+	---@cast self element
+	if self.name ~= "Entity" then
+		return
+	end
+	---@cast self element
+	-- thanks Kaedenn for writing this!
+	read = read or ModTextFileGetContent
+	exists = exists or ModDoesFileExist
+	local base_tag
+	while true do
+		base_tag = self:first_of("Base")
+		if not base_tag then
+			break
+		end
+		local file = base_tag:get("file")
+		if file and exists(file) then
+			local root_xml = nxml.parse_file(file, read)
+
+			root_xml:expand_base(read, exists)
+
+			merge_xml(self, base_tag, root_xml)
+			self:lift_child(base_tag)
+		else
+			self:remove_child(base_tag)
+		end
+	end
+	for elem in self:each_child() do
+		elem:expand_base(read, exists)
+	end
+end
+
+---@param defaults table<string, table<string, any>>
+function XML_ELEMENT_FUNCS:apply_defaults(defaults)
+	---@cast self element
+	local apply = defaults[self.name]
+	for child in self:each_child() do
+		child:apply_defaults(defaults)
+	end
+	if not apply then
+		return
+	end
+	for k, v in pairs(apply) do
+		if self:get(k) == nil then
+			self:set(k, v)
+		end
+	end
+end
+
+---Returns the content inside an element.
+---Example:
+---```xml
+---<Hi>Content</Hi>
+---```
+---Here `:text()` is "Content"
 ---@return str
 function XML_ELEMENT_FUNCS:text()
-	---@cast self element_blob
-	if self.content == nil then return "" end
+	---@cast self element
+	if self.content == nil then
+		return ""
+	end
 	local content_count = #self.content
-	if content_count == 0 then return "" end
+	if content_count == 0 then
+		return ""
+	end
 
 	local text = self.content[1]
 	for i = 2, content_count do
@@ -541,22 +702,23 @@ function XML_ELEMENT_FUNCS:text()
 	return text
 end
 
----@param child element_blob
+---@param child element
 function XML_ELEMENT_FUNCS:add_child(child)
 	self.children[#self.children + 1] = child
 end
 
----@param children element_blob[]
+---@param children element[]
 function XML_ELEMENT_FUNCS:add_children(children)
-	local children_i = #self.children + 1
-	for i = 1, #children do
-		self.children[children_i] = children[i]
-		children_i = children_i + 1
+	---@cast self element
+	for _, child in ipairs(children) do
+		self:add_child(child)
 	end
 end
 
----@param child element_blob
+---Removes the given child, note that this is exact equality not structural equality so copies will not be considered equal.
+---@param child element
 function XML_ELEMENT_FUNCS:remove_child(child)
+	---@cast self element
 	for i = 1, #self.children do
 		if self.children[i] == child then
 			table.remove(self.children, i)
@@ -565,39 +727,80 @@ function XML_ELEMENT_FUNCS:remove_child(child)
 	end
 end
 
+---Removes the given child, but adds its children to this element
+---@param child element
+function XML_ELEMENT_FUNCS:lift_child(child)
+	---@cast self element
+	for k, v in ipairs(self.children) do
+		if v == child then
+			local dst_index = k + 1
+			for elem in child:each_child() do
+				table.insert(self.children, dst_index, elem)
+				dst_index = dst_index + 1
+			end
+			table.remove(self.children, k)
+			break
+		end
+	end
+end
+
 ---@param index int
 function XML_ELEMENT_FUNCS:remove_child_at(index)
+	---@cast self element
 	table.remove(self.children, index)
 end
 
 function XML_ELEMENT_FUNCS:clear_children()
-	---@cast self element_blob
+	---@cast self element
 	self.children = {}
 end
 
 function XML_ELEMENT_FUNCS:clear_attrs()
+	---@cast self element
 	self.attr = {}
 end
 
+---Returns the first child element with the given name and its index.
 ---@param element_name str
----@return element_blob?
+---@return element?, int?
 function XML_ELEMENT_FUNCS:first_of(element_name)
-	local i = 0
-	local n = #self.children
-
-	while i < n do
-		i = i + 1
-		local c = self.children[i]
-
-		if c.name == element_name then return c end
+	---@cast self element
+	for k, v in ipairs(self.children) do
+		if v.name == element_name then
+			return v, k
+		end
 	end
-
-	return nil
 end
 
+---Returns the nth child element with the given name and its index.
 ---@param element_name str
----@return fun(): element_blob?
+---@param n int
+---@return element?, int?
+function XML_ELEMENT_FUNCS:nth_of(element_name, n)
+	---@cast self element
+	for k, v in ipairs(self.children) do
+		if v.name ~= element_name then
+			goto continue
+		end
+		n = n - 1
+		if n == 0 then
+			return v, k
+		end
+		::continue::
+	end
+end
+
+---Iterate over each child with the given name, effectively a filter.
+---Use like:
+---```lua
+---for dmc in entity:each_of("DamageModelComponent") do
+---	dmc:set("hp", 5)
+---end
+---```
+---@param element_name str
+---@return fun(): element?
 function XML_ELEMENT_FUNCS:each_of(element_name)
+	---@cast self element
 	local i = 1
 	local n = #self.children
 
@@ -612,9 +815,11 @@ function XML_ELEMENT_FUNCS:each_of(element_name)
 	end
 end
 
+---Collects all children with the given name into a table.
 ---@param element_name str
----@return element_blob[]
+---@return element[]
 function XML_ELEMENT_FUNCS:all_of(element_name)
+	---@cast self element
 	local table = {}
 	local i = 1
 	for elem in self:each_of(element_name) do
@@ -624,8 +829,15 @@ function XML_ELEMENT_FUNCS:all_of(element_name)
 	return table
 end
 
----@return fun(): element_blob
+---Iterate over each child of the xml element, use like:
+---```lua
+---for child in elem:each_child() do
+---	print(child.name)
+---end
+---```
+---@return fun(): element?
 function XML_ELEMENT_FUNCS:each_child()
+	---@cast self element
 	local i = 0
 	local n = #self.children
 
@@ -637,12 +849,72 @@ function XML_ELEMENT_FUNCS:each_child()
 	end
 end
 
----@param data str
----@return element_blob
-function nxml.parse(data)
-	local data_len = #data
-	local tok = new_tokenizer(data, data_len)
-	local parser = new_parser(tok)
+---@param value str | bool
+---@return str
+local function attr_value_to_str(value)
+	local t = type(value)
+	if t == "string" then
+		return value
+	end
+	if t == "boolean" then
+		return value and "1" or "0"
+	end
+
+	return tostring(value)
+end
+
+---Gets the given attribute, note get's value is probably stringified and not the true value.
+---@param attr str
+---@return str?
+function XML_ELEMENT_FUNCS:get(attr)
+	---@cast self element
+	return self.attr[attr]
+end
+
+---Sets the given attribute, make sure your type can be stringified.
+---@param attr str
+---@param value any
+function XML_ELEMENT_FUNCS:set(attr, value)
+	---@cast self element
+	self.attr[attr] = attr_value_to_str(value)
+end
+
+---Allows you to have an xml element which represents a file, with changes made in the xml element reflecting in the file when you exit the `edit_file()` scope.
+---Use like:
+---```lua
+---for content in nxml.edit_file("data/entities/animals/boss_centipede/boss_centipede.xml") do
+---	content:first_of("DamageModelComponent"):set("hp", 2)
+---end
+----- Kolmis file is edited once we exit the for loop.
+---```
+---@param file str
+---@param read (fun(filename: str): str)? `ModTextFileGetContent`
+---@param write fun(filename: str, content: str)? `ModTextFileSetContent`
+---@return fun(): element?
+function nxml.edit_file(file, read, write)
+	read = read or ModTextFileGetContent
+	write = write or ModTextFileSetContent
+	local first_time = true
+	local tree = nxml.parse_file(file, read)
+	return function()
+		if not first_time then
+			write(file, tostring(tree))
+			return
+		end
+		first_time = false
+		return tree
+	end
+end
+
+---Parses a file. This is noita specific as it uses `ModTextFileGetContent`, but if you pass your own read function you can use it in a standalone context.
+---@param file str
+---@param read (fun(filename: str): str)? `ModTextFileGetContent`
+---@return element
+function nxml.parse_file(file, read)
+	read = read or ModTextFileGetContent
+	local content = read(file)
+	local tok = new_tokenizer(content)
+	local parser = new_parser(tok, nxml.error_handler)
 
 	local elem = parser:parse_element(false)
 
@@ -653,12 +925,34 @@ function nxml.parse(data)
 	return elem
 end
 
+---The primary nxml function, converts nxml source into an element.
+---Note it is the content not the filename, use `nxml.parse_file()` to parse by filename.
 ---@param data str
----@return element_blob[]
+---@return element
+function nxml.parse(data)
+	local tok = new_tokenizer(data)
+	local parser = new_parser(tok, nxml.error_handler)
+
+	local elem = parser:parse_element(false)
+
+	if not elem or (elem.errors and #elem.errors > 0) then
+		error("parser encountered errors")
+	end
+
+	return elem
+end
+
+---I don't know what this does. Maybe it parses an xml file like:
+---```xml
+---<A />
+---<B />
+---<C />
+---```
+---@param data str
+---@return element[]
 function nxml.parse_many(data)
-	local data_len = #data
-	local tok = new_tokenizer(data, data_len)
-	local parser = new_parser(tok)
+	local tok = new_tokenizer(data)
+	local parser = new_parser(tok, nxml.error_handler)
 
 	local elems = parser:parse_elements()
 
@@ -673,35 +967,30 @@ function nxml.parse_many(data)
 	return elems
 end
 
+---Constructs an element with the given values, just a wrapper to set the metatable really.
 ---@param name str
 ---@param attrs table<str, str>? {}
----@return element_blob
-function nxml.new_element(name, attrs)
+---@param children element[]? {}
+---@return element
+function nxml.new_element(name, attrs, children)
 	---@type element
 	local element = {
 		name = name,
 		attr = attrs or {},
-		children = {},
+		children = children or {},
 		errors = {},
-		content = nil
+		content = nil,
 	}
+	---@diagnostic disable-next-line: return-type-mismatch
 	return setmetatable(element, XML_ELEMENT_MT)
 end
 
----@param value str | bool
----@return str
-local function attr_value_to_str(value)
-	local t = type(value)
-	if t == "string" then return value end
-	if t == "boolean" then return value and "1" or "0" end
-
-	return tostring(value)
-end
-
----@param elem element_blob
+---Generally you should do tostring(elem) instead of calling this function.
+---This function is just how it's implemented and is exposed for more customisation.
+---@param elem element
 ---@param packed bool
 ---@param indent_char str? \t
----@param cur_indent str? ""
+---@param cur_indent str? '""'
 ---@return str
 function nxml.tostring(elem, packed, indent_char, cur_indent)
 	indent_char = indent_char or "\t"
@@ -710,7 +999,7 @@ function nxml.tostring(elem, packed, indent_char, cur_indent)
 	local self_closing = #elem.children == 0 and (not elem.content or #elem.content == 0)
 
 	for k, v in pairs(elem.attr) do
-		s = s .. " " .. k .. "=\"" .. attr_value_to_str(v) .. "\""
+		s = s .. " " .. k .. '="' .. attr_value_to_str(v) .. '"'
 	end
 
 	if self_closing then
@@ -723,16 +1012,24 @@ function nxml.tostring(elem, packed, indent_char, cur_indent)
 	local deeper_indent = cur_indent .. indent_char
 
 	if elem.content and #elem.content ~= 0 then
-		if not packed then s = s .. "\n" .. deeper_indent end
+		if not packed then
+			s = s .. "\n" .. deeper_indent
+		end
 		s = s .. elem:text()
 	end
 
-	if not packed then s = s .. "\n" end
+	if not packed then
+		s = s .. "\n"
+	end
 
-	for i, v in ipairs(elem.children) do
-		if not packed then s = s .. deeper_indent end
+	for _, v in ipairs(elem.children) do
+		if not packed then
+			s = s .. deeper_indent
+		end
 		s = s .. nxml.tostring(v, packed, indent_char, deeper_indent)
-		if not packed then s = s .. "\n" end
+		if not packed then
+			s = s .. "\n"
+		end
 	end
 
 	s = s .. cur_indent .. "</" .. elem.name .. ">"

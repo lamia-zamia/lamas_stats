@@ -9,6 +9,8 @@ local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type U
 ---@field private player_y number
 ---@field private fungal_cd number
 ---@field private z number
+---@field private sp shift_predictor
+---@field mat material_parser
 local gui = UI_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
@@ -18,6 +20,8 @@ gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.show = false
 gui.z = 900
+gui.sp = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua")
+gui.mat = dofile_once("mods/lamas_stats/files/scripts/material_parser.lua")
 
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_header.lua",
@@ -60,6 +64,8 @@ end
 
 ---Gets initial data
 function gui:Init()
+	self.mat:convert()
+	self.sp:parse()
 	self:GetSettings()
 	self.show = self.mod:GetSettingBoolean("enabled_at_start")
 	self.menu.opened = self.mod:GetSettingBoolean("lamas_menu_enabled_default")

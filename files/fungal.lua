@@ -78,12 +78,3 @@ function gui_fungal_shift_get_shifts()
 		future_shifts = nil
 	end
 end
-
-function UpdateFungalVariables()
-	show_shifts_per_screen = ModSettingGet("lamas_stats.fungal_shift_max")
-	if (current_shifts > show_shifts_per_screen) or (future_shifts ~= nil and maximum_shifts > show_shifts_per_screen) then
-		show_arrows = true
-	else show_arrows = false end
-	fungal_shift_scale = tonumber(ModSettingGet("lamas_stats.fungal_scale")) or 1
-	gui_fungal_shift_get_shifts()
-end
