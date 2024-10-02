@@ -23,7 +23,9 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_header.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_helper.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_menu.lua",
-	"mods/lamas_stats/files/scripts/gui/gui_stats.lua"
+	"mods/lamas_stats/files/scripts/gui/gui_stats.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_fungal.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_kys.lua"
 }
 
 for i = 1, #modules do
@@ -52,6 +54,8 @@ function gui:GetSettings()
 	self:MenuGetSettings()
 	self:StatsGetSettings()
 	self:HeaderGetSettings()
+	self:KysGetSettings()
+	self.scroll.height_max = 200
 end
 
 ---Gets initial data

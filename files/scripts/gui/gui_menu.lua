@@ -5,11 +5,11 @@
 ---@field pos_x number
 ---@field pos_y number
 ---@field opened boolean
----@field header string
----@field fungal boolean
----@field perks boolean
----@field kys boolean
----@field current_window function|nil
+---@field package header string
+---@field package fungal boolean
+---@field package perks boolean
+---@field package kys boolean
+---@field package current_window function|nil
 
 ---@class (exact) LS_Gui
 ---@field private menu LS_Gui_menu
@@ -27,6 +27,13 @@ local menu = {
 	}
 }
 
+---Sets width if it's higher than current width
+---@private
+---@param value number
+function menu:MenuSetWidth(value)
+	self.menu.width = math.max(self.menu.width, value)
+end
+
 ---Adds clickable button
 ---@param text string
 ---@param tooltip_text string
@@ -34,7 +41,7 @@ local menu = {
 function menu:MenuAddButton(text, tooltip_text, fn)
 	if self.menu.current_window == fn then
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, false)
-		if self:IsLeftClicked() then
+		if self:IsHovered() and self:IsLeftClicked() then
 			self.menu.current_window = nil
 		end
 	elseif self:IsButtonClicked(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, tooltip_text) then
@@ -50,14 +57,15 @@ function menu:MenuDraw()
 	self.menu.pos_y = self.menu.start_y + 15
 	self.menu.width = self:GetTextDimension(self.menu.header)
 
-	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, "", print) end
+	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, "", self.FungalScrollbox) end
 	if self.menu.perks then self:MenuAddButton(_T.Perks, "", self.mod.GetGlobalNumber) end
-	if self.menu.kys then self:MenuAddButton(_T.KYS_Suicide, "", self.mod.GetSettingBoolean) end
+	if self.menu.kys then self:MenuAddButton(_T.KYS_Suicide, "", self.KysDraw) end
 
-	self.menu.width = math.max(self.menu.width, self.menu.pos_x - self.menu.start_x - 9)
+	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
 	self.menu.pos_y = self.menu.pos_y + 15
 
-	if self.menu.current_window then self.menu:current_window() end
+	self.menu.pos_x = self.menu.start_x
+	if self.menu.current_window then self.menu.current_window(self) end
 
 	self:Draw9Piece(self.menu.start_x - 6, self.menu.start_y - 1, self.z + 50, self.menu.width + 12,
 		self.menu.pos_y - self.menu.start_y + 2)
