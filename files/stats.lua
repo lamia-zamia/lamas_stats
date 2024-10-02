@@ -73,14 +73,6 @@ local function ShowTimeHoverTooltip(gui)
 	end
 end
 
-function ShowTime(i, gui, id, x, y)
-	local transString = GameTextGetTranslatedOrNot("$stat_time")
-	local width = GuiGetTextDimensions(gui, transString)
-	PopulateStats(i, gui, stats_x, y, transString .. " " .. StatsGetValue("playtime_str"))
-	GuiTooltipLamas(gui, 0, 10, 800, ShowTimeHoverTooltip)
-	stats_x = stats_x + 44 + width
-end
-
 function ShowPlayerBiome(i, gui, id, x, y)
 	player_x, player_y = get_player_pos()
 	local biome = BiomeMapGetName(player_x, player_y)
@@ -167,7 +159,6 @@ end
 
 function StatsTableInsert()
 	table.insert(lamas_stats_main_menu_list,ShowStart)
-	if ModSettingGet("lamas_stats.stats_showtime") then table.insert(lamas_stats_main_menu_list,ShowTime) end
 	if ModSettingGet("lamas_stats.stats_showkills") then table.insert(lamas_stats_main_menu_list,ShowKill) end
 	if ModSettingGet("lamas_stats.stats_show_player_pos") then table.insert(lamas_stats_main_menu_list, ShowPlayerPos) end
 	if ModSettingGet("lamas_stats.stats_show_player_biome") then table.insert(lamas_stats_main_menu_list, ShowPlayerBiome) end

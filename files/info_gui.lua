@@ -14,18 +14,6 @@ if ModSettingGet("lamas_stats.lamas_menu_enabled_default") then
 end
 
 function gui_top_main_display_loop()
-	local gui_id = 100
-	local function id()
-		gui_id = gui_id + 1
-		return gui_id
-	end
-	
-	GuiZSet(gui_top,800)
-	GuiLayoutBeginHorizontal(gui_top, stat_pos_x, stat_pos_y, false, 0, 0)
-	if GuiButton(gui_top, id(), 0, 0, top_text) then
-		ToggleMenu()
-	end
-	GuiLayoutEnd(gui_top)
 	if ModSettingGet("lamas_stats.stats_position") == "on top" then
 		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_top)
 		GUI_Stats(gui_top, id(), x+20, y)
@@ -33,15 +21,6 @@ function gui_top_main_display_loop()
 end
 
 function gui_menu_main_display_loop()
-	local gui_id = 100
-	local function id()
-		gui_id = gui_id + 1
-		return gui_id
-	end
-	GuiLayoutBeginVertical(gui_menu, menu_pos_x, menu_pos_y) --layer1
-	GuiZSet(gui_menu,800)
-	GuiText(gui_menu, 0, 0, ModSettingGet("lamas_stats.lamas_menu_header"))
-
 	if ModSettingGet("lamas_stats.stats_position") == "merged" then
 		GuiText(gui_menu,0,0," ")
 		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_menu)
@@ -54,19 +33,6 @@ function gui_menu_main_display_loop()
 		if GuiButton(gui_menu, id(), 0, 0, button.ui_name) then
 			button.action()
 		end
-	end
-	GuiLayoutEnd(gui_menu) --layer1
-end
-
-function ToggleMenu()
-	if menu_opened then
-		gui_menu_function = nil
-		top_text = "[L]"
-		menu_opened = false
-	else
-		gui_menu_function = gui_menu_main_display_loop
-		top_text = "[*]"
-		menu_opened = true
 	end
 end
 
@@ -157,35 +123,6 @@ local function LamasStatsApplySettings()
 	PopulateButtons()
 	if ModSettingGet("lamas_stats.enable_fungal_recipes") then
 		APLC_table = dofile_once("mods/lamas_stats/files/APLC.lua")
-	end
-end
-
-function GuiStartFrameWithChecks(gui_frame, gui_function)
-	if player then --if player is even alive
-		if gui_frame ~= nil then GuiStartFrame(gui_frame) end
-		if gui_function ~= nil and GameIsInventoryOpen() == false and lamas_stats_menu_enabled then
-			gui_function()
-		end
-	end
-end
-
---[[		main loop		]]
-function lamas_stats_main_loop() 
-	--hotkey
-	if InputIsKeyJustDown(ModSettingGet("lamas_stats.input_key")) then 
-		lamas_stats_menu_enabled = not lamas_stats_menu_enabled
-	end
-	player = EntityGetWithTag("player_unit")[1]
-	--overlay
-	GuiStartFrameWithChecks(gui_top, gui_top_function)
-
-	--menu
-	GuiStartFrameWithChecks(gui_menu, gui_menu_function)
-
-	--apply settings
-	if ModSettingGet("lamas_stats.setting_changed") then
-		LamasStatsApplySettings()
-		ModSettingSet("lamas_stats.setting_changed", false)
 	end
 end
 
