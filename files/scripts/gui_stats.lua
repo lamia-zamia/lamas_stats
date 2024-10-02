@@ -40,6 +40,18 @@ function stats:IfStatEntryHovered(width, tooltip)
 	end
 end
 
+---Draws biome stat
+---@private
+function stats:StatsBiome()
+	if not self.stats.biome then return end
+	local biome = BiomeMapGetName(self.player_x, self.player_y)
+	if biome == "_EMPTY_" then biome = _T.lamas_stats_unknown end
+	local text = _T.lamas_stats_location .. ": " .. self:Locale(biome)
+	local text_width = self:GetTextDimension(text)
+	self:Text(self.stats.x, self.stats.y, text)
+	self.stats.x = self.stats.x + text_width + 10
+end
+
 ---Draws position stat tooltip
 ---@private
 function stats:StatsPositionTooltip()
@@ -79,10 +91,15 @@ function stats:StatsPosition()
 	self:Text(self.stats.x, self.stats.y, position_string)
 
 	if self.stats.position_toggle then
+		local x = "X:" .. math.floor(self.player_x)
+		local y = "Y:" .. math.floor(self.player_y)
+		local x_dim = math.ceil(self:GetTextDimension(x) / 10) * 10
+		local y_dim = math.ceil(self:GetTextDimension(y) / 10) * 10
+		local stat_max = math.max(x_dim, y_dim)
 		self:Text(self.stats.x + offset, self.stats.y, "X:" .. math.floor(self.player_x) .. ",")
-		offset = offset + 50
+		offset = offset + stat_max + 10
 		self:Text(self.stats.x + offset, self.stats.y, "Y:" .. math.floor(self.player_y))
-		offset = offset + 50
+		offset = offset + stat_max
 	end
 
 	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, offset, 11) and self:IsLeftClicked() then
@@ -160,6 +177,7 @@ function stats:StatsDraw()
 		self.StatsTime,
 		self.StatsKills,
 		self.StatsPosition,
+		self.StatsBiome
 	}
 
 	local count = #stat_fns
