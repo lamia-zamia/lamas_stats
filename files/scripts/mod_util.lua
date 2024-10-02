@@ -25,4 +25,12 @@ function util:GetSettingBoolean(id)
 	return ModSettingGet(self.mod_prfx .. id) == true
 end
 
+---Returns global number
+---@param id string
+---@param default? number
+---@return number
+function util:GetGlobalNumber(id, default)
+	return tonumber(GlobalsGetValue(id, tostring(default or 0))) or 0
+end
+
 return util
