@@ -7,6 +7,7 @@ local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type U
 ---@field player entity_id|nil
 ---@field player_x number
 ---@field player_y number
+---@field fungal_cd number
 local gui = UI_class:New()
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.show = false
@@ -31,16 +32,9 @@ end
 function gui:FetchData()
 	self.player_x, self.player_y = EntityGetTransform(self.player)
 	if GameGetFrameNum() % 300 == 0 then
-		local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
-		if player_par_x < self.stats.position_pw_east then
-			self.stats.position_pw_east = player_par_x
-			GlobalsSetValue("lamas_stats_farthest_east", tostring(player_par_x))
-		end
-		if player_par_x > self.stats.position_pw_west then
-			self.stats.position_pw_west = player_par_x
-			GlobalsSetValue("lamas_stats_farthest_west", tostring(player_par_x))
-		end
+		self:ScanPWPosition()
 	end
+	self.fungal_cd = self:GetFungalShiftCooldown()
 end
 
 ---Fetches settings

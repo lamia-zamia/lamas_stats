@@ -36,20 +36,36 @@ local stats = {
 function stats:IfStatEntryHovered(width, tooltip)
 	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, width, 11, true) then
 		self:ShowTooltipCenteredX(0, 20, tooltip)
-		-- self:Color(1, 1, 0.9)
 	end
+end
+
+---Draws fungal cooldown if in cooldown
+---@private
+---@return boolean
+function stats:StatsFungal()
+	if not self.stats.shift_cd or self.fungal_cd <= 0 then return false end
+	self:AddOptionForNext(self.c.options.NonInteractive)
+	self:Image(self.stats.x - 3, self.stats.y - 3, "data/ui_gfx/status_indicators/fungal_shift.png")
+	if self:IsHoverBoxHovered(self.stats.x - 3, self.stats.y - 3, 13, 13, true) then
+		self.tooltip_reset = false
+		self:ShowTooltipTextCenteredX(0, 23, _T.lamas_stats_fungal_cooldown .. " " .. self.fungal_cd)
+	end
+	self.stats.x = self.stats.x + 15
+	return true
 end
 
 ---Draws biome stat
 ---@private
+---@return boolean
 function stats:StatsBiome()
-	if not self.stats.biome then return end
+	if not self.stats.biome then return false end
 	local biome = BiomeMapGetName(self.player_x, self.player_y)
 	if biome == "_EMPTY_" then biome = _T.lamas_stats_unknown end
 	local text = _T.lamas_stats_location .. ": " .. self:Locale(biome)
 	local text_width = self:GetTextDimension(text)
 	self:Text(self.stats.x, self.stats.y, text)
 	self.stats.x = self.stats.x + text_width + 10
+	return true
 end
 
 ---Draws position stat tooltip
@@ -83,22 +99,21 @@ end
 
 ---Draws position stat
 ---@private
+---@return boolean
 function stats:StatsPosition()
-	if not self.stats.position then return end
+	if not self.stats.position then return false end
 	local position_string = _T.lamas_stats_position
 	local position_string_width = self:GetTextDimension(position_string)
 	local offset = position_string_width + 5
 	self:Text(self.stats.x, self.stats.y, position_string)
 
 	if self.stats.position_toggle then
-		local x = "X:" .. math.floor(self.player_x)
-		local y = "Y:" .. math.floor(self.player_y)
-		local x_dim = math.ceil(self:GetTextDimension(x) / 10) * 10
-		local y_dim = math.ceil(self:GetTextDimension(y) / 10) * 10
-		local stat_max = math.max(x_dim, y_dim)
-		self:Text(self.stats.x + offset, self.stats.y, "X:" .. math.floor(self.player_x) .. ",")
-		offset = offset + stat_max + 10
-		self:Text(self.stats.x + offset, self.stats.y, "Y:" .. math.floor(self.player_y))
+		local x = tostring(math.floor(self.player_x))
+		local y = tostring(math.floor(self.player_y))
+		local stat_max = math.max(#x, #y) * 8
+		self:Text(self.stats.x + offset, self.stats.y, "X:" .. x .. ",")
+		offset = offset + stat_max + 5
+		self:Text(self.stats.x + offset, self.stats.y, "Y:" .. y)
 		offset = offset + stat_max
 	end
 
@@ -111,6 +126,7 @@ function stats:StatsPosition()
 	end
 
 	self.stats.x = self.stats.x + offset
+	return true
 end
 
 ---Draws kills stat tooltip
@@ -122,8 +138,9 @@ end
 
 ---Draws kills stat
 ---@private
+---@return boolean
 function stats:StatsKills()
-	if not self.stats.kills then return end
+	if not self.stats.kills then return false end
 	local kill_string = _T.lamas_stats_progress_kills
 	local kill_string_width = self:GetTextDimension(kill_string)
 	local offset = kill_string_width + 30
@@ -131,6 +148,7 @@ function stats:StatsKills()
 	self:Text(self.stats.x, self.stats.y, kill_string .. " " .. StatsGetValue("enemies_killed"))
 
 	self.stats.x = self.stats.x + offset
+	return true
 end
 
 ---Draws time stat tooltip
@@ -156,8 +174,9 @@ end
 
 ---Draws time stat
 ---@private
+---@return boolean
 function stats:StatsTime()
-	if not self.stats.time then return end
+	if not self.stats.time then return false end
 	local time_string = self:Locale("$stat_time ")
 	local time_string_width = self:GetTextDimension(time_string)
 	local time = StatsGetValue("playtime_str")
@@ -165,6 +184,7 @@ function stats:StatsTime()
 	self:IfStatEntryHovered(offset, self.StatsTimeTooltip)
 	self:Text(self.stats.x, self.stats.y, time_string .. time)
 	self.stats.x = self.stats.x + offset
+	return true
 end
 
 ---Draws stats
@@ -174,6 +194,7 @@ function stats:StatsDraw()
 	self.stats.y = self.header.pos_y
 
 	local stat_fns = {
+		self.StatsFungal,
 		self.StatsTime,
 		self.StatsKills,
 		self.StatsPosition,
@@ -182,8 +203,8 @@ function stats:StatsDraw()
 
 	local count = #stat_fns
 	for i = 1, count do
-		stat_fns[i](self)
-		if i < count then
+		local shown = stat_fns[i](self)
+		if shown and i < count then
 			self:Text(self.stats.x, self.stats.y, "|")
 			self.stats.x = self.stats.x + 5
 		end
