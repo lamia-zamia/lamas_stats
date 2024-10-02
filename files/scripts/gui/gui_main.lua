@@ -1,16 +1,23 @@
 local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type UI_class
 
 ---@class (exact) LS_Gui:UI_class
----@field mod mod_util
----@field show boolean
----@field hotkey number
----@field player entity_id|nil
----@field player_x number
----@field player_y number
----@field fungal_cd number
+---@field private mod mod_util
+---@field private show boolean
+---@field private hotkey number
+---@field private player entity_id|nil
+---@field private player_x number
+---@field private player_y number
+---@field private fungal_cd number
+---@field private z number
 local gui = UI_class:New()
+gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
+gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
+gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
+gui.scroll.scroll_img_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.png"
+gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.show = false
+gui.z = 900
 
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_header.lua",
@@ -44,6 +51,14 @@ function gui:GetSettings()
 	self.stats.position_pw_east = self.mod:GetGlobalNumber("lamas_stats_farthest_east")
 	self:MenuGetSettings()
 	self:StatsGetSettings()
+	self:HeaderGetSettings()
+end
+
+---Gets initial data
+function gui:Init()
+	self:GetSettings()
+	self.show = self.mod:GetSettingBoolean("enabled_at_start")
+	self.menu.opened = self.mod:GetSettingBoolean("lamas_menu_enabled_default")
 end
 
 ---Main function to draw gui
@@ -58,9 +73,10 @@ function gui:loop()
 
 	self:FetchData()
 
-	GuiZSet(self.gui, 800)
+	GuiZSet(self.gui, self.z)
 	self:HeaderDraw()
-	self:StatsDraw()
+	if self.stats.enabled then self:StatsDraw() end
+	if self.menu.opened then self:MenuDraw() end
 end
 
 return gui

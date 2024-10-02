@@ -1,4 +1,4 @@
-local helper = {} ---@class LS_Gui
+local helper = {} ---@class (exact) LS_Gui
 
 ---Sets yellow color for next widget
 ---@private

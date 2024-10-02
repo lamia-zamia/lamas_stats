@@ -10,6 +10,7 @@
 ---@field shift_cd boolean
 ---@field x number
 ---@field y number
+---@field enabled boolean
 
 ---@class (exact) LS_Gui
 ---@field private stats LS_Gui_stats
@@ -25,7 +26,8 @@ local stats = {
 		biome = false,
 		shift_cd = false,
 		x = 0,
-		y = 0
+		y = 0,
+		enabled = false,
 	}
 }
 
@@ -220,6 +222,7 @@ function stats:StatsGetSettings()
 	self.stats.position_pw = self.mod:GetSettingBoolean("stats_show_player_pos_pw")
 	self.stats.biome = self.mod:GetSettingBoolean("stats_show_player_biome")
 	self.stats.shift_cd = self.mod:GetSettingBoolean("stats_show_fungal_cooldown")
+	self.stats.enabled = self.mod:GetSettingBoolean("stats_enable")
 end
 
 return stats

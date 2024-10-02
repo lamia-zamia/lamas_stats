@@ -27,7 +27,7 @@ end
 
 ---?
 function OnPlayerSpawned()
-	gui:GetSettings()
+	gui:Init()
 	-- dofile_once("mods/lamas_stats/files/perks_vanilla_icons.lua")
 end
 
