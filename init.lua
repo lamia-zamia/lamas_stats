@@ -1,7 +1,5 @@
 _T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation strings
-local gui = dofile_once("mods/lamas_stats/files/scripts/gui_main.lua") ---@type LS_Gui
-
--- original_material_properties = {} --table of material names and colors, populates from materials.xml
+local gui = dofile_once("mods/lamas_stats/files/scripts/gui/gui_main.lua") ---@type LS_Gui
 
 local white_pixel = "mods/lamas_stats/vfs/white.png"
 local custom_img_id = ModImageMakeEditable(white_pixel, 1, 1)
@@ -25,13 +23,11 @@ end
 ---Idk why it's called before initialized
 function OnWorldPostUpdate()
 	gui:loop()
-	-- if lamas_stats_main_loop then lamas_stats_main_loop() end
 end
 
 ---?
 function OnPlayerSpawned()
 	gui:GetSettings()
-	-- dofile_once("mods/lamas_stats/files/info_gui.lua") --loading main gui file
 	-- dofile_once("mods/lamas_stats/files/perks_vanilla_icons.lua")
 end
 

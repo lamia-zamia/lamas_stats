@@ -13,10 +13,10 @@ gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.show = false
 
 local modules = {
-	"mods/lamas_stats/files/scripts/gui_header.lua",
-	"mods/lamas_stats/files/scripts/gui_helper.lua",
-	"mods/lamas_stats/files/scripts/gui_menu.lua",
-	"mods/lamas_stats/files/scripts/gui_stats.lua"
+	"mods/lamas_stats/files/scripts/gui/gui_header.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_helper.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_menu.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_stats.lua"
 }
 
 for i = 1, #modules do

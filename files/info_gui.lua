@@ -1,23 +1,9 @@
-gui_top = GuiCreate()
-gui_menu = GuiCreate()
-
-menu_pos_x = 2
-menu_pos_y = 12
-
-local top_text = "[L]"
 local lamas_stats_menu_enabled = ModSettingGet("lamas_stats.enabled_at_start")
 
 local menu_opened = false
 if ModSettingGet("lamas_stats.lamas_menu_enabled_default") then
 	local menu_opened = true
 	gui_menu_function = gui_menu_main_display_loop
-end
-
-function gui_top_main_display_loop()
-	if ModSettingGet("lamas_stats.stats_position") == "on top" then
-		local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui_top)
-		GUI_Stats(gui_top, id(), x+20, y)
-	end
 end
 
 function gui_menu_main_display_loop()
@@ -107,14 +93,6 @@ function gui_kys_main_loop()
 	GuiEndAutoBoxNinePiece(gui_menu, 1, 130, 0, false, 0, screen_png, screen_png)
 end
 
-local function PopulateStatsList()
-	lamas_stats_main_menu_list = {}
-	if ModSettingGet("lamas_stats.stats_enable") then
-		dofile_once("mods/lamas_stats/files/stats.lua")
-		StatsTableInsert()
-	end
-end
-
 local function LamasStatsApplySettings()
 	UpdateCommonVariables()
 	stat_pos_x = ModSettingGet("lamas_stats.overlay_x")
@@ -125,7 +103,3 @@ local function LamasStatsApplySettings()
 		APLC_table = dofile_once("mods/lamas_stats/files/APLC.lua")
 	end
 end
-
---[[		these are executed once on load		]]
-LamasStatsApplySettings()
-gui_top_function = gui_top_main_display_loop
