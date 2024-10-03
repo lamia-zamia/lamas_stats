@@ -1,6 +1,6 @@
 ---@class (exact) shift
 ---@field from? number[]
----@field to? number[]
+---@field to? number
 ---@field flask? string
 
 ---@class (exact) shift_predictor
@@ -15,8 +15,8 @@ local shift_predictor = {
 	shifts = {},
 }
 
-local buffer
-local flask
+local buffer ---@type shift
+local flask 
 
 ---Redefines functions so they would do nothing
 local function redefine_functions()
@@ -90,7 +90,6 @@ end
 local function get_shift_materials()
 	buffer = {
 		from = {},
-		to = {}
 	}
 	flask = 0
 	fungal_shift(1, 0, 0, true)
@@ -104,11 +103,10 @@ local function get_shift_flask(shift)
 	flask = 1
 	buffer = {
 		from = {},
-		to = {}
 	}
 	fungal_shift(1, 0, 0, true)
 	if buffer.from[1] ~= shift_predictor.shifts[shift].from[1] then return "from" end
-	if buffer.to[1] ~= shift_predictor.shifts[shift].to[1] then return "to" end
+	if buffer.to ~= shift_predictor.shifts[shift].to then return "to" end
 end
 
 ---Parses data from fungal_shift.lua
@@ -138,7 +136,7 @@ function shift_predictor:parse()
 
 	local convertMaterialEverywhere = function(material_from_type, material_to_type)
 		buffer.from[#buffer.from + 1] = material_from_type
-		buffer.to[#buffer.to + 1] = material_to_type
+		buffer.to = material_to_type
 	end
 	ConvertMaterialEverywhere = convertMaterialEverywhere
 

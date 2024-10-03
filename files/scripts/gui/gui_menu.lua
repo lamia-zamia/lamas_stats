@@ -45,6 +45,7 @@ function menu:MenuAddButton(text, tooltip_text, fn)
 			self.menu.current_window = nil
 		end
 	elseif self:IsButtonClicked(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, tooltip_text) then
+		self:FakeScrollBox_Reset()
 		self.menu.current_window = fn
 	end
 	self.menu.pos_x = self.menu.pos_x + self:GetTextDimension(text) + 9

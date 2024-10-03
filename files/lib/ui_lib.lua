@@ -562,26 +562,31 @@ end
 ---@param y number position y
 ---@param z number z of scrollbox
 ---@param sprite string 9piece for scrollbox
+---@param margin number margin to add
 ---@param draw_fn function function to draw inside scrollbox, position is relative
-function ui_class:FakeScrollBox(x, y, z, sprite, draw_fn)
+function ui_class:FakeScrollBox(x, y, z, sprite, margin, draw_fn)
 	local id = self:id()
 	self.scroll.sprite_dim = GuiGetImageDimensions(self.gui, sprite, 1)
 	self.scroll.max_y_target = self.scroll.max_y - self.scroll.height
-	self:Draw9Piece(x, y, z, self.scroll.width, self.scroll.height, sprite)
+	local box_x = x - margin
+	local box_y = y - margin
+	local box_width = self.scroll.width + margin * 2
+	local box_height = self.scroll.height + margin * 2
+	self:Draw9Piece(box_x, box_y, z, box_width, box_height, sprite)
 
 	---phantom 9piece with corrent hitbox
-	self:Draw9Piece(x - self.scroll.sprite_dim / 3, y - self.scroll.sprite_dim / 3, z,
-		self.scroll.width + self.scroll.sprite_dim / 1.5, self.scroll.height + self.scroll.sprite_dim / 1.5,
-		self.c.empty, self.c.empty)
-	local main_window = self:GetPrevious()
-	if main_window.hovered then
+	local hovered = self:IsHoverBoxHovered(box_x - self.scroll.sprite_dim / 3, box_y - self.scroll.sprite_dim / 3,
+		box_width + self.scroll.sprite_dim / 1.5, box_height + self.scroll.sprite_dim / 1.5)
+
+	if hovered then
 		self:BlockInput()
 	end
+
 	if self.scroll.max_y > self.scroll.height then
 		self:FakeScrollBox_CalculateDims(y)
-		self:FakeScrollBox_DrawScrollbarTrack(x, y, z)
+		self:FakeScrollBox_DrawScrollbarTrack(x + margin, y, z)
 		self:FakeScrollBox_MouseDrag(y)
-		self:FakeScrollBox_AnswerToWheel()
+		if hovered then self:FakeScrollBox_AnswerToWheel() end
 	end
 
 	GuiAnimateBegin(self.gui)

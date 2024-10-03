@@ -44,8 +44,9 @@ end
 ---@private
 function gui:FetchData()
 	self.player_x, self.player_y = EntityGetTransform(self.player)
-	if GameGetFrameNum() % 300 == 0 then
+	if GameGetFrameNum() % 60 == 0 then
 		self:ScanPWPosition()
+		self.fungal.current_shift = self.mod:GetGlobalNumber("fungal_shift_iteration", 0) + 1
 	end
 	self.fungal_cd = self:GetFungalShiftCooldown()
 end
@@ -59,6 +60,7 @@ function gui:GetSettings()
 	self:StatsGetSettings()
 	self:HeaderGetSettings()
 	self:KysGetSettings()
+	self:FungalGetSettings()
 	self.scroll.height_max = 200
 end
 

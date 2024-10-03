@@ -1,22 +1,3 @@
-dofile_once("data/scripts/magic/fungal_shift.lua") --for materials list
-local compatibility = nil
-
-local function SetColor(material)
-	GuiColorSetForNextWidget(gui_menu,material.red,material.green,material.blue,material.alpha)
-end
-
-function gui_fungal_shift_add_potion_icon(gui, icon)
-	icon = icon or potion_png
-	GuiImage(gui, id(), 0, 0, icon, 1, fungal_shift_scale)
-end
-
-function gui_fungal_shift_add_color_potion_icon(gui, material)
-	if original_material_properties[material].icon == potion_png then
-		SetColor(original_material_properties[material].color)
-	end
-	gui_fungal_shift_add_potion_icon(gui, original_material_properties[material].icon)
-end
-
 function gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, if_mat)
 	if compatibility == "ImprovedFungalShift" then
 		if material.flask == "to" and #material.from > 1 then return end
@@ -292,49 +273,7 @@ function gui_fungal_shift_display_from_tooltip(gui, material)
 	end
 	GuiLayoutEnd(gui)
 end
---[[	Display From]]
-function gui_fungal_shift_display_from(gui, material)
-	GuiBeginAutoBox(gui)
-	if material.flask == "from" then --if flask was flagged
-		if current_shifts < material.number then --if it's future shift
-			gui_fungal_shift_add_potion_icon(gui)
-			if material.failed == nil then
-				GuiTextRed(gui, 0, 0, _T.lamas_stats_or .. " ", fungal_shift_scale)
-			else 
-				GuiTextRed(gui, 0, 0, _T.lamas_stats_flask, fungal_shift_scale)
-				GuiText(gui, 0, 0, "*", fungal_shift_scale)
-				GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
-				GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_from_tooltip, material)
-				return
-			end
-		else
-			GuiColorSetForNextWidget(gui, 1, 1, 0.698, 1)
-		end
-	end
 
-	if material.flask == "from_fail" then
-		GuiColorSetForNextWidget(gui, 1, 1, 0.698, 1)
-	end
-
-	if ModSettingGet("lamas_stats.fungal_group_type") == "group" then
-		if #material.from > 1 then
-			GuiText(gui, 0, 0, _T.lamas_stats_fungal_group_of, fungal_shift_scale)
-		else
-			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[material.from[1]].name), fungal_shift_scale)
-		end
-	end
-	
-	for _,mat in ipairs(material.from) do
-		if ModSettingGet("lamas_stats.fungal_group_type") == "full" then
-			if material.flask == "from_fail" then GuiColorSetForNextWidget(gui, 1, 1, 0.698, 1) end
-			GuiText(gui, 0, 0, GameTextGetTranslatedOrNot(original_material_properties[mat].name), fungal_shift_scale)
-		end
-		gui_fungal_shift_add_color_potion_icon(gui, mat)
-	end
-
-	GuiEndAutoBoxNinePiece(gui,0,0,0,false,0,empty_png,empty_png)
-	GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_from_tooltip, material)
-end
 --[[	Display To Tooltip]]
 function gui_fungal_shift_display_to_tooltip_greedy(gui, material)
 	local gold = ModSettingGet("lamas_stats.enable_fungal_greedy_gold")
@@ -419,5 +358,3 @@ function gui_fungal_shift_display_to(gui, material)
 	GuiTooltipLamas(gui, 0, 0, guiZ, gui_fungal_shift_display_to_tooltip, material)
 	GuiText(gui, 0, 0, "", fungal_shift_scale)
 end
-
-gui_fungal_shift_decide_compatibility()
