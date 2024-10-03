@@ -117,7 +117,7 @@ function shift_predictor:parse()
 	sandbox:start_sandbox()
 
 	redefine_functions()
-	fungal_shift = nil
+	fungal_shift = nil ---@diagnostic disable-line: assign-type-mismatch
 	dofile("data/scripts/magic/fungal_shift.lua")
 
 	determine_cooldown()
