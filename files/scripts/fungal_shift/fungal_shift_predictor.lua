@@ -2,6 +2,7 @@
 ---@field from? number[]
 ---@field to? number
 ---@field flask? string
+---@field failed? shift
 
 ---@class (exact) shift_predictor
 ---@field cooldown number
@@ -93,20 +94,33 @@ local function get_shift_materials()
 	}
 	flask = 0
 	fungal_shift(1, 0, 0, true)
-	return buffer
-end
-
----Checks if flask is usable
----@param shift number
----@return string?
-local function get_shift_flask(shift)
-	flask = 1
+	local no_flask = buffer
 	buffer = {
 		from = {},
 	}
+	flask = 1
 	fungal_shift(1, 0, 0, true)
-	if buffer.from[1] ~= shift_predictor.shifts[shift].from[1] then return "from" end
-	if buffer.to ~= shift_predictor.shifts[shift].to then return "to" end
+	if buffer.to == flask then
+		if buffer.from[1] == no_flask.from[1] then
+			no_flask.flask = "to"
+			return no_flask
+		else
+			buffer.to = nil
+			buffer.failed = no_flask
+			return buffer
+		end
+	end
+	if buffer.from[1] == flask then
+		if buffer.to == no_flask.to then
+			no_flask.flask = "from"
+			return no_flask
+		else
+			buffer.from = nil
+			buffer.failed = no_flask
+			return buffer
+		end
+	end
+	return buffer
 end
 
 ---Parses data from fungal_shift.lua
@@ -148,10 +162,6 @@ function shift_predictor:parse()
 	for i = 1, 200 do
 		shift_predictor.current_predict_iter = i
 		shift_predictor.shifts[i] = get_shift_materials()
-		shift_predictor.shifts[i].flask = get_shift_flask(i)
-		if shift_predictor.shifts[i].flask then
-			-- shift_predictor.shifts[i].failed =
-		end
 	end
 
 	sandbox:end_sandbox()
