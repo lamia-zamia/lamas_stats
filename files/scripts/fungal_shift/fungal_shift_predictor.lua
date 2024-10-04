@@ -17,7 +17,7 @@ local shift_predictor = {
 }
 
 local buffer ---@type shift
-local flask 
+local flask
 
 ---Redefines functions so they would do nothing
 local function redefine_functions()
@@ -86,14 +86,39 @@ local function determina_max_shift()
 	shift_predictor.max_shifts = 200
 end
 
----Fake shift to get seed shifts
----@return {from:number[], to:number[]}?
-local function get_shift_materials()
-	buffer = {
-		from = {},
-	}
-	flask = 0
-	fungal_shift(1, 0, 0, true)
+---Checks for failed shifts with flask from
+---@param no_flask shift
+---@return shift
+local function check_for_failed_shift_with_flask_from(no_flask)
+	if buffer.to == no_flask.to then
+		no_flask.flask = "from"
+		return no_flask
+	else
+		buffer.from = nil
+		buffer.failed = no_flask
+		return buffer
+	end
+end
+
+---Checks for failed shifts with flask to
+---@param no_flask shift
+---@return shift
+local function check_for_failed_shift_with_flask_to(no_flask)
+	local from_count = #no_flask.from
+	if from_count > 1 or buffer.from[1] == no_flask.from[1] then
+		no_flask.from = from_count > #buffer.from and no_flask.from or buffer.from
+		no_flask.flask = "to"
+		return no_flask
+	else
+		buffer.to = nil
+		buffer.failed = no_flask
+		return buffer
+	end
+end
+
+---Fake shift to get flask shifts
+---@return shift
+local function check_for_flask_shift()
 	local no_flask = buffer
 	buffer = {
 		from = {},
@@ -101,26 +126,23 @@ local function get_shift_materials()
 	flask = 1
 	fungal_shift(1, 0, 0, true)
 	if buffer.to == flask then
-		if buffer.from[1] == no_flask.from[1] then
-			no_flask.flask = "to"
-			return no_flask
-		else
-			buffer.to = nil
-			buffer.failed = no_flask
-			return buffer
-		end
+		return check_for_failed_shift_with_flask_to(no_flask)
 	end
 	if buffer.from[1] == flask then
-		if buffer.to == no_flask.to then
-			no_flask.flask = "from"
-			return no_flask
-		else
-			buffer.from = nil
-			buffer.failed = no_flask
-			return buffer
-		end
+		return check_for_failed_shift_with_flask_from(no_flask)
 	end
 	return buffer
+end
+
+---Fake shift to get seed shifts
+---@return shift
+local function get_shift_materials()
+	buffer = {
+		from = {},
+	}
+	flask = 0
+	fungal_shift(1, 0, 0, true)
+	return check_for_flask_shift()
 end
 
 ---Parses data from fungal_shift.lua
@@ -154,16 +176,18 @@ function shift_predictor:parse()
 	end
 	ConvertMaterialEverywhere = convertMaterialEverywhere
 
-	local gget_held_item_material = function()
+	local _get_held_item_material = function()
 		return flask
 	end
-	get_held_item_material = gget_held_item_material ---@diagnostic disable-line: lowercase-global
-	
+	get_held_item_material = _get_held_item_material ---@diagnostic disable-line: lowercase-global
+
 	for i = 1, 200 do
 		shift_predictor.current_predict_iter = i
 		shift_predictor.shifts[i] = get_shift_materials()
 	end
 
+	buffer = nil ---@diagnostic disable-line: cast-local-type
+	
 	sandbox:end_sandbox()
 end
 

@@ -7,6 +7,7 @@ nxml.error_handler = function() end
 ---@field ui_name string
 ---@field color material_colors|false
 ---@field icon string
+---@field static boolean
 
 ---@class (exact) material_parser
 ---@field private buffer {[string]: material_data}|nil
@@ -127,7 +128,8 @@ local function parse_element(element)
 	mat.buffer[element.attr.name] = {
 		ui_name = element.attr.ui_name,
 		icon = material_icon,
-		color = material_color
+		color = material_color,
+		static = not not element.attr.name:find("_static$")
 	}
 end
 
@@ -153,7 +155,8 @@ function mat:parse()
 	self.invalid = {
 		ui_name = "???",
 		icon = "data/items_gfx/potion_normals.png",
-		color = false
+		color = false,
+		static = false
 	}
 
 	nxml = nil ---@diagnostic disable-line: cast-local-type

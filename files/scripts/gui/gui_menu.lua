@@ -10,6 +10,7 @@
 ---@field package perks boolean
 ---@field package kys boolean
 ---@field package current_window function|nil
+---@field package previous_window function|nil
 
 ---@class (exact) LS_Gui
 ---@field private menu LS_Gui_menu
@@ -23,7 +24,8 @@ local menu = {
 		fungal = false,
 		perks = false,
 		kys = false,
-		current_window = nil
+		current_window = nil,
+		previous_window = nil
 	}
 }
 
@@ -46,6 +48,7 @@ function menu:MenuAddButton(text, tooltip_text, fn)
 		end
 	elseif self:IsButtonClicked(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, tooltip_text) then
 		self:FakeScrollBox_Reset()
+		self.scroll.height_max = 200
 		self.menu.current_window = fn
 	end
 	self.menu.pos_x = self.menu.pos_x + self:GetTextDimension(text) + 9
@@ -54,23 +57,35 @@ end
 ---Draw menu
 ---@private
 function menu:MenuDraw()
+	self:AnimateB()
+	self:AnimateAlpha(0.1, 0.1, false)
+	self:AnimateScale(0.1, false)
 	self.menu.pos_x = self.menu.start_x
 	self.menu.pos_y = self.menu.start_y + 15
 	self.menu.width = self:GetTextDimension(self.menu.header)
 
-	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, "", self.FungalScrollbox) end
+	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, "", self.FungalDrawWindow) end
 	if self.menu.perks then self:MenuAddButton(_T.Perks, "", self.mod.GetGlobalNumber) end
 	if self.menu.kys then self:MenuAddButton(_T.KYS_Suicide, "", self.KysDraw) end
 
 	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
-	self.menu.pos_y = self.menu.pos_y + 15
+	self.menu.pos_y = self.menu.pos_y + 17
 
+	local reset_anim = self.menu.previous_window ~= self.menu.current_window
+	self:AnimateB()
+	self:AnimateAlpha(0.1, 0.1, reset_anim)
+	self:AnimateScale(0.1, reset_anim)
 	self.menu.pos_x = self.menu.start_x
+
 	if self.menu.current_window then self.menu.current_window(self) end
 
+	self:AnimateE()
 	self:Draw9Piece(self.menu.start_x - 6, self.menu.start_y - 1, self.z + 50, self.menu.width + 12,
-		self.menu.pos_y - self.menu.start_y + 2)
-	self:TextCentered(self.menu.start_x, self.menu.start_y, self.menu.header, self.menu.width)
+		self.menu.pos_y - self.menu.start_y)
+
+	self:Text(self.menu.start_x, self.menu.start_y, self.menu.header)
+	self:AnimateE()
+	self.menu.previous_window = self.menu.current_window
 end
 
 ---Fetch settings

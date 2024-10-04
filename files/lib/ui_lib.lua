@@ -433,8 +433,6 @@ function ui_class:FakeScrollBox_Reset()
 	self.scroll.target_y = 0
 	self.scroll.max_y = 0
 	self.scroll.move_triggered = false
-	-- self.scroll.height = 0
-	self.scroll.height_max = 140
 end
 
 ---function to calculate target scroll pos for mouse drag

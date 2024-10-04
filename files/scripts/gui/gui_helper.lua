@@ -6,6 +6,28 @@ function helper:ColorYellow()
 	self:Color(1, 1, 0.7)
 end
 
+---Draws checbox
+---@param x number
+---@param y number
+---@param text string
+---@param value boolean
+---@return boolean hovered
+function helper:IsDrawCheckbox(x, y, text, value)
+	local text_dim = self:GetTextDimension(text)
+	local hovered = self:IsHoverBoxHovered(x, y + 1, text_dim + 13, 9)
+	if hovered then self:ColorYellow() end
+	self:Text(x, y, text)
+	self:Draw9Piece(x + text_dim + 4, y + 2, self.z, 6, 6, hovered and self.buttons.img_hl or self.buttons.img)
+	if value then
+		self:Color(0, 0.8, 0)
+		self:Text(x + text_dim + 5, y, "V")
+	else
+		self:Color(0.8, 0, 0)
+		self:Text(x + text_dim + 5, y, "X")
+	end
+	return hovered
+end
+
 ---Draws text button
 ---@private
 ---@param x number
@@ -26,6 +48,7 @@ function helper:IsTextButtonClicked(x, y, text)
 end
 
 ---Returns fungal shift cooldown
+---@private
 ---@return number
 ---@nodiscard
 function helper:GetFungalShiftCooldown()

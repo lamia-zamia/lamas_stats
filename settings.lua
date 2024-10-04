@@ -957,7 +957,7 @@ function ModSettingsGui( gui, in_main_menu )
 	if waitingForKey == true then --async wait for input 
 		GetInput()
 	end
-	
+
 	local current_language = GameTextGetTranslatedOrNot("$current_language")
 	
 	if current_language ~= current_language_last_frame then
