@@ -10,11 +10,12 @@ nxml.error_handler = function() end
 
 ---@class (exact) material_parser
 ---@field private buffer {[string]: material_data}|nil
+---@field private invalid material_data
 ---@field data {[number]: material_data|nil}
 ---@field get_data fun(self, number):material_data
 local mat = {
 	buffer = {},
-	data = {}
+	data = {},
 }
 
 ---Split abgr
@@ -130,6 +131,34 @@ local function parse_element(element)
 	}
 end
 
+---Parses a file
+---@param file string
+local function parse_file(file)
+	local xml = nxml.parse(ModTextFileGetContent(file))
+
+	for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
+		for elem in xml:each_of(element_name) do
+			parse_element(elem)
+		end
+	end
+end
+
+---Parses material list
+function mat:parse()
+	local files = ModMaterialFilesGet()
+	for i = 1, #files do
+		parse_file(files[i])
+	end
+
+	self.invalid = {
+		ui_name = "???",
+		icon = "data/items_gfx/potion_normals.png",
+		color = false
+	}
+
+	nxml = nil ---@diagnostic disable-line: cast-local-type
+end
+
 ---Converts buffer data into actual data
 function mat:convert()
 	for name, value in pairs(self.buffer) do
@@ -138,30 +167,11 @@ function mat:convert()
 	self.buffer = {}
 end
 
----Parses material list
-function mat:parse()
-	local content = ""
-	local files = ModMaterialFilesGet()
-	for i = 1, #files do
-		content = content .. "\n" .. ModTextFileGetContent(files[i])
-	end
-
-	local xml = nxml.parse(content)
-
-	for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
-		for elem in xml:each_of(element_name) do
-			parse_element(elem)
-		end
-	end
-
-	nxml = nil ---@diagnostic disable-line: cast-local-type
-end
-
 ---Returns data
 ---@param material_type number
 ---@return material_data
 function mat:get_data(material_type)
-	return self.data[material_type]
+	return self.data[material_type] or self.invalid
 end
 
 return mat
