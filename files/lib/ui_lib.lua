@@ -560,16 +560,17 @@ end
 ---@param y number position y
 ---@param z number z of scrollbox
 ---@param sprite string 9piece for scrollbox
----@param margin number margin to add
+---@param margin_x number margin to add to width
+---@param margin_y number margin to add to height
 ---@param draw_fn function function to draw inside scrollbox, position is relative
-function ui_class:FakeScrollBox(x, y, z, sprite, margin, draw_fn)
+function ui_class:FakeScrollBox(x, y, z, sprite, margin_x, margin_y, draw_fn)
 	local id = self:id()
 	self.scroll.sprite_dim = GuiGetImageDimensions(self.gui, sprite, 1)
 	self.scroll.max_y_target = self.scroll.max_y - self.scroll.height
-	local box_x = x - margin
-	local box_y = y - margin
-	local box_width = self.scroll.width + margin * 2
-	local box_height = self.scroll.height + margin * 2
+	local box_x = x - margin_x
+	local box_y = y - margin_y
+	local box_width = self.scroll.width + margin_x * 2
+	local box_height = self.scroll.height + margin_y * 2
 	self:Draw9Piece(box_x, box_y, z, box_width, box_height, sprite)
 
 	---phantom 9piece with corrent hitbox
@@ -582,7 +583,7 @@ function ui_class:FakeScrollBox(x, y, z, sprite, margin, draw_fn)
 
 	if self.scroll.max_y > self.scroll.height then
 		self:FakeScrollBox_CalculateDims(y)
-		self:FakeScrollBox_DrawScrollbarTrack(x + margin, y, z)
+		self:FakeScrollBox_DrawScrollbarTrack(x + margin_x, y, z)
 		self:FakeScrollBox_MouseDrag(y)
 		if hovered then self:FakeScrollBox_AnswerToWheel() end
 	end

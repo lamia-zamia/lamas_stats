@@ -1,7 +1,7 @@
 ---@class (exact) LS_Gui_fungal_offset
 ---@field shift number offset after shift i: text
----@field group_of number offset after group_of text
----@field or_flask number offset after or_flask text
+---@field from number offset after from
+---@field to number offset after to
 
 ---@class (exact) LS_Gui_fungal
 ---@field x number
@@ -10,6 +10,7 @@
 ---@field offset LS_Gui_fungal_offset
 ---@field future boolean to show future window or not
 ---@field row_count number
+---@field width number
 
 ---@class (exact) LS_Gui
 ---@field private fungal LS_Gui_fungal
@@ -121,11 +122,13 @@ end
 ---@param y number
 ---@param material_type number
 function fungal:FungalDrawSingleMaterial(x, y, material_type)
+	
 	local data = self.mat:get_data(material_type)
-	local name = self:Locale(data.ui_name)
-	self:Text(x, y, name)
+	-- local name = self:Locale(data.ui_name)
+	self:FungalDrawIcon(x, y, material_type)
+	self:Text(x + 9, y, data.ui_name)
 	-- self.fungal.x = self.fungal.x + self:GetTextDimension(name)
-	self:FungalDrawIcon(x + self:GetTextDimension(name), y, material_type)
+	
 end
 
 ---Draws from materials
@@ -150,6 +153,7 @@ function fungal:FungalDrawFromMaterials(from, flask)
 			y = y + 10
 		end
 	end
+	self.fungal.x = self.fungal.x + self.fungal.offset.from
 	--
 	-- if count > 1 then
 	-- 	-- self:Text(self.fungal.x, self.fungal.y, _T.lamas_stats_fungal_group_of)
@@ -180,14 +184,16 @@ function fungal:FungalDrawToMaterial(to, flask)
 		self:FungalDrawSingleMaterial(self.fungal.x, self.fungal.y + y, to)
 		-- if shift.flask == "to" then self:FungalDrawFlaskAvailablity() end
 	end
+	self.fungal.x = self.fungal.x + self.fungal.offset.to
 end
 
 ---Draws flask shift indicator
 ---@param x number
 ---@param y number
 function fungal:FungalDrawFlaskAvailablity(x, y)
-	self:Text(x, y, _T.lamas_stats_or)
-	self:Image(x + self.fungal.offset.or_flask, y, "data/items_gfx/potion.png")
+	self:Image(x, y, "data/items_gfx/potion.png")
+	self:Text(x + 9, y, "Held Material")
+	
 end
 
 ---Draws a shift number
@@ -195,7 +201,7 @@ end
 ---@param shift number
 function fungal:FungalDrawShiftNumber(shift)
 	local center = self:FungalGetShiftWindowOffset(1)
-	self:Text(self.fungal.x, self.fungal.y + center, string.format(_T.lamas_stats_shift .. " %02d:", shift))
+	self:Text(self.fungal.x, self.fungal.y + center, string.format(_T.lamas_stats_shift .. " %02d", shift))
 	self.fungal.x = self.fungal.x + self.fungal.offset.shift
 end
 
@@ -220,9 +226,8 @@ function fungal:FungalSanitizeFromShifts(from)
 end
 
 function fungal:FungalDraw()
-	self.fungal.x = 0
+	self.fungal.x = 3
 	self.fungal.y = 0 - self.scroll.y
-	local max_width = 0
 
 	for i = self.fungal.current_shift, 20 do
 		local shift = self.sp.shifts[i]
@@ -234,7 +239,6 @@ function fungal:FungalDraw()
 		if shift.flask == "to" and self.fungal.row_count == 1 then
 			self.fungal.row_count = self.fungal.row_count + 1
 		end
-		-- if i == 1 then print(self.fungal.row_count, self:FungalGetShiftWindowOffset(3)) end
 
 		local height = self.fungal.row_count * 10 + 1
 		self:AddOptionForNext(self.c.options.NonInteractive)
@@ -243,41 +247,50 @@ function fungal:FungalDraw()
 		if i % 2 == 1 then
 			self:Color(0.3, 0.3, 0.3)
 		end
-		self:Image(self.fungal.x - 50, self.fungal.y, self.c.px, 0.5, 640, height)
-		
+		self:Image(self.fungal.x - 3, self.fungal.y, self.c.px, 0.5, 640, height)
+
 		self:FungalDrawShiftNumber(i)
 
 		self:FungalDrawFromMaterials(from, shift.flask == "from")
-		-- if shift.flask == "from" then self:FungalDrawFlaskAvailablity() end
-		self.fungal.x = self.fungal.x + 90
+
+		-- self.fungal.x = self.fungal.x + 90
 		local center = self:FungalGetShiftWindowOffset(1)
 		self:Text(self.fungal.x, self.fungal.y + center, " -> ")
-		self.fungal.x = self.fungal.x + 30
-		
+		self.fungal.x = self.fungal.x + 15
+
 		self:FungalDrawToMaterial(shift.to, shift.flask == "to")
-		self.fungal.x = self.fungal.x + 90
-		-- if not shift.to then
-		-- 	self:Color(0.8, 0, 0)
-		-- 	self:Text(self.fungal.x, self.fungal.y, "*")
-		-- 	self.fungal.x = self.fungal.x + 5
-		-- else
-		-- 	-- self:FungalDrawSingleMaterial(shift.to)
-		-- 	if shift.flask == "to" then self:FungalDrawFlaskAvailablity() end
-		-- end
+		
 
 		self.fungal.y = self.fungal.y + height
-		max_width = math.max(max_width, self.fungal.x)
-		self.fungal.x = 0
+		self.fungal.x = 3
 	end
-	self.scroll.width = max_width
-	self:MenuSetWidth(max_width - 6)
+
 	self:Text(0, self.fungal.y + self.scroll.y, "")
 end
 
+function fungal:FungalUpdateWindowDims()
+	local max_from = 0
+	local max_to = 0
+	for i = 1, 20 do
+		local shift = self.sp.shifts[i]
+		for j = 1, #shift.from do
+			local data = self.mat:get_data(shift.from[j])
+			local name = self:Locale(data.ui_name)
+			max_from = math.max(max_from, self:GetTextDimension(name))
+		end
+		local name = self:Locale(self.mat:get_data(shift.to).ui_name)
+		max_to = math.max(max_to, self:GetTextDimension(name))
+	end
+
+	self.fungal.offset.shift = self:GetTextDimension(_T.lamas_stats_shift .. "000")
+	self.fungal.offset.from = max_from + 9
+	self.fungal.offset.to = max_to + 9
+	self.scroll.width = self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3
+end
+
+---Fetches settings
 function fungal:FungalGetSettings()
-	self.fungal.offset.shift = self:GetTextDimension(_T.lamas_stats_shift .. "000: ")
-	self.fungal.offset.group_of = self:GetTextDimension(_T.lamas_stats_fungal_group_of)
-	self.fungal.offset.or_flask = self:GetTextDimension(_T.lamas_stats_or)
+	self:FungalUpdateWindowDims()
 end
 
 function fungal:FungalDrawWindow()
@@ -287,7 +300,15 @@ function fungal:FungalDrawWindow()
 		end
 	end
 	self.menu.pos_y = self.menu.pos_y + 12
-	self:FakeScrollBox(self.menu.pos_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, self.FungalDraw)
+	self:FakeScrollBox(self.menu.pos_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self
+		.FungalDraw)
+	self:MenuSetWidth(self.scroll.width - 6)
+end
+
+---Initialize data for fungal shift
+function fungal:FungalInit()
+	self:FungalUpdateWindowDims()
+	self.scroll.width = self.scroll.width
 end
 
 return fungal
