@@ -493,12 +493,12 @@ function ui_class:FakeScrollBox_DrawScrollbarTrack(x, y, z)
 		scroll_img = self.scroll.scroll_img_hl
 	end
 	-- Draw the scrollbar thumb
-	self:Draw9Piece(x + self.scroll.width + self.scroll.sprite_dim / 3 - 5, y + self.scroll.scrollbar_pos, z - 1, 0,
+	self:Draw9Piece(x + self.scroll.width + self.scroll.sprite_dim / 3 - 5, y + self.scroll.scrollbar_pos, z - 10, 0,
 		self.scroll
 		.scrollbar_height, scroll_img)
 
 	-- Draw the scrollbar track
-	self:Draw9Piece(x + self.scroll.width + self.scroll.sprite_dim / 3 - 8, y, z - 1, 6, self.scroll.height, self.c
+	self:Draw9Piece(x + self.scroll.width + self.scroll.sprite_dim / 3 - 8, y, z - 10, 6, self.scroll.height, self.c
 		.empty,
 		self.c.empty)
 end
@@ -575,7 +575,7 @@ function ui_class:FakeScrollBox(x, y, z, sprite, margin_x, margin_y, draw_fn)
 
 	---phantom 9piece with corrent hitbox
 	local hovered = self:IsHoverBoxHovered(box_x - self.scroll.sprite_dim / 3, box_y - self.scroll.sprite_dim / 3,
-		box_width + self.scroll.sprite_dim / 1.5, box_height + self.scroll.sprite_dim / 1.5)
+		box_width + self.scroll.sprite_dim / 1.5, box_height + self.scroll.sprite_dim / 1.5, true)
 
 	if hovered then
 		self:BlockInput()

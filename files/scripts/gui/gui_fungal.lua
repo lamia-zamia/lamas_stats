@@ -44,17 +44,7 @@ function fungal:FungalDrawIcon(x, y, material_type)
 		self:FungalPotionColor(data.color)
 	end
 	self:Image(x, y, data.icon)
-	-- self.fungal.x = self.fungal.x + 9
 end
-
----Draws potions icons
---@private
---@param material_types number[]
--- function fungal:FungalDrawIcons(material_types)
--- 	for i = 1, #material_types do
--- 		self:FungalDrawIcon(material_types[i])
--- 	end
--- end
 
 --[[	Display From ]]
 -- function gui_fungal_shift_display_from(gui, material)
@@ -122,13 +112,9 @@ end
 ---@param y number
 ---@param material_type number
 function fungal:FungalDrawSingleMaterial(x, y, material_type)
-	
 	local data = self.mat:get_data(material_type)
-	-- local name = self:Locale(data.ui_name)
 	self:FungalDrawIcon(x, y, material_type)
 	self:Text(x + 9, y, data.ui_name)
-	-- self.fungal.x = self.fungal.x + self:GetTextDimension(name)
-	
 end
 
 ---Draws from materials
@@ -154,14 +140,6 @@ function fungal:FungalDrawFromMaterials(from, flask)
 		end
 	end
 	self.fungal.x = self.fungal.x + self.fungal.offset.from
-	--
-	-- if count > 1 then
-	-- 	-- self:Text(self.fungal.x, self.fungal.y, _T.lamas_stats_fungal_group_of)
-	-- 	-- self.fungal.x = self.fungal.x + self.fungal.offset.group_of
-	-- 	self:FungalDrawIcons(from)
-	-- else
-	-- 	self:FungalDrawSingleMaterial(from[1])
-	-- end
 end
 
 ---Draws to material
@@ -173,16 +151,13 @@ function fungal:FungalDrawToMaterial(to, flask)
 		local center = self:FungalGetShiftWindowOffset(1)
 		self:Color(0.8, 0, 0)
 		self:Text(self.fungal.x, self.fungal.y + center, "*")
-		-- self.fungal.x = self.fungal.x + 5
 	else
 		local y = self:FungalGetShiftWindowOffset(flask and 2 or 1)
-		-- local y = 0
 		if flask then
 			self:FungalDrawFlaskAvailablity(self.fungal.x, self.fungal.y + y)
 			y = y + 10
 		end
 		self:FungalDrawSingleMaterial(self.fungal.x, self.fungal.y + y, to)
-		-- if shift.flask == "to" then self:FungalDrawFlaskAvailablity() end
 	end
 	self.fungal.x = self.fungal.x + self.fungal.offset.to
 end
@@ -191,9 +166,8 @@ end
 ---@param x number
 ---@param y number
 function fungal:FungalDrawFlaskAvailablity(x, y)
-	self:Image(x, y, "data/items_gfx/potion.png")
+	self:Image(x, y, "mods/lamas_stats/files/gfx/held_material.png")
 	self:Text(x + 9, y, "Held Material")
-	
 end
 
 ---Draws a shift number
@@ -227,8 +201,9 @@ end
 
 function fungal:FungalDraw()
 	self.fungal.x = 3
-	self.fungal.y = 0 - self.scroll.y
+	self.fungal.y = 1 - self.scroll.y
 
+	self:AddOption(self.c.options.NonInteractive)
 	for i = self.fungal.current_shift, 20 do
 		local shift = self.sp.shifts[i]
 
@@ -241,30 +216,27 @@ function fungal:FungalDraw()
 		end
 
 		local height = self.fungal.row_count * 10 + 1
-		self:AddOptionForNext(self.c.options.NonInteractive)
-		self:SetZ(self.z + 50)
-		self:Color(0, 0, 0)
-		if i % 2 == 1 then
-			self:Color(0.3, 0.3, 0.3)
-		end
-		self:Image(self.fungal.x - 3, self.fungal.y, self.c.px, 0.5, 640, height)
+
+		local color = i % 2 == 0 and 0.4 or 0.6
+		self:SetZ(self.z + 4)
+		self:Color(color, color, color)
+		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, 640, height)
 
 		self:FungalDrawShiftNumber(i)
 
 		self:FungalDrawFromMaterials(from, shift.flask == "from")
 
-		-- self.fungal.x = self.fungal.x + 90
 		local center = self:FungalGetShiftWindowOffset(1)
 		self:Text(self.fungal.x, self.fungal.y + center, " -> ")
 		self.fungal.x = self.fungal.x + 15
 
 		self:FungalDrawToMaterial(shift.to, shift.flask == "to")
-		
+
 
 		self.fungal.y = self.fungal.y + height
 		self.fungal.x = 3
 	end
-
+	self:RemoveOption(self.c.options.NonInteractive)
 	self:Text(0, self.fungal.y + self.scroll.y, "")
 end
 
