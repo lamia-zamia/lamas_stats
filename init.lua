@@ -17,7 +17,7 @@ end
 
 ---After OnModPostInit
 function OnMagicNumbersAndWorldSeedInitialized()
-	gui.mat:parse()
+	gui:PostBiomeInit()
 end
 
 ---Idk why it's called before initialized
@@ -27,7 +27,7 @@ end
 
 ---?
 function OnPlayerSpawned()
-	gui:Init()
+	gui:PostWorldInit()
 	-- dofile_once("mods/lamas_stats/files/perks_vanilla_icons.lua")
 end
 

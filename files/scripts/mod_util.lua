@@ -33,4 +33,11 @@ function util:GetGlobalNumber(id, default)
 	return tonumber(GlobalsGetValue(id, tostring(default or 0))) or 0
 end
 
+---Sets settings
+---@param id string
+---@param value number|string|boolean
+function util:SetModSetting(id, value)
+	ModSettingSet(self.mod_prfx .. id, value)
+end
+
 return util

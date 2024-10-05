@@ -9,7 +9,7 @@ local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type U
 ---@field private player_y number
 ---@field private fungal_cd number
 ---@field private z number
----@field private sp shift_predictor
+---@field private fs fungal_shift
 ---@field mat material_parser
 local gui = UI_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
@@ -20,7 +20,7 @@ gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.show = false
 gui.z = 900
-gui.sp = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua")
+gui.fs = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift.lua")
 gui.mat = dofile_once("mods/lamas_stats/files/scripts/material_parser.lua")
 
 local modules = {
@@ -64,10 +64,15 @@ function gui:GetSettings()
 	self.scroll.height_max = 200
 end
 
----Gets initial data
-function gui:Init()
+---Gets data after materials are done
+function gui:PostBiomeInit()
+	self.mat:parse()
+end
+
+---Gets data after worlds exist
+function gui:PostWorldInit()
 	self.mat:convert()
-	self.sp:parse()
+	self.fs:Init()
 	self:GetSettings()
 	self.show = self.mod:GetSettingBoolean("enabled_at_start")
 	self.menu.opened = self.mod:GetSettingBoolean("lamas_menu_enabled_default")
@@ -85,7 +90,7 @@ function gui:loop()
 
 	self:FetchData()
 
-	GuiZSet(self.gui, self.z)
+	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
 	if self.stats.enabled then self:StatsDraw() end
 	if self.menu.opened then self:MenuDraw() end

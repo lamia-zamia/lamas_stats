@@ -1,9 +1,3 @@
----@class (exact) shift
----@field from? number[]
----@field to? number
----@field flask? string
----@field failed? shift
-
 ---@class (exact) shift_predictor
 ---@field cooldown number
 ---@field max_shifts number
@@ -187,7 +181,7 @@ function shift_predictor:parse()
 	end
 
 	buffer = nil ---@diagnostic disable-line: cast-local-type
-	
+
 	sandbox:end_sandbox()
 end
 

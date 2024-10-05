@@ -2,6 +2,8 @@
 ---@field shift number offset after shift i: text
 ---@field from number offset after from
 ---@field to number offset after to
+---@field past number
+---@field future number
 
 ---@class (exact) LS_Gui_fungal
 ---@field x number
@@ -9,6 +11,7 @@
 ---@field current_shift number
 ---@field offset LS_Gui_fungal_offset
 ---@field future boolean to show future window or not
+---@field past boolean
 ---@field row_count number
 ---@field width number
 
@@ -199,13 +202,9 @@ function fungal:FungalSanitizeFromShifts(from)
 	return arr
 end
 
-function fungal:FungalDraw()
-	self.fungal.x = 3
-	self.fungal.y = 1 - self.scroll.y
-
-	self:AddOption(self.c.options.NonInteractive)
+function fungal:FungalDrawFuture()
 	for i = self.fungal.current_shift, 20 do
-		local shift = self.sp.shifts[i]
+		local shift = self.fs.predictor.shifts[i]
 
 		local from = self:FungalSanitizeFromShifts(shift.from)
 		if shift.flask == "from" then
@@ -232,10 +231,19 @@ function fungal:FungalDraw()
 
 		self:FungalDrawToMaterial(shift.to, shift.flask == "to")
 
-
 		self.fungal.y = self.fungal.y + height
 		self.fungal.x = 3
 	end
+end
+
+function fungal:FungalDraw()
+	self.fungal.x = 3
+	self.fungal.y = 1 - self.scroll.y
+
+	self:AddOption(self.c.options.NonInteractive)
+
+	if self.fungal.future then self:FungalDrawFuture() end
+
 	self:RemoveOption(self.c.options.NonInteractive)
 	self:Text(0, self.fungal.y + self.scroll.y, "")
 end
@@ -244,7 +252,7 @@ function fungal:FungalUpdateWindowDims()
 	local max_from = 0
 	local max_to = 0
 	for i = 1, 20 do
-		local shift = self.sp.shifts[i]
+		local shift = self.fs.predictor.shifts[i]
 		for j = 1, #shift.from do
 			local data = self.mat:get_data(shift.from[j])
 			local name = self:Locale(data.ui_name)
@@ -257,7 +265,11 @@ function fungal:FungalUpdateWindowDims()
 	self.fungal.offset.shift = self:GetTextDimension(_T.lamas_stats_shift .. "000")
 	self.fungal.offset.from = max_from + 9
 	self.fungal.offset.to = max_to + 9
-	self.scroll.width = self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3
+	self.fungal.offset.past = self:GetTextDimension(_T.EnableFungalPast) + 15
+	self.fungal.offset.future = self:GetTextDimension(_T.EnableFungalFuture) + 15
+
+	self.scroll.width = math.max(self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3,
+		self.fungal.offset.past + self.fungal.offset.future)
 end
 
 ---Fetches settings
@@ -266,9 +278,16 @@ function fungal:FungalGetSettings()
 end
 
 function fungal:FungalDrawWindow()
-	if self:IsDrawCheckbox(self.menu.pos_x, self.menu.pos_y - 1, "Future", self.fungal.future) then
+	if self:IsDrawCheckbox(self.menu.pos_x, self.menu.pos_y - 1, _T.EnableFungalPast, self.fungal.past) then
+		if self:IsMouseClicked() then
+			self.fungal.past = not self.fungal.past
+			self.mod:SetModSetting("enable_fungal_past", self.fungal.past)
+		end
+	end
+	if self:IsDrawCheckbox(self.menu.pos_x + self.fungal.offset.past, self.menu.pos_y - 1, _T.EnableFungalFuture, self.fungal.future) then
 		if self:IsMouseClicked() then
 			self.fungal.future = not self.fungal.future
+			self.mod:SetModSetting("enable_fungal_future", self.fungal.future)
 		end
 	end
 	self.menu.pos_y = self.menu.pos_y + 12
@@ -280,6 +299,8 @@ end
 ---Initialize data for fungal shift
 function fungal:FungalInit()
 	self:FungalUpdateWindowDims()
+	self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
+	self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")
 	self.scroll.width = self.scroll.width
 end
 

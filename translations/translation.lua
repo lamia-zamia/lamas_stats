@@ -43,6 +43,8 @@ local translations =
 		KYS_Suicide = "Suicide",
 		KYS_Suicide_Warn = "Are you sure? This button will kill you",
 		KYS_Button = "Yes, commit seppuku",
+		EnableFungalPast = "Show past shifts",
+		EnableFungalFuture = "Show future shifts",
 	},
 	["русский"] = {
 		lamas_stat_return = "Назад",
@@ -87,6 +89,8 @@ local translations =
 		KYS_Suicide = "Суицид",
 		KYS_Suicide_Warn = "Точно? Эта кнопка убьёт Мину",
 		KYS_Button = "Да, сделать сеппуку",
+		EnableFungalPast = "Показывать прошлые сдвиги",
+		EnableFungalFuture = "Показывать будущие сдвиги",
 	},
 	["日本語"] = {
 		lamas_stat_return = "戻る",
@@ -131,6 +135,8 @@ local translations =
 		KYS_Suicide = "自殺",
 		KYS_Suicide_Warn = "本当に自殺しますか？ このボタンはあなたを殺します",
 		KYS_Button = "はい、切腹します",
+		EnableFungalPast = "過去のシフトを表示",
+		EnableFungalFuture = "未来のシフトを表示",
 	},
 }
 

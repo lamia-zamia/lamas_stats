@@ -52,14 +52,14 @@ end
 ---@return number
 ---@nodiscard
 function helper:GetFungalShiftCooldown()
-	if self.mod:GetGlobalNumber("fungal_shift_iteration", 0) > self.sp.max_shifts then return 0 end
+	if self.fungal.current_shift > self.fs.max_shifts then return 0 end
 
 	local last_frame = self.mod:GetGlobalNumber("fungal_shift_last_frame", -1)
 	if last_frame < 0 then return 0 end
 
 	local frame = GameGetFrameNum()
 
-	return math.max(math.floor((self.sp.cooldown - (frame - last_frame)) / 60), 0)
+	return math.max(math.floor((self.fs.cooldown - (frame - last_frame)) / 60), 0)
 end
 
 ---Sets max parallel positions
