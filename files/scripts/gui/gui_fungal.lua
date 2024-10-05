@@ -236,11 +236,21 @@ function fungal:FungalDrawFuture()
 	end
 end
 
+function fungal:FungalDrawPast()
+	if self.fungal.current_shift <= 1 then return end
+
+	for i = 1, self.fungal.current_shift do
+
+	end
+end
+
 function fungal:FungalDraw()
 	self.fungal.x = 3
 	self.fungal.y = 1 - self.scroll.y
 
 	self:AddOption(self.c.options.NonInteractive)
+
+	if self.fungal.past then self:FungalDrawPast() end
 
 	if self.fungal.future then self:FungalDrawFuture() end
 
