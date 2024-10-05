@@ -1,6 +1,6 @@
 ---@diagnostic disable: lowercase-global, missing-global-doc
 function gui_fungal_shift_get_past_shifts()
-	past_shifts = {}
+	-- past_shifts = {}
 	local past_materials = ComponentGetValue2(worldcomponent, "changed_materials")
 	local shift_number = 1
 	current_shifts = tonumber(GlobalsGetValue("fungal_shift_iteration", "0"))

@@ -46,7 +46,11 @@ function gui:FetchData()
 	self.player_x, self.player_y = EntityGetTransform(self.player)
 	if GameGetFrameNum() % 60 == 0 then
 		self:ScanPWPosition()
-		self.fungal.current_shift = self.mod:GetGlobalNumber("fungal_shift_iteration", 0) + 1
+	end
+	local shift_num = self.mod:GetGlobalNumber("fungal_shift_iteration", 0) + 1
+	if self.fs.current_shift ~= shift_num then
+		self.fs.current_shift = shift_num
+		self.fs:AnalizePastShifts()
 	end
 	self.fungal_cd = self:GetFungalShiftCooldown()
 end
@@ -93,6 +97,7 @@ function gui:loop()
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
 	if self.stats.enabled then self:StatsDraw() end
+	self.gui_id = 200000
 	if self.menu.opened then self:MenuDraw() end
 end
 

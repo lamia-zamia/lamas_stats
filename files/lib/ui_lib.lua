@@ -32,7 +32,7 @@ local const = {
 ---@class UI_class
 ---@field protected gui gui
 ---@field private gui_tooltip gui
----@field private gui_id number
+---@field protected gui_id number
 ---@field private gui_longest_string_cache table
 ---@field private __index UI_class
 ---@field private gui_tooltip_size_cache gui_tooltip_size_cache

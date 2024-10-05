@@ -52,7 +52,7 @@ end
 ---@return number
 ---@nodiscard
 function helper:GetFungalShiftCooldown()
-	if self.fungal.current_shift > self.fs.max_shifts then return 0 end
+	if not self.fs.current_shift or self.fs.current_shift > self.fs.max_shifts then return 0 end
 
 	local last_frame = self.mod:GetGlobalNumber("fungal_shift_last_frame", -1)
 	if last_frame < 0 then return 0 end

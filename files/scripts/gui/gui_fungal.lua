@@ -8,7 +8,6 @@
 ---@class (exact) LS_Gui_fungal
 ---@field x number
 ---@field y number
----@field current_shift number
 ---@field offset LS_Gui_fungal_offset
 ---@field future boolean to show future window or not
 ---@field past boolean
@@ -203,7 +202,7 @@ function fungal:FungalSanitizeFromShifts(from)
 end
 
 function fungal:FungalDrawFuture()
-	for i = self.fungal.current_shift, 20 do
+	for i = self.fs.current_shift, 20 do
 		local shift = self.fs.predictor.shifts[i]
 
 		local from = self:FungalSanitizeFromShifts(shift.from)
@@ -237,10 +236,40 @@ function fungal:FungalDrawFuture()
 end
 
 function fungal:FungalDrawPast()
-	if self.fungal.current_shift <= 1 then return end
+	if self.fs.current_shift <= 1 then return end
 
-	for i = 1, self.fungal.current_shift do
+	for i = 1, self.fs.current_shift do
+		local shift = self.fs.past_shifts[i]
 
+		if not shift then return end --do something
+
+		local from = self:FungalSanitizeFromShifts(shift.from)
+		-- if shift.flask == "from" then
+		-- 	self.fungal.row_count = self.fungal.row_count + 1
+		-- end
+		-- if shift.flask == "to" and self.fungal.row_count == 1 then
+		-- 	self.fungal.row_count = self.fungal.row_count + 1
+		-- end
+
+		local height = self.fungal.row_count * 10 + 1
+
+		local color = i % 2 == 0 and 0.4 or 0.6
+		self:SetZ(self.z + 4)
+		self:Color(color, color, color)
+		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, 640, height)
+
+		self:FungalDrawShiftNumber(i)
+
+		self:FungalDrawFromMaterials(from, false)
+
+		local center = self:FungalGetShiftWindowOffset(1)
+		self:Text(self.fungal.x, self.fungal.y + center, " -> ")
+		self.fungal.x = self.fungal.x + 15
+
+		self:FungalDrawToMaterial(shift.to, false)
+
+		self.fungal.y = self.fungal.y + height
+		self.fungal.x = 3
 	end
 end
 
@@ -308,6 +337,7 @@ end
 
 ---Initialize data for fungal shift
 function fungal:FungalInit()
+	-- self.fs:AnalizePastShifts()
 	self:FungalUpdateWindowDims()
 	self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
 	self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")
