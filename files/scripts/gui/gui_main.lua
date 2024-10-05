@@ -16,6 +16,7 @@ gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
 gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
 gui.scroll.scroll_img_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.png"
+gui.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
 gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.show = false
@@ -28,8 +29,8 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_helper.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_menu.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_stats.lua",
-	"mods/lamas_stats/files/scripts/gui/gui_fungal.lua",
-	"mods/lamas_stats/files/scripts/gui/gui_kys.lua"
+	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_kys.lua",
 }
 
 for i = 1, #modules do

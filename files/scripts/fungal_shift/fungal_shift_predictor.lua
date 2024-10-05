@@ -11,7 +11,8 @@ local shift_predictor = {
 }
 
 local buffer ---@type shift
-local flask
+local flask ---@type number
+local print_old = print
 
 ---Redefines functions so they would do nothing
 local function redefine_functions()
@@ -98,12 +99,13 @@ end
 ---@param no_flask shift
 ---@return shift
 local function check_for_failed_shift_with_flask_to(no_flask)
-	local from_count = #no_flask.from
+	local from_count = #buffer.from
 	if from_count > 1 or buffer.from[1] == no_flask.from[1] then
 		no_flask.from = from_count > #buffer.from and no_flask.from or buffer.from
 		no_flask.flask = "to"
 		return no_flask
 	else
+		-- print_old(shift_predictor.current_predict_iter, no_flask.from[1] .. ", " .. no_flask.to)
 		buffer.to = nil
 		buffer.failed = no_flask
 		return buffer

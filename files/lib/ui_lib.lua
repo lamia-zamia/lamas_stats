@@ -3,7 +3,8 @@ local options = {
 	ForceFocusable = 7,
 	NonInteractive = 2,
 	AlwaysClickable = 3,
-	NoPositionTween = 6
+	NoPositionTween = 6,
+	Layout_NextSameLine = 14
 }
 
 ---@class UI_const
