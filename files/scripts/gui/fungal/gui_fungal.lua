@@ -39,7 +39,7 @@ end
 function fungal:FungalDrawFromMaterials(x, y, from, flask)
 	if not from then
 		local center = self:FungalGetShiftWindowOffset(1)
-		self:FungalDrawFlaskAvailablity(x, y + center, true)
+		self:FungalDrawFlaskAvailablity(x, y + center, { 0.8, 0, 0 })
 	else
 		local count = #from
 		local rows = count + (flask and 1 or 0)
@@ -64,7 +64,7 @@ end
 function fungal:FungalDrawToMaterial(x, y, to, flask)
 	if not to then
 		local center = self:FungalGetShiftWindowOffset(1)
-		self:FungalDrawFlaskAvailablity(x, y + center, true)
+		self:FungalDrawFlaskAvailablity(x, y + center, { 0.8, 0, 0 })
 	else
 		local y_offset = self:FungalGetShiftWindowOffset(flask and 2 or 1)
 		if flask then

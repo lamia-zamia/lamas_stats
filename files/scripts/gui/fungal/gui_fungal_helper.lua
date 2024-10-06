@@ -5,13 +5,20 @@
 ---@field past number
 ---@field future number
 ---@field held number
----@field ifnot number
----@field _or number
----@field _if number
----@field _then number
 
 ---@class (exact) LS_Gui
 local helper = {}
+
+---Draws a text and returns text dim
+---@private
+---@param x number
+---@param y number
+---@param text string
+---@return number
+function helper:FungalText(x, y, text)
+	self:Text(x, y, text)
+	return (self:GetTextDimension(text))
+end
 
 ---Returns true if shift is hovered
 ---@private
@@ -80,10 +87,10 @@ end
 ---@private
 ---@param x number
 ---@param y number
----@param failed? boolean
-function helper:FungalDrawFlaskAvailablity(x, y, failed)
+---@param color? {[1]:number, [2]: number, [3]:number}
+function helper:FungalDrawFlaskAvailablity(x, y, color)
 	self:Image(x, y + 1, "mods/lamas_stats/files/gfx/held_material.png")
-	if failed then self:Color(0.8, 0, 0) end
+	if color then self:Color(unpack(color)) end
 	self:Text(x + 9, y, _T.HeldMaterial)
 end
 
@@ -195,10 +202,6 @@ function helper:FungalUpdateWindowDims()
 	self.fungal.offset.past = self:GetTextDimension(_T.EnableFungalPast) + 15
 	self.fungal.offset.future = self:GetTextDimension(_T.EnableFungalFuture) + 15
 	self.fungal.offset.held = self:GetTextDimension(_T.HeldMaterial)
-	self.fungal.offset.ifnot = self:GetTextDimension(_T.lamas_stats_fungal_if_fail)
-	self.fungal.offset._or = self:GetTextDimension(_T.lamas_stats_or)
-	self.fungal.offset._if = self:GetTextDimension(_T.lamas_stats_if)
-	self.fungal.offset._then = self:GetTextDimension(_T.lamas_stats_then)
 
 	self:FungalSetFungalListOffset()
 
