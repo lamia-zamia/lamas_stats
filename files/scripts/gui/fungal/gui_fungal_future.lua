@@ -53,6 +53,14 @@ function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	self:FungalDrawFutureTooltipShift(y + 10, shift.force_failed, offset)
 end
 
+---Draws greedy information
+---@param y integer
+---@param greedy greedy_shift
+function future:FungalDrawFutureTooltipGreedy(y, greedy)
+	self:FungalDrawSingleMaterial(0, y, greedy.gold)
+	self:FungalDrawSingleMaterial(50, y, greedy.grass)
+end
+
 ---Draws tooltip for future shift
 ---@private
 ---@param shift shift
@@ -69,8 +77,15 @@ function future:FungalDrawFutureTooltip(shift, i)
 	y = y + 10
 
 	self:FungalDrawFutureTooltipShift(y, shift, offset_from)
-	y = y + 10 * self.fungal.row_count + 5
+	y = y + 10 * self.fungal.row_count
 	if not self.fs.predictor.is_using_new_shift then return end
+
+	if shift.greedy then
+		self:FungalDrawFutureTooltipGreedy(y, shift.greedy)
+		y = y + 10
+	end
+	y = y + 5
+
 	if shift.failed then
 		self:FungalDrawFutureTooltipShiftFailed(y, shift, offset_from)
 		y = y + 10 * self.fungal.row_count + 15

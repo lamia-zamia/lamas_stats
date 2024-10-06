@@ -1,11 +1,14 @@
 local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") ---@type error_reporter
+
+---@alias greedy_shift {gold:integer, grass:integer, success:boolean}
+
 ---@class (exact) shift
 ---@field from? integer[]
 ---@field to? integer
 ---@field flask? string
 ---@field failed? shift
 ---@field force_failed? shift
----@field greedy? {gold:integer, grass:integer, success:boolean}
+---@field greedy? greedy_shift
 
 ---@class fungal_shift
 ---@field predictor shift_predictor
