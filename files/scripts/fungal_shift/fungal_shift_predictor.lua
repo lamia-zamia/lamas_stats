@@ -32,10 +32,13 @@ end
 local function determine_cooldown()
 	local passed_frame_check
 	local frame = 0
+
 	local globalsGetValue = function(key)
+		-- Returning frame 180000 - frame for checks
 		if key == "fungal_shift_last_frame" then
 			return 180000 - frame
 		end
+		-- Returning iteration 5000 for it to exit after frame check
 		if key == "fungal_shift_iteration" then
 			passed_frame_check = true
 			return 5000
@@ -48,6 +51,7 @@ local function determine_cooldown()
 	end
 	GameGetFrameNum = gameGetFrameNum
 
+	-- Starting from 180000, decreasing frame by one and checking if frame check was passed
 	for _ = 1, 180000 do
 		passed_frame_check = false
 		fungal_shift(1, 0, 0, false)
@@ -57,6 +61,7 @@ local function determine_cooldown()
 		end
 		frame = frame + 1
 	end
+	-- Failover, wtf happened?
 	shift_predictor.cooldown = 0
 end
 
@@ -64,6 +69,7 @@ end
 local function determina_max_shift()
 	local converted
 
+	-- Rewriting function to set boolean to true when shift was successful
 	local convertMaterialEverywhere = function()
 		converted = true
 	end
@@ -72,12 +78,15 @@ local function determina_max_shift()
 	for _ = 1, 200 do
 		converted = false
 		fungal_shift(1, 0, 0, false)
+		-- If it didn't converted - it was failed
 		if not converted then
 			shift_predictor.max_shifts = shift_predictor.current_predict_iter - 1
 			return
 		end
+		-- Elsewise increasing current "iteration" 
 		shift_predictor.current_predict_iter = shift_predictor.current_predict_iter + 1
 	end
+	-- Failover, wtf happened?
 	shift_predictor.max_shifts = 200
 end
 
@@ -131,32 +140,44 @@ end
 ---Fake shift to get flask shifts
 ---@return shift
 local function check_for_flask_shift()
+	-- Writing old value as shift without a flask
 	local no_flask = buffer
 	buffer = {
 		from = {},
 	}
+	-- Shifting with fire flask
 	flask = 1
 	fungal_shift(1, 0, 0, true)
+
+	-- Material "to" was changed to flask, calculating failed shift
 	if buffer.to == flask then
 		return check_for_failed_shift_with_flask_to(no_flask)
 	end
+	-- Material "from" was changed to flask, calculating failed shift
 	if buffer.from[1] == flask then
 		return check_for_failed_shift_with_flask_from(no_flask)
 	end
+
+	-- Shift wasn't changed, returning as is
 	return buffer
 end
 
 ---Fake shift to get seed shifts
 ---@return shift
 local function get_shift_materials()
+	-- Clearing buffer 
 	buffer = {
 		from = {},
 	}
+	-- Setting no flask (air)
 	flask = 0
 	fungal_shift(1, 0, 0, true)
+
+	-- Something failed
 	if not buffer.from[1] or not buffer.to then
 		_GamePrint("couldn't parse shift list")
 	end
+	-- Checking for flasks
 	return check_for_flask_shift()
 end
 
