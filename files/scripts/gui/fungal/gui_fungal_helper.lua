@@ -118,6 +118,7 @@ function helper:FungalSanitizeFromShifts(from)
 			arr[#arr + 1] = from[i]
 		end
 	end
+	if #arr < 1 then return from end
 	return arr
 end
 
