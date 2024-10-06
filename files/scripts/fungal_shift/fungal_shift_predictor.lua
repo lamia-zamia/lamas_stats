@@ -12,7 +12,7 @@ local shift_predictor = {
 
 local buffer ---@type shift
 local flask ---@type number
-local print_old = print
+local _GamePrint = GamePrint
 
 ---Redefines functions so they would do nothing
 local function redefine_functions()
@@ -100,15 +100,31 @@ end
 ---@return shift
 local function check_for_failed_shift_with_flask_to(no_flask)
 	local from_count = #buffer.from
-	if from_count > 1 or buffer.from[1] == no_flask.from[1] then
+	if from_count > 1 then
 		no_flask.from = from_count > #buffer.from and no_flask.from or buffer.from
 		no_flask.flask = "to"
 		return no_flask
+	elseif buffer.from[1] == no_flask.from[1] then
+		local correct_shift = no_flask
+		flask = buffer.from[1]
+		buffer = {
+			from = {},
+		}
+		fungal_shift(1, 0, 0, true)
+		correct_shift.force_failed = buffer
+		return correct_shift
 	else
-		-- print_old(shift_predictor.current_predict_iter, no_flask.from[1] .. ", " .. no_flask.to)
-		buffer.to = nil
-		buffer.failed = no_flask
-		return buffer
+		local correct_shift = buffer
+		correct_shift.to = nil
+		correct_shift.flask = "to"
+		correct_shift.failed = no_flask
+		flask = buffer.from[1]
+		buffer = {
+			from = {},
+		}
+		fungal_shift(1, 0, 0, true)
+		correct_shift.force_failed = buffer
+		return correct_shift
 	end
 end
 
@@ -138,6 +154,9 @@ local function get_shift_materials()
 	}
 	flask = 0
 	fungal_shift(1, 0, 0, true)
+	if not buffer.from[1] or not buffer.to then
+		_GamePrint("couldn't parse shift list")
+	end
 	return check_for_flask_shift()
 end
 

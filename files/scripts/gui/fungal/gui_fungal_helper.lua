@@ -1,3 +1,15 @@
+---@class (exact) LS_Gui_fungal_offset
+---@field shift number offset after shift i: text
+---@field from number offset after from
+---@field to number offset after to
+---@field past number
+---@field future number
+---@field held number
+---@field ifnot number
+---@field _or number
+---@field _if number
+---@field _then number
+
 ---@class (exact) LS_Gui
 local helper = {}
 
@@ -9,7 +21,7 @@ local helper = {}
 ---@return boolean
 ---@nodiscard
 function helper:FungalIsHoverBoxHovered(x, y, height)
-	if y + height / 2 > 0 and y + height / 2 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.pos_x + x, self.menu.pos_y + y + 7, self.fungal.width, height)
+	if y + height / 2 > 0 and y + height / 2 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.pos_x + x, self.menu.pos_y + y + 7, self.fungal.width, height, true)
 	then
 		return true
 	end
@@ -41,7 +53,7 @@ function helper:FungalDrawIcon(x, y, material_type)
 	if data.color then
 		self:FungalPotionColor(data.color)
 	end
-	self:Image(x, y, data.icon)
+	self:Image(x, y + 1, data.icon)
 end
 
 ---Draws material name and icon
@@ -61,7 +73,7 @@ end
 ---@param y number
 ---@param failed? boolean
 function helper:FungalDrawFlaskAvailablity(x, y, failed)
-	self:Image(x, y, "mods/lamas_stats/files/gfx/held_material.png")
+	self:Image(x, y + 1, "mods/lamas_stats/files/gfx/held_material.png")
 	if failed then self:Color(0.8, 0, 0) end
 	self:Text(x + 9, y, "Held Material")
 end
@@ -105,18 +117,26 @@ end
 ---@param shift shift
 ---@param max_from number
 ---@param max_to number
+---@param ignore_flask? boolean
 ---@return number from, number to
-function helper:FungalGetLongestTextInShift(shift, max_from, max_to)
+function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flask)
 	if not shift then return max_from, max_to end
+	if shift.flask and not ignore_flask then
+		if shift.flask == "to" then
+			max_to = math.max(self.fungal.offset.held + 9, max_to)
+		else
+			max_from = math.max(self.fungal.offset.held + 9, max_from)
+		end
+	end
 	if shift.to then
 		local name = self.mat:get_data(shift.to).ui_name
-		max_to = math.max(self:GetTextDimension(self:Locale(name)), max_to)
+		max_to = math.max(self:GetTextDimension(self:Locale(name)) + 9, max_to)
 	end
 	if shift.from then
 		for j = 1, #shift.from do
 			local data = self.mat:get_data(shift.from[j])
 			local name = self:Locale(data.ui_name)
-			max_from = math.max(max_from, self:GetTextDimension(name))
+			max_from = math.max(max_from, self:GetTextDimension(name) + 9)
 		end
 	end
 	return max_from, max_to
@@ -125,18 +145,28 @@ end
 ---Calculates row count for shift
 ---@private
 ---@param from number[]
+---@param to number
 ---@param flask string|false
 ---@return number
-function helper:FungalCalculateRowCount(from, flask)
+function helper:FungalCalculateRowCount(from, to, flask)
 	local rows = from and #from or 1
-	if flask == "from" then rows = rows + 1 end
-	if rows == 1 and flask == "to" then rows = 2 end
+	if flask == "from" and from[1] then rows = rows + 1 end
+	if rows == 1 and flask == "to" and to then rows = 2 end
 	return rows
 end
 
 ---Gets longest material name and sets it's width
 ---@private
 function helper:FungalUpdateWindowDims()
+	self.fungal.offset.shift = self:GetTextDimension(_T.lamas_stats_shift .. "000")
+	self.fungal.offset.past = self:GetTextDimension(_T.EnableFungalPast) + 15
+	self.fungal.offset.future = self:GetTextDimension(_T.EnableFungalFuture) + 15
+	self.fungal.offset.held = self:GetTextDimension(_T.HeldMaterial)
+	self.fungal.offset.ifnot = self:GetTextDimension(_T.lamas_stats_fungal_if_fail)
+	self.fungal.offset._or = self:GetTextDimension(_T.lamas_stats_or)
+	self.fungal.offset._if = self:GetTextDimension(_T.lamas_stats_if)
+	self.fungal.offset._then = self:GetTextDimension(_T.lamas_stats_then)
+
 	local max_from = 0
 	local max_to = 0
 	for i = 1, self.fs.current_shift - 1 do
@@ -145,12 +175,8 @@ function helper:FungalUpdateWindowDims()
 	for i = self.fs.current_shift, self.fs.max_shifts do
 		max_from, max_to = self:FungalGetLongestTextInShift(self.fs.predictor.shifts[i], max_from, max_to)
 	end
-
-	self.fungal.offset.shift = self:GetTextDimension(_T.lamas_stats_shift .. "000")
-	self.fungal.offset.from = max_from + 9
-	self.fungal.offset.to = max_to + 9
-	self.fungal.offset.past = self:GetTextDimension(_T.EnableFungalPast) + 15
-	self.fungal.offset.future = self:GetTextDimension(_T.EnableFungalFuture) + 15
+	self.fungal.offset.from = max_from
+	self.fungal.offset.to = max_to
 
 	self.fungal.width = math.max(self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3,
 		self.fungal.offset.past + self.fungal.offset.future)

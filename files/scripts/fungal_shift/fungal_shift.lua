@@ -4,6 +4,7 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 ---@field to? number
 ---@field flask? string
 ---@field failed? shift
+---@field force_failed? shift
 
 ---@class fungal_shift
 ---@field predictor shift_predictor

@@ -18,6 +18,7 @@ local translations =
 		lamas_stats_flask = "Flask",
 		lamas_stats_or = "or",
 		lamas_stats_if = "if",
+		lamas_stats_then = "then",
 		lamas_stats_shift = "shift",
 		lamas_stats_farthest = "Farthest",
 		lamas_stats_fungal_shift_possible = "Flask shift available",
@@ -45,6 +46,7 @@ local translations =
 		KYS_Button = "Yes, commit seppuku",
 		EnableFungalPast = "Show past shifts",
 		EnableFungalFuture = "Show future shifts",
+		HeldMaterial = "Held Material",
 	},
 	["русский"] = {
 		lamas_stat_return = "Назад",
@@ -56,13 +58,14 @@ local translations =
 		lamas_stats_fungal_predict_error = "Что-то пошло не так при попытке рассчитать сдвиг",
 		lamas_stats_fungal_if_fail = "если не",
 		lamas_stats_fungal_shift_failed = "Грибной сдвиг был провальный",
-		lamas_stats_ingame_name = "айди материала",		
+		lamas_stats_ingame_name = "айди материала",
 		FungalShifts = "Грибные сдвиги",
 		lamas_stats_fungal_group_of = "группа",
 		lamas_stats_fungal_next_shift = "следующий сдвиг",
 		lamas_stats_flask = "Пузырёк",
 		lamas_stats_or = "или",
 		lamas_stats_if = "если",
+		lamas_stats_then = "тогда",
 		lamas_stats_shift = "сдвиг",
 		lamas_stats_farthest = "Самый дальний",
 		lamas_stats_fungal_shift_possible = "Возможен сдвиг с помощью фляги",
@@ -91,6 +94,7 @@ local translations =
 		KYS_Button = "Да, сделать сеппуку",
 		EnableFungalPast = "Показывать прошлые сдвиги",
 		EnableFungalFuture = "Показывать будущие сдвиги",
+		HeldMaterial = "Материал в руке",
 	},
 	["日本語"] = {
 		lamas_stat_return = "戻る",
@@ -110,6 +114,7 @@ local translations =
 		lamas_stats_flask = "フラスコ",
 		lamas_stats_or = "または",
 		lamas_stats_if = "もし",
+		lamas_stats_then = "その時",
 		lamas_stats_shift = "シフト",
 		lamas_stats_farthest = "最遠",
 		lamas_stats_fungal_shift_possible = "フラスコシフト可能",
@@ -137,29 +142,33 @@ local translations =
 		KYS_Button = "はい、切腹します",
 		EnableFungalPast = "過去のシフトを表示",
 		EnableFungalFuture = "未来のシフトを表示",
+		HeldMaterial = "手持ちの材料",
 	},
 }
 
-local _T = setmetatable({}, 
-{
-	__index = function(t, k)
-	local currentLang = GameTextGetTranslatedOrNot("$current_language")
-	if currentLang == "русский(Neonomi)" or currentLang == "русский(Сообщество)" then --compatibility with custom langs
-		currentLang = "русский"
-	end
-	if currentLang == "自然な日本語" then
-		currentLang = "日本語"
-	end
-	if not translations[currentLang] then
-		currentLang = "English"
-	end
-	if not translations[currentLang][k] then
-		print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, currentLang))
-		currentLang = "English"
-	end
-	if translations[currentLang][k] then return translations[currentLang][k]
-	else return "ERROR" end
-	end
-})
+local _T = setmetatable({},
+	{
+		__index = function(t, k)
+			local currentLang = GameTextGetTranslatedOrNot("$current_language")
+			if currentLang == "русский(Neonomi)" or currentLang == "русский(Сообщество)" then --compatibility with custom langs
+				currentLang = "русский"
+			end
+			if currentLang == "自然な日本語" then
+				currentLang = "日本語"
+			end
+			if not translations[currentLang] then
+				currentLang = "English"
+			end
+			if not translations[currentLang][k] then
+				print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, currentLang))
+				currentLang = "English"
+			end
+			if translations[currentLang][k] then
+				return translations[currentLang][k]
+			else
+				return "ERROR"
+			end
+		end
+	})
 
 return _T
