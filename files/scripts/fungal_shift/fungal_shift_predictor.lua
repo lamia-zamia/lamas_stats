@@ -3,11 +3,13 @@
 ---@field max_shifts integer
 ---@field shifts shift[]
 ---@field private current_predict_iter number
+---@field is_using_new_shift boolean
 local shift_predictor = {
 	cooldown = 0,
 	max_shifts = 20,
 	current_predict_iter = 1,
 	shifts = {},
+	is_using_new_shift = false
 }
 
 local last_shift_result ---@type shift
@@ -90,9 +92,9 @@ local function determine_max_shift()
 	shift_predictor.max_shifts = 200
 end
 
----Forces failed shift to predict results
+---Does fungal shift with flask
 ---@param material integer
-local function do_forced_fail_shift(material)
+local function do_fungal_shift_with_material(material)
 	flask = material
 	last_shift_result = {
 		from = {},
@@ -109,12 +111,12 @@ local function check_for_failed_shift_with_flask_from(last_shift_without_flask)
 		last_shift_without_flask.flask = "from"
 
 		-- Forcing fail shift using same material as "to"
-		do_forced_fail_shift(last_shift_result.to)
+		do_fungal_shift_with_material(last_shift_result.to)
 
 		last_shift_without_flask.force_failed = last_shift_result
 		return last_shift_without_flask
 
-	-- Shift was failed
+		-- Shift was failed
 	else
 		local correct_shift = last_shift_result
 
@@ -125,7 +127,7 @@ local function check_for_failed_shift_with_flask_from(last_shift_without_flask)
 		correct_shift.failed = last_shift_without_flask
 
 		-- -- Forcing another kind of failed shift with same material
-		do_forced_fail_shift(last_shift_result.to)
+		do_fungal_shift_with_material(last_shift_result.to)
 		correct_shift.force_failed = last_shift_result
 
 		return correct_shift
@@ -152,7 +154,7 @@ local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 		local correct_shift = last_shift_without_flask
 
 		-- Forcing fail shift using same material as "from"
-		do_forced_fail_shift(last_shift_result.from[1])
+		do_fungal_shift_with_material(last_shift_result.from[1])
 
 		correct_shift.force_failed = last_shift_result
 		return correct_shift
@@ -169,7 +171,7 @@ local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 		correct_shift.failed = last_shift_without_flask
 
 		-- Forcing another kind of failed shift with same material
-		do_forced_fail_shift(last_shift_result.from[1])
+		do_fungal_shift_with_material(last_shift_result.from[1])
 
 		correct_shift.force_failed = last_shift_result
 		return correct_shift
@@ -181,12 +183,9 @@ end
 local function check_for_flask_shift()
 	-- Writing old value as shift without a flask
 	local last_shift_without_flask = last_shift_result
-	last_shift_result = {
-		from = {},
-	}
-	-- Shifting with fire flask
-	flask = 1
-	fungal_shift(1, 0, 0, true)
+
+	-- Shifting with nest
+	do_fungal_shift_with_material(CellFactory_GetType("nest_static"))
 
 	-- Material "to" was changed to flask, calculating failed shift
 	if last_shift_result.to == flask then
@@ -218,6 +217,35 @@ local function get_shift_materials()
 	end
 	-- Checking for flasks
 	return check_for_flask_shift()
+end
+
+---Checks if pouch shift is possible
+---@return boolean
+local function is_pouch_shift_possible()
+	local file = "data/scripts/magic/fungal_shift.lua"
+	local content = ModTextFileGetContent(file)
+	if content:find("\"powder_stash\"") then return true end
+	return false
+end
+
+---Gets results of greedy shift
+---@param i integer
+local function get_greedy_shift_results(i)
+	if shift_predictor.shifts[i].flask ~= "to" then return end
+
+	shift_predictor.shifts[i].greedy = {}
+	
+	local gold = CellFactory_GetType("gold")
+	do_fungal_shift_with_material(gold)
+	local gold_success = last_shift_result.to == gold
+	shift_predictor.shifts[i].greedy.gold = last_shift_result.to
+
+	local grass = CellFactory_GetType("grass_holy")
+	do_fungal_shift_with_material(grass)
+	local grass_success = last_shift_result.to == grass
+	shift_predictor.shifts[i].greedy.grass = last_shift_result.to
+
+	shift_predictor.shifts[i].greedy.success = gold_success or grass_success
 end
 
 ---Parses data from fungal_shift.lua
@@ -267,6 +295,14 @@ function shift_predictor:parse()
 	for i = 1, 200 do
 		shift_predictor.current_predict_iter = i
 		shift_predictor.shifts[i] = get_shift_materials()
+	end
+
+	self.is_using_new_shift = is_pouch_shift_possible()
+
+	if self.is_using_new_shift then
+		for i = 1, 200 do
+			get_greedy_shift_results(i)
+		end
 	end
 
 	-- Removing vars

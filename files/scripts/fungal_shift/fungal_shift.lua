@@ -5,6 +5,7 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 ---@field flask? string
 ---@field failed? shift
 ---@field force_failed? shift
+---@field greedy? {gold:integer, grass:integer, success:boolean}
 
 ---@class fungal_shift
 ---@field predictor shift_predictor
@@ -135,7 +136,7 @@ function fs:AnalizePastShifts()
 	self.shifted:GetShiftedMaterials()
 	for i = #self.past_shifts + 1, self.current_shift - 1 do
 		if not self.shifted.materials[self.shifted.indexed] then
-			reporter:Report("Couldn't find shifted materials for shift " .. i)
+			reporter:Report(_T.lamas_stats_fungal_predict_error .. ", " .. i)
 			return
 		end
 		self:AnalizePastShift(i)
@@ -145,7 +146,6 @@ end
 ---Init fungal shifts
 function fs:Init()
 	self.predictor:parse()
-	-- self:AnalizePastShifts()
 	self.max_shifts = self.predictor.max_shifts
 	self.cooldown = self.predictor.cooldown
 end
