@@ -70,7 +70,7 @@ function future:FungalDrawFutureTooltip(shift, i)
 
 	self:FungalDrawFutureTooltipShift(y, shift, offset_from)
 	y = y + 10 * self.fungal.row_count + 5
-
+	if not self.fs.predictor.is_using_new_shift then return end
 	if shift.failed then
 		self:FungalDrawFutureTooltipShiftFailed(y, shift, offset_from)
 		y = y + 10 * self.fungal.row_count + 15
@@ -90,7 +90,6 @@ function future:FungalDrawFuture()
 		self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
 		local height = self.fungal.row_count * 10
 		local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
-
 		if hovered then
 			if i == self.fs.current_shift then
 				self:Color(0.4, 1, 0.5)
