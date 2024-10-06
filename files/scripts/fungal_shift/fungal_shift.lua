@@ -24,10 +24,9 @@ local fs = {
 
 function fs:AnalizePastShifts()
 	self.shifted:GetShiftedMaterials()
-	local current_pair = 1
-	for i = 1, self.current_shift - 1 do
-		if not self.shifted.materials[current_pair] then
-			reporter("Couldn't find shifted materials for shift " .. i)
+	for i = #self.past_shifts + 1, self.current_shift - 1 do
+		if not self.shifted.materials[self.shifted.indexed] then
+			reporter:Report("Couldn't find shifted materials for shift " .. i)
 			return
 		end
 
@@ -36,7 +35,7 @@ function fs:AnalizePastShifts()
 		local past_shift = self.past_shifts[i]
 
 		past_shift.from = {}
-		past_shift.to = self.shifted.materials[current_pair].to
+		past_shift.to = self.shifted.materials[self.shifted.indexed].to
 
 		local seed_shift = self.predictor.shifts[i]
 
@@ -66,14 +65,14 @@ function fs:AnalizePastShifts()
 		if past_shift.to ~= seed_shift.to and seed_shift.flask == "to" then
 			past_shift.flask = "to"
 			past_shift.from = seed_shift.from
-			current_pair = current_pair + #past_shift.from
+			self.shifted.indexed = self.shifted.indexed + #past_shift.from
 			goto continue
 		end
 
 		--[[	checking if shifted from is different from seed ]]
 		for j = 1, #seed_shift.from do
 			local material_type = seed_shift.from[j]
-			if self.shifted.materials[current_pair].from ~= material_type then
+			if self.shifted.materials[self.shifted.indexed].from ~= material_type then
 				if seed_shift.flask == "from" then
 					past_shift.flask = "from"
 					-- if past_materials[shift_number] == "apotheosis_cursed_liquid_red_static" or past_materials[shift_number] == "apotheosis_cursed_liquid_red" then
@@ -83,17 +82,17 @@ function fs:AnalizePastShifts()
 					-- 	break
 					-- end
 					if j == 1 then --foolproofing cases where first material matching shifted material
-						past_shift.from[#past_shift.from + 1] = self.shifted.materials[current_pair].from
-						current_pair = current_pair + 1
+						past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
+						self.shifted.indexed = self.shifted.indexed + 1
 					end
 					break
 				else
-					past_shift.from[#past_shift.from + 1] = self.shifted.materials[current_pair].from
-					current_pair = current_pair + 1
+					past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
+					self.shifted.indexed = self.shifted.indexed + 1
 				end
 			else
-				past_shift.from[#past_shift.from + 1] = self.shifted.materials[current_pair].from
-				current_pair = current_pair + 1
+				past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
+				self.shifted.indexed = self.shifted.indexed + 1
 				-- if past_shifts[i].to ~= past_materials[shift_number + 1] then --failproof cases where failed shifts are identical to true shift
 				-- 	break
 				-- end

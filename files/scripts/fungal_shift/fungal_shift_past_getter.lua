@@ -4,8 +4,10 @@
 
 ---@class fungal_reader
 ---@field materials materials_shifted[]
+---@field indexed number
 local reader = {
-	materials = {}
+	materials = {},
+	indexed = 1
 }
 
 function reader:GetShiftedMaterials()
