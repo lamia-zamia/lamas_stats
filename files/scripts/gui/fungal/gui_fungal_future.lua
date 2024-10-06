@@ -31,6 +31,7 @@ function future:FungalDrawFutureTooltip(shift, i)
 
 	self:Text(0, y, string.format(_T.lamas_stats_shift .. " %02d", i))
 	y = y + 10
+
 	self:FungalDrawFutureTooltipShift(y, shift, offset_from)
 	y = y + 10 * self.fungal.row_count + 5
 
@@ -39,6 +40,7 @@ function future:FungalDrawFutureTooltip(shift, i)
 		self:FungalDrawFlaskAvailablity(self.fungal.offset.ifnot + 3, y)
 		self:Text(self.fungal.offset.ifnot + self.fungal.offset.held + 14, y, _T.lamas_stats_then)
 		y = y + 10
+
 		self:FungalDrawFutureTooltipShift(y, shift.failed, offset_from)
 		y = y + 10 * self.fungal.row_count + 5
 	end
@@ -53,9 +55,10 @@ function future:FungalDrawFutureTooltip(shift, i)
 		self:FungalDrawFlaskAvailablity(x, y)
 		x = x + self.fungal.offset.held + 10
 		self:Text(x, y, "=")
-		local material = shift.flask == "from" and shift.to or shift.from[1]
+		local material = shift.flask == "from" and shift.to or shift.force_failed.from[1]
 		self:FungalDrawSingleMaterial(x + 5, y, material)
 		y = y + 10
+		
 		self:FungalDrawFutureTooltipShift(y, shift.force_failed, offset_from)
 	end
 	self:RemoveOption(self.c.options.Layout_NextSameLine)

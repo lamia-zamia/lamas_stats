@@ -10,7 +10,7 @@ local shift_predictor = {
 	shifts = {},
 }
 
-local buffer ---@type shift
+local last_shift_result ---@type shift
 local flask ---@type number
 local _GamePrint = GamePrint
 
@@ -66,7 +66,7 @@ local function determine_cooldown()
 end
 
 ---Bruteforce max shift count
-local function determina_max_shift()
+local function determine_max_shift()
 	local converted
 
 	-- Rewriting function to set boolean to true when shift was successful
@@ -83,56 +83,95 @@ local function determina_max_shift()
 			shift_predictor.max_shifts = shift_predictor.current_predict_iter - 1
 			return
 		end
-		-- Elsewise increasing current "iteration" 
+		-- Elsewise increasing current "iteration"
 		shift_predictor.current_predict_iter = shift_predictor.current_predict_iter + 1
 	end
 	-- Failover, wtf happened?
 	shift_predictor.max_shifts = 200
 end
 
+---Forces failed shift to predict results
+---@param material number
+local function do_forced_fail_shift(material)
+	flask = material
+	last_shift_result = {
+		from = {},
+	}
+	fungal_shift(1, 0, 0, true)
+end
+
 ---Checks for failed shifts with flask from
----@param no_flask shift
+---@param last_shift_without_flask shift
 ---@return shift
-local function check_for_failed_shift_with_flask_from(no_flask)
-	if buffer.to == no_flask.to then
-		no_flask.flask = "from"
-		return no_flask
+local function check_for_failed_shift_with_flask_from(last_shift_without_flask)
+	-- If "to" wasn't changed - it's a correct shift
+	if last_shift_result.to == last_shift_without_flask.to then
+		last_shift_without_flask.flask = "from"
+
+		-- Forcing fail shift using same material as "to"
+		do_forced_fail_shift(last_shift_result.to)
+
+		last_shift_without_flask.force_failed = last_shift_result
+		return last_shift_without_flask
+
+	-- Shift was failed
 	else
-		buffer.from = nil
-		buffer.failed = no_flask
-		return buffer
+		local correct_shift = last_shift_result
+
+		-- "from" is empty because it's the same material as "to"
+		correct_shift.from = nil
+
+		-- previous shift is the failed one
+		correct_shift.failed = last_shift_without_flask
+
+		-- -- Forcing another kind of failed shift with same material
+		do_forced_fail_shift(last_shift_result.to)
+		correct_shift.force_failed = last_shift_result
+
+		return correct_shift
 	end
 end
 
 ---Checks for failed shifts with flask to
----@param no_flask shift
+---@param last_shift_without_flask shift this shift without using a flask
 ---@return shift
-local function check_for_failed_shift_with_flask_to(no_flask)
-	local from_count = #buffer.from
+local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
+	-- Gettings amount of from materials
+	local from_count = #last_shift_result.from
+
+	-- If there's 2 or more from materials - shift can not fail
 	if from_count > 1 then
-		no_flask.from = from_count > #buffer.from and no_flask.from or buffer.from
-		no_flask.flask = "to"
-		return no_flask
-	elseif buffer.from[1] == no_flask.from[1] then
-		local correct_shift = no_flask
-		flask = buffer.from[1]
-		buffer = {
-			from = {},
-		}
-		fungal_shift(1, 0, 0, true)
-		correct_shift.force_failed = buffer
+		-- Chosing longest "from" list, otherwise it could exclude some results from group (for example toxic sludge, poison - > toxic sludge)
+		last_shift_without_flask.from = from_count > #last_shift_result.from and last_shift_without_flask.from or
+			last_shift_result.from
+		last_shift_without_flask.flask = "to"
+		return last_shift_without_flask
+
+		-- If "from" material is same with or without flask - it's a normal flask shift
+	elseif last_shift_result.from[1] == last_shift_without_flask.from[1] then
+		local correct_shift = last_shift_without_flask
+
+		-- Forcing fail shift using same material as "from"
+		do_forced_fail_shift(last_shift_result.from[1])
+
+		correct_shift.force_failed = last_shift_result
 		return correct_shift
+
+		-- It's a failed shift
 	else
-		local correct_shift = buffer
+		local correct_shift = last_shift_result
+
+		-- "To" is empty because it's the same material
 		correct_shift.to = nil
 		correct_shift.flask = "to"
-		correct_shift.failed = no_flask
-		flask = buffer.from[1]
-		buffer = {
-			from = {},
-		}
-		fungal_shift(1, 0, 0, true)
-		correct_shift.force_failed = buffer
+
+		-- Failed shift is the one without a flask
+		correct_shift.failed = last_shift_without_flask
+
+		-- Forcing another kind of failed shift with same material
+		do_forced_fail_shift(last_shift_result.from[1])
+
+		correct_shift.force_failed = last_shift_result
 		return correct_shift
 	end
 end
@@ -141,8 +180,8 @@ end
 ---@return shift
 local function check_for_flask_shift()
 	-- Writing old value as shift without a flask
-	local no_flask = buffer
-	buffer = {
+	local last_shift_without_flask = last_shift_result
+	last_shift_result = {
 		from = {},
 	}
 	-- Shifting with fire flask
@@ -150,23 +189,23 @@ local function check_for_flask_shift()
 	fungal_shift(1, 0, 0, true)
 
 	-- Material "to" was changed to flask, calculating failed shift
-	if buffer.to == flask then
-		return check_for_failed_shift_with_flask_to(no_flask)
+	if last_shift_result.to == flask then
+		return check_for_failed_shift_with_flask_to(last_shift_without_flask)
 	end
 	-- Material "from" was changed to flask, calculating failed shift
-	if buffer.from[1] == flask then
-		return check_for_failed_shift_with_flask_from(no_flask)
+	if last_shift_result.from[1] == flask then
+		return check_for_failed_shift_with_flask_from(last_shift_without_flask)
 	end
 
 	-- Shift wasn't changed, returning as is
-	return buffer
+	return last_shift_result
 end
 
 ---Fake shift to get seed shifts
 ---@return shift
 local function get_shift_materials()
-	-- Clearing buffer 
-	buffer = {
+	-- Clearing last_shift_result
+	last_shift_result = {
 		from = {},
 	}
 	-- Setting no flask (air)
@@ -174,7 +213,7 @@ local function get_shift_materials()
 	fungal_shift(1, 0, 0, true)
 
 	-- Something failed
-	if not buffer.from[1] or not buffer.to then
+	if not last_shift_result.from[1] or not last_shift_result.to then
 		_GamePrint("couldn't parse shift list")
 	end
 	-- Checking for flasks
@@ -183,15 +222,19 @@ end
 
 ---Parses data from fungal_shift.lua
 function shift_predictor:parse()
+	-- Starting sandbox to not load any globals
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
 
+	-- Redefining some functions so fungal shift would do nothing
 	redefine_functions()
 	fungal_shift = nil ---@diagnostic disable-line: assign-type-mismatch
 	dofile("data/scripts/magic/fungal_shift.lua")
 
+	-- Gets shift cooldown
 	determine_cooldown()
 
+	-- Cooldown value was set, we don't need to work with cooldown anymore
 	local gameGetFrameNum = function()
 		return 0
 	end
@@ -204,26 +247,33 @@ function shift_predictor:parse()
 	end
 	GlobalsGetValue = globalsGetValue
 
-	determina_max_shift()
+	-- Gets max shift
+	determine_max_shift()
 
+	-- Starting to parse materials, overriding convertMaterial function so it would return what was converted
 	local convertMaterialEverywhere = function(material_from_type, material_to_type)
-		buffer.from[#buffer.from + 1] = material_from_type
-		buffer.to = material_to_type
+		last_shift_result.from[#last_shift_result.from + 1] = material_from_type
+		last_shift_result.to = material_to_type
 	end
 	ConvertMaterialEverywhere = convertMaterialEverywhere
 
+	-- Overwriting a function to return a set material instead of hold material
 	local _get_held_item_material = function()
 		return flask
 	end
 	get_held_item_material = _get_held_item_material ---@diagnostic disable-line: lowercase-global
 
+	-- Getting 200 shifts (because fuck you)
 	for i = 1, 200 do
 		shift_predictor.current_predict_iter = i
 		shift_predictor.shifts[i] = get_shift_materials()
 	end
 
-	buffer = nil ---@diagnostic disable-line: cast-local-type
+	-- Removing vars
+	last_shift_result = nil ---@diagnostic disable-line: cast-local-type
+	flask = nil ---@diagnostic disable-line: cast-local-type
 
+	-- Reverting globals to its formal state
 	sandbox:end_sandbox()
 end
 

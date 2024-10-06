@@ -77,47 +77,6 @@ function gui_fungal_shift_tooltip_diplay_failed_shift(gui, material, if_mat)
 	GuiLayoutEnd(gui)
 end
 
-local function gui_fungal_shift_calculate_if_fail_to_flask_check(if_fail, current_shift)
-	local statement1 = if_fail.from.flask and #current_shift.from.materials == 1 and
-		current_shift.from.materials[1] == if_fail.to.material
-	local statement2 = if_fail.to.flask and #current_shift.from.materials == 1 and
-		current_shift.from.materials[1] == if_fail.from.materials[1]
-	local result = statement1 or statement2
-	return result
-end
-
-local function gui_fungal_shift_calculate_if_fail_from_flask_check(if_fail, current_shift)
-	local statement1 = if_fail.from.flask and current_shift.to.material == if_fail.to.material
-	local statement2 = if_fail.to.flask and #if_fail.from.materials == 1 and
-		current_shift.to.material == if_fail.from.materials[1]
-	local result = statement1 or statement2
-	return result
-end
-
-function gui_fungal_shift_calculate_if_fail(i, current_shift)
-	local convert_tries = 1
-	local if_fail = gui_fungal_shift_get_seed_shifts(i, convert_tries)
-	if current_shift.to.flask then
-		while (gui_fungal_shift_calculate_if_fail_to_flask_check(if_fail, current_shift)) do
-			convert_tries = convert_tries + 1
-			if_fail = gui_fungal_shift_get_seed_shifts(i, convert_tries)
-		end
-	end
-	if current_shift.from.flask then
-		while (gui_fungal_shift_calculate_if_fail_from_flask_check(if_fail, current_shift)) do
-			convert_tries = convert_tries + 1
-			if_fail = gui_fungal_shift_get_seed_shifts(i, convert_tries)
-		end
-	end
-	return if_fail
-end
-
-function gui_fungal_shift_decide_compatibility()
-	for i, mod in ipairs(active_mods) do
-		if mod == "ImprovedFungalShift" then compatibility = mod end
-	end
-end
-
 function gui_fungal_shift_get_seed_shifts(iter, convert_tries) --calculate shifts based on seed (code is copied from game itself)
 	local _from, _to = nil, nil
 	local converted_any = false

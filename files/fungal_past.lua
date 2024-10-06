@@ -1,4 +1,4 @@
----@diagnostic disable: lowercase-global, missing-global-doc
+---@diagnostic disable: lowercase-global, missing-global-doc, undefined-global
 function gui_fungal_shift_get_past_shifts()
 	-- past_shifts = {}
 	local past_materials = ComponentGetValue2(worldcomponent, "changed_materials")
@@ -88,18 +88,5 @@ function gui_fungal_shift_get_past_shifts()
 			end
 		end
 		::continue::
-	end
-end
-
-function gui_fungal_shift_display_past_shifts(gui)
-	for i = show_shift_start_from, #past_shifts, 1 do
-		if past_shifts[i].flask ~= "lamas_failed_shift" then
-			GuiLayoutBeginHorizontal(gui, 0, 0, 0, 0, 0)
-			GuiText(gui, 0, 0, _T.lamas_stats_shift .. " " .. tostring(past_shifts[i].number) .. ": ", fungal_shift_scale)
-			gui_fungal_shift_display_from(gui, past_shifts[i])
-			gui_fungal_shift_display_to(gui, past_shifts[i])
-			GuiLayoutEnd(gui)
-		end
-		if i % show_shifts_per_screen == 0 then break end
 	end
 end

@@ -21,7 +21,116 @@ local fs = {
 	current_shift = 0
 }
 
+---Checks is shift is identical to failed shift
+---@private
+---@param shift shift
+---@return boolean
+---@nodiscard
+function fs:IsShiftIdenticalToFailed(shift)
+	-- local fullmatch = 0 -- How many times there was an match between real shift and "failed" shift
+	for i = 1, #shift.from do
+		local material_from = shift.from[i]
+		local index = self.shifted.indexed + i - 1
+		if material_from ~= self.shifted.materials[index].from or shift.to ~= self.shifted.materials[index].to then
+			return false
+		end
+	end
+	return true
+end
 
+---Gets "from" materials that does not equal to "to"
+---@private
+---@param from number[]
+---@param to number
+---@return number[]
+---@nodiscard
+function fs:SanitizeFromMaterials(from, to)
+	local seed_shift_from_count = #from
+	if seed_shift_from_count > 1 then
+		local unique_from = {}
+		for i = 1, seed_shift_from_count do
+			local material_from = from[i]
+			if material_from ~= to then
+				unique_from[#unique_from + 1] = material_from
+			end
+		end
+		return unique_from
+	end
+
+	return from
+end
+
+---Analize past shift
+---@private
+---@param shift_number number
+function fs:AnalizePastShift(shift_number)
+	self.past_shifts[shift_number] = {}
+	local past_shift = self.past_shifts[shift_number]
+
+	past_shift.from = {}
+	past_shift.to = self.shifted.materials[self.shifted.indexed].to
+
+	local seed_shift = self.predictor.shifts[shift_number]
+
+	-- Checking if shift is identical to failed shift
+	if seed_shift.failed and self:IsShiftIdenticalToFailed(seed_shift.failed) then
+		-- set it as failed
+		past_shift.from = seed_shift.failed.from
+		self.shifted.indexed = self.shifted.indexed + #seed_shift.failed.from
+		return
+	end
+
+	-- Checking if shift is identical to force failed shift
+	if seed_shift.force_failed and self:IsShiftIdenticalToFailed(seed_shift.force_failed) then
+		-- set it as failed
+		past_shift.from = seed_shift.force_failed.from
+		self.shifted.indexed = self.shifted.indexed + #seed_shift.force_failed.from
+		return
+	end
+
+	-- Excluding same materials from "from" as "to" (in case with group shifts such as toxic, poison -> toxic would have only poison -> toxic)
+	local unique_from = self:SanitizeFromMaterials(seed_shift.from, past_shift.to)
+
+	-- Checking if shifted "to" is different from seed
+	if past_shift.to ~= seed_shift.to and seed_shift.flask == "to" then
+		past_shift.flask = "to"
+		past_shift.from = unique_from
+		self.shifted.indexed = self.shifted.indexed + #past_shift.from
+		return
+	end
+
+	-- Checking if shifted from is different from seed
+	for j = 1, #unique_from do
+		local material_type = unique_from[j]
+		if self.shifted.materials[self.shifted.indexed].from ~= material_type then
+			if seed_shift.flask == "from" then
+				past_shift.flask = "from"
+				-- if past_materials[shift_number] == "apotheosis_cursed_liquid_red_static" or past_materials[shift_number] == "apotheosis_cursed_liquid_red" then
+				-- 	table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red_static")
+				-- 	table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red")
+				-- 	shift_number = shift_number + 4
+				-- 	break
+				-- end
+				if j == 1 then --foolproofing cases where first material matching shifted material
+					past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
+					self.shifted.indexed = self.shifted.indexed + 1
+				end
+				break
+			else
+				past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
+				self.shifted.indexed = self.shifted.indexed + 1
+			end
+		else
+			past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
+			self.shifted.indexed = self.shifted.indexed + 1
+			-- if past_shifts[i].to ~= past_materials[shift_number + 1] then --failproof cases where failed shifts are identical to true shift
+			-- 	break
+			-- end
+		end
+	end
+end
+
+---Analize past shifts
 function fs:AnalizePastShifts()
 	self.shifted:GetShiftedMaterials()
 	for i = #self.past_shifts + 1, self.current_shift - 1 do
@@ -29,76 +138,7 @@ function fs:AnalizePastShifts()
 			reporter:Report("Couldn't find shifted materials for shift " .. i)
 			return
 		end
-
-		-- Initializing past shift
-		self.past_shifts[i] = {}
-		local past_shift = self.past_shifts[i]
-
-		past_shift.from = {}
-		past_shift.to = self.shifted.materials[self.shifted.indexed].to
-
-		local seed_shift = self.predictor.shifts[i]
-
-
-
-		-- if seed_shifts.flask then
-		-- 	local temp_failed_shift = gui_fungal_shift_calculate_if_fail(i, seed_shifts)
-		-- 	local fullmatch = 0 --how many times there was an match between real shift and "failed" shift
-		-- 	for ii, mat in ipairs(temp_failed_shift.from.materials) do
-		-- 		local iter = 2 * (ii - 1)
-		-- 		--if real shift is identical to "failed" shift
-		-- 		if mat == past_materials[shift_number + iter] and past_materials[shift_number + 1] == past_materials[shift_number + iter + 1] then
-		-- 			fullmatch = fullmatch + 1
-		-- 		else
-		-- 			break
-		-- 		end
-		-- 	end
-		-- 	if fullmatch == #temp_failed_shift.from.materials then
-		-- 		past_shifts[i].flask = "from_fail"
-		-- 		past_shifts[i].from = temp_failed_shift.from.materials
-		-- 		shift_number = shift_number + (#past_shifts[i].from) * 2
-		-- 		goto continue
-		-- 	end
-		-- end
-
-		-- Checking if shifted "to" is different from seed
-		if past_shift.to ~= seed_shift.to and seed_shift.flask == "to" then
-			past_shift.flask = "to"
-			past_shift.from = seed_shift.from
-			self.shifted.indexed = self.shifted.indexed + #past_shift.from
-			goto continue
-		end
-
-		--[[	checking if shifted from is different from seed ]]
-		for j = 1, #seed_shift.from do
-			local material_type = seed_shift.from[j]
-			if self.shifted.materials[self.shifted.indexed].from ~= material_type then
-				if seed_shift.flask == "from" then
-					past_shift.flask = "from"
-					-- if past_materials[shift_number] == "apotheosis_cursed_liquid_red_static" or past_materials[shift_number] == "apotheosis_cursed_liquid_red" then
-					-- 	table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red_static")
-					-- 	table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red")
-					-- 	shift_number = shift_number + 4
-					-- 	break
-					-- end
-					if j == 1 then --foolproofing cases where first material matching shifted material
-						past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
-						self.shifted.indexed = self.shifted.indexed + 1
-					end
-					break
-				else
-					past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
-					self.shifted.indexed = self.shifted.indexed + 1
-				end
-			else
-				past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
-				self.shifted.indexed = self.shifted.indexed + 1
-				-- if past_shifts[i].to ~= past_materials[shift_number + 1] then --failproof cases where failed shifts are identical to true shift
-				-- 	break
-				-- end
-			end
-		end
-		::continue::
+		self:AnalizePastShift(i)
 	end
 end
 
