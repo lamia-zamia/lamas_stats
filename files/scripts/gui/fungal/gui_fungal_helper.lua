@@ -21,7 +21,7 @@ local helper = {}
 ---@return boolean
 ---@nodiscard
 function helper:FungalIsHoverBoxHovered(x, y, height)
-	if y + height / 2 > 0 and y + height / 2 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.pos_x + x, self.menu.pos_y + y + 7, self.fungal.width, height, true)
+	if y + height / 2 > 0 and y + height / 2 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, height, true)
 	then
 		return true
 	end
@@ -102,7 +102,8 @@ end
 ---@param y number
 function helper:FungalDrawArrow(x, y)
 	local center = self:FungalGetShiftWindowOffset(1)
-	self:Text(x, y + center, "->")
+	self:Image(x, y + center, "mods/lamas_stats/files/gfx/arrow.png")
+	-- self:Text(x, y + center, "->")
 end
 
 ---Removes duplicate static entries from display

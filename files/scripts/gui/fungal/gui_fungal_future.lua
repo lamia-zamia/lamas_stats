@@ -118,7 +118,7 @@ function future:FungalDrawFuture()
 			self:Color(color, color, color)
 		end
 		self:SetZ(self.z + 4)
-		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, 640, height + 1)
+		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
 
 		self:FungalDrawShiftNumber(i)
 		self:FungalDrawFromMaterials(self.fungal.x, self.fungal.y, from, shift.flask == "from")

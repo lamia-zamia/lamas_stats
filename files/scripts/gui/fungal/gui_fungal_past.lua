@@ -44,14 +44,14 @@ function past:FungalDrawPast()
 			-- Darken past shift
 			self:SetZ(self.z - 101)
 			self:Color(0, 0, 0)
-			self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, 640, height + 1)
+			self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
 
 			local color = i % 2 == 0 and 0.4 or 0.6
 			self:Color(color, color, color)
 		end
 
 		self:SetZ(self.z + 4)
-		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, 640, height + 1)
+		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
 
 		
 
