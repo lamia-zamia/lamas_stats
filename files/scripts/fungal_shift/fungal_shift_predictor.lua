@@ -12,8 +12,8 @@ local shift_predictor = {
 	is_using_new_shift = false
 }
 
-local last_shift_result ---@type shift
-local flask ---@type integer
+local last_shift_result
+local flask
 local _GamePrint = GamePrint
 
 ---Redefines functions so they would do nothing

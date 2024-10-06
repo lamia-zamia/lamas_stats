@@ -2,12 +2,16 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 
 ---@alias greedy_shift {gold:integer, grass:integer, success:boolean}
 
+---@class (exact) failed_shift
+---@field from? integer[]
+---@field to? integer
+
 ---@class (exact) shift
 ---@field from? integer[]
 ---@field to? integer
 ---@field flask? string
----@field failed? shift
----@field force_failed? shift
+---@field failed? failed_shift
+---@field force_failed? failed_shift
 ---@field greedy? greedy_shift
 
 ---@class fungal_shift
@@ -27,7 +31,7 @@ local fs = {
 
 ---Checks is shift is identical to failed shift
 ---@private
----@param shift shift
+---@param shift failed_shift
 ---@return boolean
 ---@nodiscard
 function fs:IsShiftIdenticalToFailed(shift)

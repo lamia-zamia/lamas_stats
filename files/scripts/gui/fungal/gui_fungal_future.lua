@@ -4,7 +4,7 @@ local future = {}
 ---Draws individual shift in tooltip
 ---@private
 ---@param y number
----@param shift shift
+---@param shift shift|failed_shift
 ---@param offset number
 function future:FungalDrawFutureTooltipShift(y, shift, offset)
 	local x = 3

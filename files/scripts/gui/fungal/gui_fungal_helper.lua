@@ -125,7 +125,7 @@ end
 
 ---Returns longest string from shift
 ---@private
----@param shift shift
+---@param shift shift|failed_shift
 ---@param max_from number
 ---@param max_to number
 ---@param ignore_flask? boolean
