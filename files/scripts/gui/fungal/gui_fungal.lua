@@ -145,7 +145,7 @@ function fungal:FungalDraw()
 
 	if self.fungal.past and self.fs.current_shift > 1 then self:FungalDrawPast() end
 
-	if self.fungal.future then self:FungalDrawFuture() end
+	if self.fungal.future and self.fs.current_shift <= self.fs.max_shifts then self:FungalDrawFuture() end
 
 	self:RemoveOption(self.c.options.NonInteractive)
 	self:Text(0, self.fungal.y + self.scroll.y, "")

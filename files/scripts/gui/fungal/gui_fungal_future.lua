@@ -92,7 +92,13 @@ function future:FungalDrawFuture()
 		local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
 
 		if hovered then
-			self:Color(0.2, 0.6, 0.7)
+			if i == self.fs.current_shift then
+				self:Color(0.4, 1, 0.5)
+			else
+				self:Color(0.2, 0.6, 0.7)
+			end
+		elseif i == self.fs.current_shift then
+			self:Color(0.6, 1, 0.1)
 		else
 			local color = i % 2 == 0 and 0.4 or 0.6
 			self:Color(color, color, color)
