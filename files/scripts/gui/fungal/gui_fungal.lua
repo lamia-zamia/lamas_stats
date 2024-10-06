@@ -19,6 +19,7 @@ local fungal = {
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_helper.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_future.lua",
+	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_past.lua"
 }
 
 for i = 1, #modules do
@@ -134,46 +135,6 @@ function fungal:FungalDrawToMaterial(x, y, to, flask)
 	end
 end
 
-
-function fungal:FungalDrawPast()
-	if self.fs.current_shift <= 1 then return end
-
-	for i = 1, self.fs.current_shift do
-		local shift = self.fs.past_shifts[i]
-
-		if not shift then return end --do something
-
-		local from = self:FungalSanitizeFromShifts(shift.from)
-		-- if shift.flask == "from" then
-		-- 	self.fungal.row_count = self.fungal.row_count + 1
-		-- end
-		-- if shift.flask == "to" and self.fungal.row_count == 1 then
-		-- 	self.fungal.row_count = self.fungal.row_count + 1
-		-- end
-
-		local height = self.fungal.row_count * 10 + 1
-
-		local color = i % 2 == 0 and 0.4 or 0.6
-		self:SetZ(self.z + 4)
-		self:Color(color, color, color)
-		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, 640, height)
-
-		self:FungalDrawShiftNumber(i)
-
-		self:FungalDrawFromMaterials(self.fungal.x, self.fungal.y, from, false)
-		self.fungal.x = self.fungal.x + self.fungal.offset.from
-
-		self:FungalDrawArrow(self.fungal.x, self.fungal.y)
-		self.fungal.x = self.fungal.x + 15
-
-		self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, false)
-		self.fungal.x = self.fungal.x + self.fungal.offset.to
-
-		self.fungal.y = self.fungal.y + height
-		self.fungal.x = 3
-	end
-end
-
 ---Main function to draw shifts
 ---@private
 function fungal:FungalDraw()
@@ -182,7 +143,7 @@ function fungal:FungalDraw()
 
 	self:AddOption(self.c.options.NonInteractive)
 
-	if self.fungal.past then self:FungalDrawPast() end
+	if self.fungal.past and self.fs.current_shift > 1 then self:FungalDrawPast() end
 
 	if self.fungal.future then self:FungalDrawFuture() end
 

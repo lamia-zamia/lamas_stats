@@ -51,7 +51,7 @@ function gui:FetchData()
 	local shift_num = self.mod:GetGlobalNumber("fungal_shift_iteration", 0) + 1
 	if self.fs.current_shift ~= shift_num then
 		self.fs.current_shift = shift_num
-		self.fs:AnalizePastShifts()
+		self:FungalShiftListChanged()
 	end
 	self.fungal_cd = self:GetFungalShiftCooldown()
 end

@@ -1,7 +1,7 @@
 local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") ---@type error_reporter
 ---@class (exact) shift
----@field from? number[]
----@field to? number
+---@field from? integer[]
+---@field to? integer
 ---@field flask? string
 ---@field failed? shift
 ---@field force_failed? shift
@@ -9,10 +9,10 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 ---@class fungal_shift
 ---@field predictor shift_predictor
 ---@field shifted fungal_reader
----@field max_shifts number
+---@field max_shifts integer
 ---@field cooldown number
 ---@field past_shifts shift
----@field current_shift number
+---@field current_shift integer
 local fs = {
 	predictor = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua"),
 	shifted = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_past_getter.lua"),
@@ -40,9 +40,9 @@ end
 
 ---Gets "from" materials that does not equal to "to"
 ---@private
----@param from number[]
----@param to number
----@return number[]
+---@param from integer[]
+---@param to integer
+---@return integer[]
 ---@nodiscard
 function fs:SanitizeFromMaterials(from, to)
 	local seed_shift_from_count = #from
@@ -62,7 +62,7 @@ end
 
 ---Analize past shift
 ---@private
----@param shift_number number
+---@param shift_number integer
 function fs:AnalizePastShift(shift_number)
 	self.past_shifts[shift_number] = {}
 	local past_shift = self.past_shifts[shift_number]
@@ -142,6 +142,7 @@ function fs:AnalizePastShifts()
 	end
 end
 
+---Init fungal shifts
 function fs:Init()
 	self.predictor:parse()
 	-- self:AnalizePastShifts()

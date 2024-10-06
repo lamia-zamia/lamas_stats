@@ -1,10 +1,10 @@
 ---@class materials_shifted
----@field from number
----@field to number
+---@field from integer
+---@field to integer
 
 ---@class fungal_reader
 ---@field materials materials_shifted[]
----@field indexed number
+---@field indexed integer
 local reader = {
 	materials = {},
 	indexed = 1

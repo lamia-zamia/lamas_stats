@@ -1,6 +1,6 @@
 ---@class (exact) shift_predictor
----@field cooldown number
----@field max_shifts number
+---@field cooldown integer
+---@field max_shifts integer
 ---@field shifts shift[]
 ---@field private current_predict_iter number
 local shift_predictor = {
@@ -11,7 +11,7 @@ local shift_predictor = {
 }
 
 local last_shift_result ---@type shift
-local flask ---@type number
+local flask ---@type integer
 local _GamePrint = GamePrint
 
 ---Redefines functions so they would do nothing
@@ -91,7 +91,7 @@ local function determine_max_shift()
 end
 
 ---Forces failed shift to predict results
----@param material number
+---@param material integer
 local function do_forced_fail_shift(material)
 	flask = material
 	last_shift_result = {

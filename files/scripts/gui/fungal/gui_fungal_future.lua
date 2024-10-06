@@ -7,14 +7,50 @@ local future = {}
 ---@param shift shift
 ---@param offset number
 function future:FungalDrawFutureTooltipShift(y, shift, offset)
-	local x = 0
+	local x = 3
 	self.fungal.row_count = self:FungalCalculateRowCount(shift.from, shift.to, shift.flask)
-	
+
 	self:FungalDrawFromMaterials(x, y, shift.from, shift.flask == "from")
 	x = x + offset + 15
 	self:FungalDrawArrow(x, y)
 	x = x + 15
 	self:FungalDrawToMaterial(x, y, shift.to, shift.flask == "to")
+end
+
+---Draws failed shift in tooltip
+---@private
+---@param y number
+---@param shift shift
+---@param offset number
+function future:FungalDrawFutureTooltipShiftFailed(y, shift, offset)
+	self:Text(0, y, _T.lamas_stats_fungal_if_fail)
+	self:FungalDrawFlaskAvailablity(self.fungal.offset.ifnot + 3, y)
+	self:Text(self.fungal.offset.ifnot + self.fungal.offset.held + 14, y, _T.lamas_stats_then)
+	y = y + 10
+
+	self:FungalDrawFutureTooltipShift(y, shift.failed, offset)
+end
+
+---Draws force failed shift in tooltip
+---@private
+---@param y number
+---@param shift shift
+---@param offset number
+function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
+	local x = 0
+	if shift.failed then
+		self:Text(x, y, _T.lamas_stats_or)
+		x = x + self.fungal.offset._or + 3
+	end
+	self:Text(x, y, _T.lamas_stats_if)
+	x = x + self.fungal.offset._if + 3
+	self:FungalDrawFlaskAvailablity(x, y)
+	x = x + self.fungal.offset.held + 10
+	self:Text(x, y, "=")
+	local material = shift.flask == "from" and shift.to or shift.force_failed.from[1]
+	self:FungalDrawSingleMaterial(x + 5, y, material)
+
+	self:FungalDrawFutureTooltipShift(y + 10, shift.force_failed, offset)
 end
 
 ---Draws tooltip for future shift
@@ -36,30 +72,11 @@ function future:FungalDrawFutureTooltip(shift, i)
 	y = y + 10 * self.fungal.row_count + 5
 
 	if shift.failed then
-		self:Text(0, y, _T.lamas_stats_fungal_if_fail)
-		self:FungalDrawFlaskAvailablity(self.fungal.offset.ifnot + 3, y)
-		self:Text(self.fungal.offset.ifnot + self.fungal.offset.held + 14, y, _T.lamas_stats_then)
-		y = y + 10
-
-		self:FungalDrawFutureTooltipShift(y, shift.failed, offset_from)
-		y = y + 10 * self.fungal.row_count + 5
+		self:FungalDrawFutureTooltipShiftFailed(y, shift, offset_from)
+		y = y + 10 * self.fungal.row_count + 15
 	end
 	if shift.force_failed then
-		local x = 0
-		if shift.failed then
-			self:Text(x, y, _T.lamas_stats_or)
-			x = x + self.fungal.offset._or + 3
-		end
-		self:Text(x, y, _T.lamas_stats_if)
-		x = x + self.fungal.offset._if + 3
-		self:FungalDrawFlaskAvailablity(x, y)
-		x = x + self.fungal.offset.held + 10
-		self:Text(x, y, "=")
-		local material = shift.flask == "from" and shift.to or shift.force_failed.from[1]
-		self:FungalDrawSingleMaterial(x + 5, y, material)
-		y = y + 10
-		
-		self:FungalDrawFutureTooltipShift(y, shift.force_failed, offset_from)
+		self:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset_from)
 	end
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
@@ -67,7 +84,7 @@ end
 ---Draws future shifts
 ---@private
 function future:FungalDrawFuture()
-	for i = self.fs.current_shift, 20 do
+	for i = self.fs.current_shift, self.fs.max_shifts do
 		local shift = self.fs.predictor.shifts[i]
 		local from = self:FungalSanitizeFromShifts(shift.from)
 		self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
