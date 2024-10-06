@@ -42,7 +42,8 @@ end
 ---@return string
 ---@nodiscard
 function helper:FungalGetName(material_type)
-	return self:Locale(self.mat:get_data(material_type).ui_name)
+	local locale = self:Locale(self.mat:get_data(material_type).ui_name)
+	return string.gsub(" " .. locale, "%W%l", string.upper):sub(2)
 end
 
 ---Sets color from data
@@ -176,7 +177,7 @@ function helper:FungalSetFungalListOffset()
 	self.fungal.offset.to = max_to
 end
 
----Updates data 
+---Updates data
 ---@private
 function helper:FungalShiftListChanged()
 	self.fs:AnalizePastShifts()
