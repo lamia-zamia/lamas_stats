@@ -98,11 +98,11 @@ local function get_icon(element)
 	if graphics and graphics.attr.texture_file and graphics.attr.texture_file ~= "" then
 		if element.attr.tags and element.attr.tags:find("static") then
 			return create_virtual_icon(element.attr.name, graphics.attr.texture_file,
-				"mods/lamas_stats/files/solid_static.png")
+				"mods/lamas_stats/files/gfx/solid_static.png")
 		end
 		if element.attr.liquid_sand == "1" then
 			return create_virtual_icon(element.attr.name, graphics.attr.texture_file,
-				"mods/lamas_stats/files/pile.png")
+				"mods/lamas_stats/files/gfx/pile.png")
 		end
 	end
 	return "data/items_gfx/potion.png"
