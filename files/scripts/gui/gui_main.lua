@@ -12,7 +12,9 @@ local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type U
 ---@field private fs fungal_shift
 ---@field private alt boolean
 ---@field private shift_hold number
----@field mat material_parser
+---@field private perks perks_parser
+---@field private actions action_parser
+---@field private mat material_parser
 local gui = UI_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
@@ -21,6 +23,8 @@ gui.scroll.scroll_img_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.pn
 gui.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
 gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
+gui.perks = dofile_once("mods/lamas_stats/files/scripts/perks/perk_data_parser.lua")
+gui.actions = dofile_once("mods/lamas_stats/files/scripts/gun_parser.lua")
 gui.show = false
 gui.z = 900
 gui.fs = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift.lua")
@@ -35,6 +39,7 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_stats.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_kys.lua",
+	"mods/lamas_stats/files/scripts/gui/perks/gui_perks.lua"
 }
 
 for i = 1, #modules do
@@ -80,6 +85,8 @@ end
 
 ---Gets data after worlds exist
 function gui:PostWorldInit()
+	self.perks:parse()
+	self.actions:parse()
 	self.mat:convert()
 	self.fs:Init()
 	self:GetSettings()

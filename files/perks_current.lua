@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global, missing-global-doc
 local perks_stats, perks_current_max_count
 
 local perks_current_scale = ModSettingGet("lamas_stats.current_perks_scale")
@@ -165,21 +166,4 @@ function gui_perks_get_perks_on_screen()
 		end
 	end
 	table.sort(perks_onscreen, function(a, b) return a.x < b.x end)
-end
-
-function gui_perks_get_current_perks()
-	perks_current = {}
-	perks_current_count = 0
-	perks_current_max_count = 0
-	
-	for perk_id in pairs(perks_data) do
-		local flag_name = get_perk_picked_flag_name(perk_id)
-		local pickup_count = tonumber(GlobalsGetValue(flag_name .. "_PICKUP_COUNT", "0"))
-		
-		if pickup_count > 0 then
-			if pickup_count > perks_current_max_count then perks_current_max_count = pickup_count end
-			perks_current[perk_id] = pickup_count
-			perks_current_count = perks_current_count + 1
-		end
-	end
 end

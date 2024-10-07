@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global, missing-global-doc, undefined-global
 dofile_once("mods/lamas_stats/files/perks_common.lua")
 dofile_once("mods/lamas_stats/files/perks_predict.lua")
 dofile_once("mods/lamas_stats/files/perks_current.lua")
