@@ -1,4 +1,4 @@
-_T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation strings
+T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation strings
 local gui = dofile_once("mods/lamas_stats/files/scripts/gui/gui_main.lua") ---@type LS_Gui
 
 local white_pixel = "mods/lamas_stats/vfs/white.png"

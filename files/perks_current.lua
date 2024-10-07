@@ -4,7 +4,7 @@ function gui_perks_show_perks_on_screen(gui)
 	if perks_onscreen == nil then return end
 	if #perks_onscreen > 0 then
 		GuiZSetForNextWidget(gui, GuiZ)
-		GuiText(gui, 0, 0, "---- " .. _T.lamas_stats_nearby_perks .. " ----", perks_scale)
+		GuiText(gui, 0, 0, "---- " .. T.lamas_stats_nearby_perks .. " ----", perks_scale)
 		
 		local width_icon = GuiGetImageDimensions(gui, perks_data["EXTRA_PERK"].perk_icon, perks_scale) 
 		GuiLayoutBeginHorizontal(gui,0,0, false)
@@ -15,7 +15,7 @@ function gui_perks_show_perks_on_screen(gui)
 			GuiImage(gui, id(), 0, 0, perks_data[perk.perk_id].perk_icon, 1, perks_scale) --displaying img by id
 
 			if perk.cast ~= nil then
-				tooltip_desc = tooltip_desc .. "\n" .. "==== " .. _T.lamas_stats_perks_always_cast .. " ===="
+				tooltip_desc = tooltip_desc .. "\n" .. "==== " .. T.lamas_stats_perks_always_cast .. " ===="
 				tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].name)
 				tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].description)
 			end
@@ -35,7 +35,7 @@ end
 
 function gui_perks_show_current_perks(gui)
 	GuiLayoutBeginHorizontal(gui,0,0, false)
-	GuiText(gui, 0, 0, "---- " .. _T.lamas_stat_current .. " ----", perks_scale)
+	GuiText(gui, 0, 0, "---- " .. T.lamas_stat_current .. " ----", perks_scale)
 	GuiLayoutEnd(gui)
 	local rows = 1 
 	GuiText(gui, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself

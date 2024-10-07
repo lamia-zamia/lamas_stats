@@ -1,11 +1,11 @@
----@class (exact) LS_Gui
+--- @class (exact) LS_Gui
 local future = {}
 
----Draws individual shift in tooltip
----@private
----@param y number
----@param shift shift|failed_shift
----@param offset number
+--- Draws individual shift in tooltip
+--- @private
+--- @param y number
+--- @param shift shift|failed_shift
+--- @param offset number
 function future:FungalDrawFutureTooltipShift(y, shift, offset)
 	local x = 3
 	self.fungal.row_count = self:FungalCalculateRowCount(shift.from, shift.to, shift.flask)
@@ -17,51 +17,51 @@ function future:FungalDrawFutureTooltipShift(y, shift, offset)
 	self:FungalDrawToMaterial(x, y, shift.to, shift.flask == "to", self.alt)
 end
 
----Draws failed shift in tooltip
----@private
----@param y number
----@param shift shift
----@param offset number
+--- Draws failed shift in tooltip
+--- @private
+--- @param y number
+--- @param shift shift
+--- @param offset number
 function future:FungalDrawFutureTooltipShiftFailed(y, shift, offset)
 	local x = 0
-	x = x + self:FungalText(x, y, _T.lamas_stats_fungal_if_fail) + 3
-	self:FungalDrawFlaskAvailablity(x, y, { 1, 1, 0.4 })
+	x = x + self:FungalText(x, y, T.lamas_stats_fungal_if_fail) + 3
+	self:FungalDrawHeldMaterial(x, y, { 1, 1, 0.4 })
 	x = x + self.fungal.offset.held + 12
-	self:Text(x, y, _T.lamas_stats_then)
+	self:Text(x, y, T.lamas_stats_then)
 	y = y + 10
 
 	self:FungalDrawFutureTooltipShift(y, shift.failed, offset)
 end
 
----Draws force failed shift in tooltip
----@private
----@param y number
----@param shift shift
----@param offset number
+--- Draws force failed shift in tooltip
+--- @private
+--- @param y number
+--- @param shift shift
+--- @param offset number
 function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	local x = 0
 	if shift.failed then
-		x = x + self:FungalText(x, y, _T.OrIf) + 3
+		x = x + self:FungalText(x, y, T.OrIf) + 3
 	else
-		x = x + self:FungalText(x, y, _T.lamas_stats_if) + 3
+		x = x + self:FungalText(x, y, T.lamas_stats_if) + 3
 	end
-	self:FungalDrawFlaskAvailablity(x, y, { 0.7, 0.7, 0.7 })
+	self:FungalDrawHeldMaterial(x, y, { 0.7, 0.7, 0.7 })
 	x = x + self.fungal.offset.held + 12
-	x = x + self:FungalText(x, y, _T.Is) + 3
+	x = x + self:FungalText(x, y, T.Is) + 3
 	local material = shift.flask == "from" and shift.to or shift.force_failed.from[1]
 	self:FungalDrawSingleMaterial(x, y, material)
 
 	self:FungalDrawFutureTooltipShift(y + 10, shift.force_failed, offset)
 end
 
----Draws greedy information
----@param y integer
----@param greedy greedy_shift
----@param offset number
+--- Draws greedy information
+--- @param y integer
+--- @param greedy greedy_shift
+--- @param offset number
 function future:FungalDrawFutureTooltipGreedy(y, greedy, offset)
 	local x = 0
 	self:ColorGray()
-	self:Text(x, y, _T.lamas_stats_fungal_greedy)
+	self:Text(x, y, T.lamas_stats_fungal_greedy)
 	x = x + 3
 	y = y + 10
 	self.fungal.row_count = 2
@@ -76,10 +76,10 @@ function future:FungalDrawFutureTooltipGreedy(y, greedy, offset)
 	self:FungalDrawSingleMaterial(x, y + 10, greedy.grass)
 end
 
----Draws tooltip for future shift
----@private
----@param shift shift
----@param i number
+--- Draws tooltip for future shift
+--- @private
+--- @param shift shift
+--- @param i number
 function future:FungalDrawFutureTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0
@@ -88,7 +88,7 @@ function future:FungalDrawFutureTooltip(shift, i)
 	offset_from = self:FungalGetLongestTextInShift(shift.failed, offset_from, 0, true, self.alt)
 	offset_from = self:FungalGetLongestTextInShift(shift.force_failed, offset_from, 0, true, self.alt)
 
-	self:Text(0, y, string.format(_T.lamas_stats_shift .. " %02d", i))
+	self:Text(0, y, string.format(T.lamas_stats_shift .. " %02d", i))
 	y = y + 10
 
 	self:FungalDrawFutureTooltipShift(y, shift, offset_from)
@@ -112,16 +112,16 @@ function future:FungalDrawFutureTooltip(shift, i)
 	end
 	if not self.alt then
 		self:ColorGray()
-		self:Text(0, y, _T.PressShiftToSeeMore)
+		self:Text(0, y, T.PressShiftToSeeMore)
 	end
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
----Sets color for future shift row
----@private
----@param hovered boolean
----@param i integer
----@param greedy greedy_shift
+--- Sets color for future shift row
+--- @private
+--- @param hovered boolean
+--- @param i integer
+--- @param greedy greedy_shift
 function future:FungalFutureDecideRowColor(hovered, i, greedy)
 	if greedy and greedy.success then
 		if hovered then
@@ -149,8 +149,8 @@ function future:FungalFutureDecideRowColor(hovered, i, greedy)
 	end
 end
 
----Draws future shifts
----@private
+--- Draws future shifts
+--- @private
 function future:FungalDrawFuture()
 	for i = self.fs.current_shift, self.fs.max_shifts do
 		local shift = self.fs.predictor.shifts[i]

@@ -1,9 +1,10 @@
----@class shift_predictor
----@field cooldown integer
----@field max_shifts integer
----@field shifts shift[]
----@field private current_predict_iter number
----@field is_using_new_shift boolean
+---@diagnostic disable: name-style-check
+--- @class shift_predictor
+--- @field cooldown integer
+--- @field max_shifts integer
+--- @field shifts shift[]
+--- @field private current_predict_iter number
+--- @field is_using_new_shift boolean
 local shift_predictor = {
 	cooldown = 0,
 	max_shifts = 20,
@@ -16,7 +17,7 @@ local last_shift_result
 local flask
 local _GamePrint = GamePrint
 
----Redefines functions so they would do nothing
+--- Redefines functions so they would do nothing
 local function redefine_functions()
 	local nil_fn = function() end
 	local fn_to_nil = { "GameCreateParticle", "GlobalsSetValue", "EntityRemoveIngestionStatusEffect",
@@ -30,7 +31,7 @@ local function redefine_functions()
 	dofile_once = dofile
 end
 
----Bruteforce cooldown value
+--- Bruteforce cooldown value
 local function determine_cooldown()
 	local passed_frame_check
 	local frame = 0
@@ -67,7 +68,7 @@ local function determine_cooldown()
 	shift_predictor.cooldown = 0
 end
 
----Bruteforce max shift count
+--- Bruteforce max shift count
 local function determine_max_shift()
 	local converted
 
@@ -92,8 +93,8 @@ local function determine_max_shift()
 	shift_predictor.max_shifts = 200
 end
 
----Does fungal shift with flask
----@param material integer
+--- Does fungal shift with flask
+--- @param material integer
 local function do_fungal_shift_with_material(material)
 	flask = material
 	last_shift_result = {
@@ -102,9 +103,9 @@ local function do_fungal_shift_with_material(material)
 	fungal_shift(1, 0, 0, true)
 end
 
----Checks for failed shifts with flask from
----@param last_shift_without_flask shift
----@return shift
+--- Checks for failed shifts with flask from
+--- @param last_shift_without_flask shift
+--- @return shift
 local function check_for_failed_shift_with_flask_from(last_shift_without_flask)
 	-- If "to" wasn't changed - it's a correct shift
 	if last_shift_result.to == last_shift_without_flask.to then
@@ -134,9 +135,9 @@ local function check_for_failed_shift_with_flask_from(last_shift_without_flask)
 	end
 end
 
----Checks for failed shifts with flask to
----@param last_shift_without_flask shift this shift without using a flask
----@return shift
+--- Checks for failed shifts with flask to
+--- @param last_shift_without_flask shift this shift without using a flask
+--- @return shift
 local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 	-- Gettings amount of from materials
 	local from_count = #last_shift_result.from
@@ -178,8 +179,8 @@ local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 	end
 end
 
----Fake shift to get flask shifts
----@return shift
+--- Fake shift to get flask shifts
+--- @return shift
 local function check_for_flask_shift()
 	-- Writing old value as shift without a flask
 	local last_shift_without_flask = last_shift_result
@@ -200,8 +201,8 @@ local function check_for_flask_shift()
 	return last_shift_result
 end
 
----Fake shift to get seed shifts
----@return shift
+--- Fake shift to get seed shifts
+--- @return shift
 local function get_shift_materials()
 	-- Clearing last_shift_result
 	last_shift_result = {
@@ -219,8 +220,8 @@ local function get_shift_materials()
 	return check_for_flask_shift()
 end
 
----Checks if pouch shift is possible
----@return boolean
+--- Checks if pouch shift is possible
+--- @return boolean
 local function is_pouch_shift_possible()
 	local file = "data/scripts/magic/fungal_shift.lua"
 	local content = ModTextFileGetContent(file)
@@ -228,8 +229,8 @@ local function is_pouch_shift_possible()
 	return false
 end
 
----Gets results of greedy shift
----@param i integer
+--- Gets results of greedy shift
+--- @param i integer
 local function get_greedy_shift_results(i)
 	if shift_predictor.shifts[i].flask ~= "to" then return end
 
@@ -249,15 +250,15 @@ local function get_greedy_shift_results(i)
 	shift_predictor.shifts[i].greedy.success = gold_success or grass_success
 end
 
----Parses data from fungal_shift.lua
+--- Parses data from fungal_shift.lua
 function shift_predictor:Parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
+	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") --- @type ML_sandbox
 	sandbox:start_sandbox()
 
 	-- Redefining some functions so fungal shift would do nothing
 	redefine_functions()
-	fungal_shift = nil ---@diagnostic disable-line: assign-type-mismatch
+	fungal_shift = nil --- @diagnostic disable-line: assign-type-mismatch
 	dofile("data/scripts/magic/fungal_shift.lua")
 
 	-- Gets shift cooldown
@@ -290,7 +291,7 @@ function shift_predictor:Parse()
 	local _get_held_item_material = function()
 		return flask
 	end
-	get_held_item_material = _get_held_item_material ---@diagnostic disable-line: lowercase-global
+	get_held_item_material = _get_held_item_material --- @diagnostic disable-line: lowercase-global
 
 	-- Getting 200 shifts (because fuck you)
 	for i = 1, 200 do
@@ -307,8 +308,8 @@ function shift_predictor:Parse()
 	end
 
 	-- Removing vars
-	last_shift_result = nil ---@diagnostic disable-line: cast-local-type
-	flask = nil ---@diagnostic disable-line: cast-local-type
+	last_shift_result = nil --- @diagnostic disable-line: cast-local-type
+	flask = nil --- @diagnostic disable-line: cast-local-type
 
 	-- Reverting globals to its formal state
 	sandbox:end_sandbox()

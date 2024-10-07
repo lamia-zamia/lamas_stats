@@ -1,21 +1,21 @@
----@class (exact) LS_Gui_menu
----@field start_x number
----@field start_y number
----@field width number
----@field pos_x number
----@field pos_y number
----@field opened boolean
----@field package header string
----@field package fungal boolean
----@field package perks boolean
----@field package kys boolean
----@field package current_window function|nil
----@field package previous_window function|nil
+--- @class (exact) LS_Gui_menu
+--- @field start_x number
+--- @field start_y number
+--- @field width number
+--- @field pos_x number
+--- @field pos_y number
+--- @field opened boolean
+--- @field package header string
+--- @field package fungal boolean
+--- @field package perks boolean
+--- @field package kys boolean
+--- @field package current_window function|nil
+--- @field package previous_window function|nil
 
----@class (exact) LS_Gui
----@field private menu LS_Gui_menu
+--- @class (exact) LS_Gui
+--- @field private menu LS_Gui_menu
 local menu = {
-	menu = { ---@diagnostic disable-line: missing-fields
+	menu = { --- @diagnostic disable-line: missing-fields
 		start_x = 16,
 		start_y = 48,
 		pos_y = 44,
@@ -29,17 +29,17 @@ local menu = {
 	}
 }
 
----Sets width if it's higher than current width
----@private
----@param value number
+--- Sets width if it's higher than current width
+--- @private
+--- @param value number
 function menu:MenuSetWidth(value)
 	self.menu.width = math.max(self.menu.width, value)
 end
 
----Adds clickable button
----@param text string
----@param fn function
----@param run? function
+--- Adds clickable button
+--- @param text string
+--- @param fn function
+--- @param run? function
 function menu:MenuAddButton(text, fn, run)
 	if self.menu.current_window == fn then
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, false)
@@ -49,7 +49,7 @@ function menu:MenuAddButton(text, fn, run)
 	else
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, true)
 		if self:IsHovered() and self:IsLeftClicked() then
-			self:FakeScrollBox_Reset()
+			self:ScrollBoxReset()
 			self.scroll.height_max = self.max_height
 			if run then run(self) end
 			self.menu.current_window = fn
@@ -58,8 +58,8 @@ function menu:MenuAddButton(text, fn, run)
 	self.menu.pos_x = self.menu.pos_x + self:GetTextDimension(text) + 9
 end
 
----Draw menu
----@private
+--- Draw menu
+--- @private
 function menu:MenuDraw()
 	self:AnimateB()
 	self:AnimateAlpha(0.1, 0.1, false)
@@ -68,9 +68,9 @@ function menu:MenuDraw()
 	self.menu.pos_y = self.menu.start_y + 15
 	self.menu.width = self:GetTextDimension(self.menu.header)
 
-	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
-	if self.menu.perks then self:MenuAddButton(_T.Perks, self.PerksDrawWindow, self.PerksInit) end
-	if self.menu.kys then self:MenuAddButton(_T.KYS_Suicide, self.KysDraw) end
+	if self.menu.fungal then self:MenuAddButton(T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
+	if self.menu.perks then self:MenuAddButton(T.Perks, self.PerksDrawWindow, self.PerksInit) end
+	if self.menu.kys then self:MenuAddButton(T.KYS_Suicide, self.KysDraw) end
 
 	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
 	self.menu.pos_y = self.menu.pos_y + 17
@@ -92,8 +92,8 @@ function menu:MenuDraw()
 	self.menu.previous_window = self.menu.current_window
 end
 
----Fetch settings
----@private
+--- Fetch settings
+--- @private
 function menu:MenuGetSettings()
 	self.menu.header = self.mod:GetSettingString("lamas_menu_header")
 	self.menu.fungal = self.mod:GetSettingBoolean("enable_fungal")

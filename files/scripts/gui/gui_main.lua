@@ -1,22 +1,22 @@
-local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type UI_class
+local ui_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") --- @type UI_class
 
----@class (exact) LS_Gui:UI_class
----@field private mod mod_util
----@field private show boolean
----@field private hotkey number
----@field private player entity_id|nil
----@field private player_x number
----@field private player_y number
----@field private fungal_cd number
----@field private z number
----@field private fs fungal_shift
----@field private alt boolean
----@field private shift_hold number
----@field private perks perks_parser
----@field private actions action_parser
----@field private mat material_parser
----@field private max_height number
-local gui = UI_class:New()
+--- @class (exact) LS_Gui:UI_class
+--- @field private mod mod_util
+--- @field private show boolean
+--- @field private hotkey number
+--- @field private player entity_id|nil
+--- @field private player_x number
+--- @field private player_y number
+--- @field private fungal_cd number
+--- @field private z number
+--- @field private fs fungal_shift
+--- @field private alt boolean
+--- @field private shift_hold number
+--- @field private perks perks_parser
+--- @field private actions action_parser
+--- @field private mat material_parser
+--- @field private max_height number
+local gui = ui_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
 gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
@@ -52,8 +52,8 @@ for i = 1, #modules do
 	end
 end
 
----Fetches common data
----@private
+--- Fetches common data
+--- @private
 function gui:FetchData()
 	self.player_x, self.player_y = EntityGetTransform(self.player)
 	if GameGetFrameNum() % 60 == 0 then
@@ -67,7 +67,7 @@ function gui:FetchData()
 	self.fungal_cd = self:GetFungalShiftCooldown()
 end
 
----Fetches settings
+--- Fetches settings
 function gui:GetSettings()
 	self.hotkey = self.mod:GetSettingNumber("input_key")
 	self.stats.position_pw_west = self.mod:GetGlobalNumber("lamas_stats_farthest_west")
@@ -80,12 +80,12 @@ function gui:GetSettings()
 	self.scroll.height_max = 200
 end
 
----Gets data after materials are done
+--- Gets data after materials are done
 function gui:PostBiomeInit()
 	self.mat:Parse()
 end
 
----Gets data after worlds exist
+--- Gets data after worlds exist
 function gui:PostWorldInit()
 	self.perks:Parse()
 	self.actions:Parse()
@@ -96,9 +96,9 @@ function gui:PostWorldInit()
 	self.menu.opened = self.mod:GetSettingBoolean("lamas_menu_enabled_default")
 end
 
----Sets alt mode when shift is holded
----@private
-function gui:CalcAltMode()
+--- Sets alt mode when shift is holded
+--- @private
+function gui:DetermineAltMode()
 	local hold = InputIsKeyDown(self.c.codes.keyboard.lshift)
 	if self.alt and not hold then
 		self.alt = false
@@ -114,7 +114,7 @@ function gui:CalcAltMode()
 	end
 end
 
----Main function to draw gui
+--- Main function to draw gui
 function gui:Loop()
 	self:StartFrame()
 	if InputIsKeyJustDown(self.hotkey) then
@@ -125,7 +125,7 @@ function gui:Loop()
 	if not self.show or not self.player or GameIsInventoryOpen() then return end
 
 	self:FetchData()
-	self:CalcAltMode()
+	self:DetermineAltMode()
 
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()

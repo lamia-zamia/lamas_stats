@@ -1,5 +1,5 @@
----@class (exact) LS_Gui
----@field kys {show: boolean, hide_after: boolean}
+--- @class (exact) LS_Gui
+--- @field kys {show: boolean, hide_after: boolean}
 local kys = {
 	kys = {
 		show = false,
@@ -7,14 +7,14 @@ local kys = {
 	}
 }
 
----Draws kys window
----@private
+--- Draws kys window
+--- @private
 function kys:KysDraw()
 	local pos_x = self.menu.start_x
 	local pos_y = self.menu.pos_y + 36
-	local kys_button_string = _T.KYS_Button
+	local kys_button_string = T.KYS_Button
 	local kys_button_string_width = self:GetTextDimension(kys_button_string)
-	local kys_warn_string = _T.KYS_Suicide_Warn
+	local kys_warn_string = T.KYS_Suicide_Warn
 	local kys_warn_string_width = self:GetTextDimension(kys_warn_string)
 
 	self:Color(1, 1, 0)
@@ -29,14 +29,14 @@ function kys:KysDraw()
 		end
 		local gsc_id = EntityGetFirstComponentIncludingDisabled(self.player, "GameStatsComponent")
 		if not gsc_id then return end
-		ComponentSetValue2(gsc_id, "extra_death_msg", _T.KYS_Suicide)
+		ComponentSetValue2(gsc_id, "extra_death_msg", T.KYS_Suicide)
 		EntityKill(self.player)
 	end
 	self:Draw9Piece(pos_x - 6, self.menu.pos_y + 30, self.z + 55, kys_warn_string_width + 12, 42)
 end
 
----Fetches settings for kys
----@private
+--- Fetches settings for kys
+--- @private
 function kys:KysGetSettings()
 	self.kys.hide_after = self.mod:GetSettingBoolean("KYS_Button_Hide")
 end

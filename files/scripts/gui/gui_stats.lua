@@ -1,19 +1,19 @@
----@class (exact) LS_Gui_stats
----@field time boolean
----@field kills boolean
----@field position boolean
----@field position_toggle boolean
----@field position_pw boolean
----@field position_pw_west number
----@field position_pw_east number
----@field biome boolean
----@field shift_cd boolean
----@field x number
----@field y number
----@field enabled boolean
+--- @class (exact) LS_Gui_stats
+--- @field time boolean
+--- @field kills boolean
+--- @field position boolean
+--- @field position_toggle boolean
+--- @field position_pw boolean
+--- @field position_pw_west number
+--- @field position_pw_east number
+--- @field biome boolean
+--- @field shift_cd boolean
+--- @field x number
+--- @field y number
+--- @field enabled boolean
 
----@class (exact) LS_Gui
----@field private stats LS_Gui_stats
+--- @class (exact) LS_Gui
+--- @field private stats LS_Gui_stats
 local stats = {
 	stats = {
 		time = false,
@@ -31,58 +31,58 @@ local stats = {
 	}
 }
 
----Shows tooltip and colors text to gray
----@private
----@param width number
----@param tooltip fun(self:table)
+--- Shows tooltip and colors text to gray
+--- @private
+--- @param width number
+--- @param tooltip fun(self:table)
 function stats:IfStatEntryHovered(width, tooltip)
 	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, width, 11, true) then
 		self:ShowTooltipCenteredX(0, 20, tooltip)
 	end
 end
 
----Draws fungal cooldown if in cooldown
----@private
----@return boolean
+--- Draws fungal cooldown if in cooldown
+--- @private
+--- @return boolean
 function stats:StatsFungal()
 	if not self.stats.shift_cd or self.fungal_cd <= 0 then return false end
 	self:AddOptionForNext(self.c.options.NonInteractive)
 	self:Image(self.stats.x - 3, self.stats.y - 3, "data/ui_gfx/status_indicators/fungal_shift.png")
 	if self:IsHoverBoxHovered(self.stats.x - 3, self.stats.y - 3, 13, 13, true) then
 		self.tooltip_reset = false
-		self:ShowTooltipTextCenteredX(0, 23, _T.lamas_stats_fungal_cooldown .. " " .. self.fungal_cd)
+		self:ShowTooltipTextCenteredX(0, 23, T.lamas_stats_fungal_cooldown .. " " .. self.fungal_cd)
 	end
 	self.stats.x = self.stats.x + 15
 	return true
 end
 
----Draws biome stat
----@private
----@return boolean
+--- Draws biome stat
+--- @private
+--- @return boolean
 function stats:StatsBiome()
 	if not self.stats.biome then return false end
 	local biome = BiomeMapGetName(self.player_x, self.player_y)
-	if biome == "_EMPTY_" then biome = _T.lamas_stats_unknown end
-	local text = _T.lamas_stats_location .. ": " .. self:Locale(biome)
+	if biome == "_EMPTY_" then biome = T.lamas_stats_unknown end
+	local text = T.lamas_stats_location .. ": " .. self:Locale(biome)
 	local text_width = self:GetTextDimension(text)
 	self:Text(self.stats.x, self.stats.y, text)
 	self.stats.x = self.stats.x + text_width + 10
 	return true
 end
 
----Draws position stat tooltip
----@private
+--- Draws position stat tooltip
+--- @private
 function stats:StatsPositionTooltip()
-	local world_string = _T.lamas_stats_stats_pw
-	local position_string = _T.lamas_stats_stats_pw_main
+	local world_string = T.lamas_stats_stats_pw
+	local position_string = T.lamas_stats_stats_pw_main
 	local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
 	if player_par_x > 0 then
-		position_string = _T.lamas_stats_stats_pw_east .. " " .. player_par_x
+		position_string = T.lamas_stats_stats_pw_east .. " " .. player_par_x
 	elseif player_par_x < 0 then
-		position_string = _T.lamas_stats_stats_pw_west .. " " .. -player_par_x
+		position_string = T.lamas_stats_stats_pw_west .. " " .. -player_par_x
 	end
 	self:ColorGray()
-	self:Text(0, 0, _T.lamas_stats_position_toggle)
+	self:Text(0, 0, T.lamas_stats_position_toggle)
 
 	if not self.stats.position_toggle then
 		self:Text(0, 0, "X: " .. tostring(math.floor(self.player_x)))
@@ -93,18 +93,18 @@ function stats:StatsPositionTooltip()
 
 	if self.stats.position_pw_east < 0 or self.stats.position_pw_west > 0 then
 		self:Text(0, 0,
-			_T.lamas_stats_farthest .. " " .. _T.lamas_stats_stats_pw_west .. ": " .. self.stats.position_pw_west)
+			T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. self.stats.position_pw_west)
 		self:Text(0, 0,
-			_T.lamas_stats_farthest .. " " .. _T.lamas_stats_stats_pw_east .. ": " .. -self.stats.position_pw_east)
+			T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. -self.stats.position_pw_east)
 	end
 end
 
----Draws position stat
----@private
----@return boolean
+--- Draws position stat
+--- @private
+--- @return boolean
 function stats:StatsPosition()
 	if not self.stats.position then return false end
-	local position_string = _T.lamas_stats_position
+	local position_string = T.lamas_stats_position
 	local position_string_width = self:GetTextDimension(position_string)
 	local offset = position_string_width + 5
 	self:Text(self.stats.x, self.stats.y, position_string)
@@ -131,19 +131,19 @@ function stats:StatsPosition()
 	return true
 end
 
----Draws kills stat tooltip
----@private
+--- Draws kills stat tooltip
+--- @private
 function stats:StatsKillTooltip()
-	self:Text(0, 0, _T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
-	self:Text(0, 0, _T.lamas_stats_progress_kills_innocent .. " " .. GlobalsGetValue("HELPLESS_KILLS", "0"))
+	self:Text(0, 0, T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
+	self:Text(0, 0, T.lamas_stats_progress_kills_innocent .. " " .. GlobalsGetValue("HELPLESS_KILLS", "0"))
 end
 
----Draws kills stat
----@private
----@return boolean
+--- Draws kills stat
+--- @private
+--- @return boolean
 function stats:StatsKills()
 	if not self.stats.kills then return false end
-	local kill_string = _T.lamas_stats_progress_kills
+	local kill_string = T.lamas_stats_progress_kills
 	local kill_string_width = self:GetTextDimension(kill_string)
 	local offset = kill_string_width + 30
 	self:IfStatEntryHovered(offset, self.StatsKillTooltip)
@@ -153,8 +153,8 @@ function stats:StatsKills()
 	return true
 end
 
----Draws time stat tooltip
----@private
+--- Draws time stat tooltip
+--- @private
 function stats:StatsTimeTooltip()
 	local stats_list = {
 		self:Locale("$menu_stats"),
@@ -162,10 +162,10 @@ function stats:StatsTimeTooltip()
 		self:Locale("$stat_places_visited ") .. StatsGetValue("places_visited"),
 		self:Locale("$stat_gold ") .. StatsGetValue("gold_all"),
 		self:Locale("$stat_items_found ") .. StatsGetValue("items"),
-		_T.lamas_stats_hearts_find .. " " .. StatsGetValue("heart_containers"),
-		_T.lamas_stats_projectiles_shot .. " " .. StatsGetValue("projectiles_shot"),
-		_T.lamas_stats_kicks .. " " .. StatsGetValue("kicks"),
-		_T.lamas_stats_damage_taken .. " " .. math.ceil(StatsGetValue("damage_taken") * 25)
+		T.lamas_stats_hearts_find .. " " .. StatsGetValue("heart_containers"),
+		T.lamas_stats_projectiles_shot .. " " .. StatsGetValue("projectiles_shot"),
+		T.lamas_stats_kicks .. " " .. StatsGetValue("kicks"),
+		T.lamas_stats_damage_taken .. " " .. math.ceil(StatsGetValue("damage_taken") * 25)
 	}
 	local longest = self:GetLongestText(stats_list, "stats_list")
 	self:TextCentered(0, 0, stats_list[1], longest)
@@ -174,9 +174,9 @@ function stats:StatsTimeTooltip()
 	end
 end
 
----Draws time stat
----@private
----@return boolean
+--- Draws time stat
+--- @private
+--- @return boolean
 function stats:StatsTime()
 	if not self.stats.time then return false end
 	local time_string = self:Locale("$stat_time ")
@@ -189,8 +189,8 @@ function stats:StatsTime()
 	return true
 end
 
----Draws stats
----@private
+--- Draws stats
+--- @private
 function stats:StatsDraw()
 	self.stats.x = self.header.pos_x + 20
 	self.stats.y = self.header.pos_y
@@ -213,8 +213,8 @@ function stats:StatsDraw()
 	end
 end
 
----Fetches settings
----@private
+--- Fetches settings
+--- @private
 function stats:StatsGetSettings()
 	self.stats.time = self.mod:GetSettingBoolean("stats_showtime")
 	self.stats.kills = self.mod:GetSettingBoolean("stats_showkills")

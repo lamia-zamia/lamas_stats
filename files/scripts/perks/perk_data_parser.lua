@@ -1,20 +1,20 @@
----@class (exact) perk_data
----@field ui_name string
----@field ui_description string
----@field perk_icon string
----@field picked_count number
+--- @class (exact) perk_data
+--- @field ui_name string
+--- @field ui_description string
+--- @field perk_icon string
+--- @field picked_count number
 
----@class perks_parser
----@field data_perks {[string]:perk_data}
----@field data_list string[]
----@field total_amount number
+--- @class perks_parser
+--- @field data_perks {[string]:perk_data}
+--- @field data_list string[]
+--- @field total_amount number
 local perks = {
 	data_perks = {},
 	data_list = {},
 	total_amount = 0
 }
 
----Add perks to the list
+--- Add perks to the list
 local function add_perk(perk_data)
 	perks.data_list[#perks.data_list + 1] = perk_data.id
 	perks.data_perks[perk_data.id] = {
@@ -25,10 +25,10 @@ local function add_perk(perk_data)
 	}
 end
 
----Parse perks in sandbox
+--- Parse perks in sandbox
 function perks:Parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
+	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") --- @type ML_sandbox
 	sandbox:start_sandbox()
 
 	-- Redefining some functions so fungal shift would do nothing
@@ -54,14 +54,14 @@ function perks:Parse()
 	sandbox:end_sandbox()
 end
 
----Returns perk data if exist
----@param id string
----@return perk_data
+--- Returns perk data if exist
+--- @param id string
+--- @return perk_data
 function perks:GetData(id)
 	return self.data_perks[id] or self.data_perks["lamas_stats_unknown"]
 end
 
----Updates currently owned perks
+--- Updates currently owned perks
 function perks:GetCurrentList()
 	self.total_amount = 0
 	for i = 1, #self.data_list do

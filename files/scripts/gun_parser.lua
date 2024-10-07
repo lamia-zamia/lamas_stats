@@ -1,15 +1,15 @@
----@class (exact) action_data
----@field name string
----@field description string
----@field sprite string
+--- @class (exact) action_data
+--- @field name string
+--- @field description string
+--- @field sprite string
 
----@class action_parser
----@field data {[string]:action_data}
+--- @class action_parser
+--- @field data {[string]:action_data}
 local actions_data = {
 	data = {}
 }
 
----Add perks to the list
+--- Add perks to the list
 local function add_action(action_data)
 	actions_data.data[action_data.id] = {
 		name = action_data.name or "",
@@ -18,10 +18,10 @@ local function add_action(action_data)
 	}
 end
 
----Parse perks in sandbox
+--- Parse perks in sandbox
 function actions_data:Parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
+	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") --- @type ML_sandbox
 	sandbox:start_sandbox()
 
 	-- Redefining some functions so fungal shift would do nothing
@@ -44,9 +44,9 @@ function actions_data:Parse()
 	sandbox:end_sandbox()
 end
 
----Returns action data if exist
----@param id string
----@return action_data
+--- Returns action data if exist
+--- @param id string
+--- @return action_data
 function actions_data:GetData(id)
 	return self.data[id] or self.data["lamas_stats_unknown"]
 end

@@ -1,4 +1,4 @@
----@enum mouse_keys
+--- @enum mouse_keys
 local mouse = {
 	lc = 1,
 	rc = 2,
@@ -7,7 +7,7 @@ local mouse = {
 	wheel_down = 5,
 }
 
----@enum keyboard_keys
+--- @enum keyboard_keys
 local keyboard = {
 	space = 44,
 	enter = 40,
@@ -15,7 +15,7 @@ local keyboard = {
 	lshift = 225,
 }
 
----@class keycodes
+--- @class keycodes
 local keycodes = {
 	mouse = mouse,
 	keyboard = keyboard
