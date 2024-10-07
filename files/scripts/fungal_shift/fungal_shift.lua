@@ -67,6 +67,22 @@ function fs:SanitizeFromMaterials(from, to)
 	return from
 end
 
+---Additional check for shift in case with Apotheosis cursed liquid
+---@private
+---@param past_shift shift
+---@return boolean
+function fs:ApotheosisCheckFrom(past_shift)
+	local cursed = CellFactory_GetType("apotheosis_cursed_liquid_red")
+	local cursed_static = CellFactory_GetType("apotheosis_cursed_liquid_red_static")
+	local from = self.shifted.materials[self.shifted.indexed].from
+	if from == cursed or from == cursed_static then
+		past_shift.from = { cursed, cursed_static }
+		self.shifted.indexed = self.shifted.indexed + 2
+		return true
+	end
+	return false
+end
+
 ---Analize past shift
 ---@private
 ---@param shift_number integer
@@ -113,12 +129,11 @@ function fs:AnalizePastShift(shift_number)
 		if self.shifted.materials[self.shifted.indexed].from ~= material_type then
 			if seed_shift.flask == "from" then
 				past_shift.flask = "from"
-				-- if past_materials[shift_number] == "apotheosis_cursed_liquid_red_static" or past_materials[shift_number] == "apotheosis_cursed_liquid_red" then
-				-- 	table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red_static")
-				-- 	table.insert(past_shifts[i].from, "apotheosis_cursed_liquid_red")
-				-- 	shift_number = shift_number + 4
-				-- 	break
-				-- end
+				-- Apotheosis compatibility
+				if ModIsEnabled("Apotheosis") and self:ApotheosisCheckFrom(past_shift) then
+					return
+				end
+
 				if j == 1 then --foolproofing cases where first material matching shifted material
 					past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
 					self.shifted.indexed = self.shifted.indexed + 1
