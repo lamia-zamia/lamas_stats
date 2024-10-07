@@ -10,11 +10,11 @@ function future:FungalDrawFutureTooltipShift(y, shift, offset)
 	local x = 3
 	self.fungal.row_count = self:FungalCalculateRowCount(shift.from, shift.to, shift.flask)
 
-	self:FungalDrawFromMaterials(x, y, shift.from, shift.flask == "from")
-	x = x + offset + 15
+	self:FungalDrawFromMaterials(x, y, shift.from, shift.flask == "from", self.alt)
+	x = x + offset + (self.alt and 3 or 15)
 	self:FungalDrawArrow(x, y)
 	x = x + 15
-	self:FungalDrawToMaterial(x, y, shift.to, shift.flask == "to")
+	self:FungalDrawToMaterial(x, y, shift.to, shift.flask == "to", self.alt)
 end
 
 ---Draws failed shift in tooltip
@@ -25,8 +25,8 @@ end
 function future:FungalDrawFutureTooltipShiftFailed(y, shift, offset)
 	local x = 0
 	x = x + self:FungalText(x, y, _T.lamas_stats_fungal_if_fail) + 3
-	self:FungalDrawFlaskAvailablity(x, y, {0.7, 0.7, 0.7})
-	x = x + self.fungal.offset.held
+	self:FungalDrawFlaskAvailablity(x, y, { 1, 1, 0.4 })
+	x = x + self.fungal.offset.held + 12
 	self:Text(x, y, _T.lamas_stats_then)
 	y = y + 10
 
@@ -41,10 +41,11 @@ end
 function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	local x = 0
 	if shift.failed then
-		x = x + self:FungalText(x, y, _T.lamas_stats_or) + 3
+		x = x + self:FungalText(x, y, _T.OrIf) + 3
+	else
+		x = x + self:FungalText(x, y, _T.lamas_stats_if) + 3
 	end
-	x = x + self:FungalText(x, y, _T.lamas_stats_if) + 3
-	self:FungalDrawFlaskAvailablity(x, y, {0.7, 0.7, 0.7})
+	self:FungalDrawFlaskAvailablity(x, y, { 0.7, 0.7, 0.7 })
 	x = x + self.fungal.offset.held + 12
 	x = x + self:FungalText(x, y, _T.Is) + 3
 	local material = shift.flask == "from" and shift.to or shift.force_failed.from[1]
@@ -56,9 +57,23 @@ end
 ---Draws greedy information
 ---@param y integer
 ---@param greedy greedy_shift
-function future:FungalDrawFutureTooltipGreedy(y, greedy)
-	self:FungalDrawSingleMaterial(0, y, greedy.gold)
-	self:FungalDrawSingleMaterial(50, y, greedy.grass)
+---@param offset number
+function future:FungalDrawFutureTooltipGreedy(y, greedy, offset)
+	local x = 0
+	self:ColorGray()
+	self:Text(x, y, _T.lamas_stats_fungal_greedy)
+	x = x + 3
+	y = y + 10
+	self.fungal.row_count = 2
+	local gold = CellFactory_GetType("gold")
+	local grass = CellFactory_GetType("grass_holy")
+	self:FungalDrawSingleMaterial(x, y, gold)
+	self:FungalDrawSingleMaterial(x, y + 10, grass)
+	x = x + offset + 3
+	self:FungalDrawArrow(x, y)
+	x = x + 15
+	self:FungalDrawSingleMaterial(x, y, greedy.gold)
+	self:FungalDrawSingleMaterial(x, y + 10, greedy.grass)
 end
 
 ---Draws tooltip for future shift
@@ -69,9 +84,9 @@ function future:FungalDrawFutureTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0
 
-	local offset_from, offset_to = self:FungalGetLongestTextInShift(shift, 0, 0)
-	offset_from, offset_to = self:FungalGetLongestTextInShift(shift.failed, offset_from, offset_to, true)
-	offset_from, offset_to = self:FungalGetLongestTextInShift(shift.force_failed, offset_from, offset_to, true)
+	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
+	offset_from = self:FungalGetLongestTextInShift(shift.failed, offset_from, 0, true, self.alt)
+	offset_from = self:FungalGetLongestTextInShift(shift.force_failed, offset_from, 0, true, self.alt)
 
 	self:Text(0, y, string.format(_T.lamas_stats_shift .. " %02d", i))
 	y = y + 10
@@ -79,20 +94,25 @@ function future:FungalDrawFutureTooltip(shift, i)
 	self:FungalDrawFutureTooltipShift(y, shift, offset_from)
 	y = y + 10 * self.fungal.row_count
 
-	if not self.fs.predictor.is_using_new_shift then return end
+	if self.fs.predictor.is_using_new_shift then
+		if shift.greedy and self.alt then
+			self:FungalDrawFutureTooltipGreedy(y, shift.greedy, offset_from)
+			y = y + 30
+		end
+		y = y + 5
 
-	if shift.greedy then
-		self:FungalDrawFutureTooltipGreedy(y, shift.greedy)
-		y = y + 10
+		if shift.failed then
+			self:FungalDrawFutureTooltipShiftFailed(y, shift, offset_from)
+			y = y + 10 * self.fungal.row_count + 15
+		end
+		if shift.force_failed then
+			self:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset_from)
+			y = y + 10 * self.fungal.row_count + 15
+		end
 	end
-	y = y + 5
-
-	if shift.failed then
-		self:FungalDrawFutureTooltipShiftFailed(y, shift, offset_from)
-		y = y + 10 * self.fungal.row_count + 15
-	end
-	if shift.force_failed then
-		self:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset_from)
+	if not self.alt then
+		self:ColorGray()
+		self:Text(0, y, _T.PressShiftToSeeMore)
 	end
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end

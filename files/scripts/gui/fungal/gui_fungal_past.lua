@@ -9,7 +9,7 @@ function past:FungalDrawPastTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0
 
-	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0)
+	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
 
 
 	self:Text(0, y, string.format(_T.lamas_stats_shift .. " %02d", i))
@@ -18,12 +18,17 @@ function past:FungalDrawPastTooltip(shift, i)
 	local x = 3
 	self.fungal.row_count = self:FungalCalculateRowCount(shift.from, shift.to, false)
 
-	self:FungalDrawFromMaterials(x, y, shift.from, false)
-	x = x + offset_from + 15
+	self:FungalDrawFromMaterials(x, y, shift.from, false, self.alt)
+	x = x + offset_from + (self.alt and 3 or 15)
 	self:FungalDrawArrow(x, y)
 	x = x + 15
-	self:FungalDrawToMaterial(x, y, shift.to, false)
+	self:FungalDrawToMaterial(x, y, shift.to, false, self.alt)
+	y = y + 10 * self.fungal.row_count + 5
 
+	if not self.alt then
+		self:ColorGray()
+		self:Text(0, y, _T.PressShiftToSeeMore)
+	end
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 

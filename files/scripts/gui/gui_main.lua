@@ -10,6 +10,8 @@ local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type U
 ---@field private fungal_cd number
 ---@field private z number
 ---@field private fs fungal_shift
+---@field private alt boolean
+---@field private shift_hold number
 ---@field mat material_parser
 local gui = UI_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
@@ -23,6 +25,8 @@ gui.show = false
 gui.z = 900
 gui.fs = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift.lua")
 gui.mat = dofile_once("mods/lamas_stats/files/scripts/material_parser.lua")
+gui.alt = false
+gui.shift_hold = 0
 
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_header.lua",
@@ -83,6 +87,24 @@ function gui:PostWorldInit()
 	self.menu.opened = self.mod:GetSettingBoolean("lamas_menu_enabled_default")
 end
 
+---Sets alt mode when shift is holded
+---@private
+function gui:CalcAltMode()
+	local hold = InputIsKeyDown(self.c.codes.keyboard.lshift)
+	if self.alt and not hold then
+		self.alt = false
+		self.shift_hold = 0
+	end
+
+	if hold and not self.alt then
+		if self.shift_hold > 30 then
+			self.alt = true
+		else
+			self.shift_hold = self.shift_hold + 1
+		end
+	end
+end
+
 ---Main function to draw gui
 function gui:loop()
 	self:StartFrame()
@@ -94,6 +116,7 @@ function gui:loop()
 	if not self.show or not self.player or GameIsInventoryOpen() then return end
 
 	self:FetchData()
+	self:CalcAltMode()
 
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()

@@ -78,9 +78,17 @@ end
 ---@param x number
 ---@param y number
 ---@param material_type integer
-function helper:FungalDrawSingleMaterial(x, y, material_type)
+---@param draw_id? boolean
+function helper:FungalDrawSingleMaterial(x, y, material_type, draw_id)
 	self:FungalDrawIcon(x, y, material_type)
-	self:Text(x + 9, y, self:FungalGetName(material_type))
+	local material_name = self:FungalGetName(material_type)
+	x = x + 9
+	self:Text(x, y, material_name)
+	if draw_id then
+		x = x + self:GetTextDimension(material_name) + 3
+		self:ColorGray()
+		self:Text(x, y, "(" .. self.mat:get_data(material_type).id .. ")")
+	end
 end
 
 ---Draws flask shift availablity
@@ -136,8 +144,9 @@ end
 ---@param max_from number
 ---@param max_to number
 ---@param ignore_flask? boolean
+---@param draw_id? boolean
 ---@return number from, number to
-function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flask)
+function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flask, draw_id)
 	if not shift then return max_from, max_to end
 	if shift.flask and not ignore_flask then
 		if shift.flask == "to" then
@@ -147,11 +156,13 @@ function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flas
 		end
 	end
 	if shift.to then
-		max_to = math.max(self:GetTextDimension(self:FungalGetName(shift.to)) + 9, max_to)
+		local id = draw_id and self:GetTextDimension("(" .. self.mat:get_data(shift.to).id .. ")") or 0
+		max_to = math.max(self:GetTextDimension(self:FungalGetName(shift.to)) + 9 + id, max_to)
 	end
 	if shift.from then
 		for j = 1, #shift.from do
-			max_from = math.max(max_from, self:GetTextDimension(self:FungalGetName(shift.from[j])) + 9)
+			local id = draw_id and self:GetTextDimension("(" .. self.mat:get_data(shift.from[j]).id .. ")") or 0
+			max_from = math.max(max_from, self:GetTextDimension(self:FungalGetName(shift.from[j])) + 9 + id)
 		end
 	end
 	return max_from, max_to

@@ -36,7 +36,8 @@ end
 ---@param y number
 ---@param from number[]
 ---@param flask boolean
-function fungal:FungalDrawFromMaterials(x, y, from, flask)
+---@param draw_id? boolean
+function fungal:FungalDrawFromMaterials(x, y, from, flask, draw_id)
 	if not from then
 		local center = self:FungalGetShiftWindowOffset(1)
 		self:FungalDrawFlaskAvailablity(x, y + center, { 0.8, 0, 0 })
@@ -49,7 +50,7 @@ function fungal:FungalDrawFromMaterials(x, y, from, flask)
 			y_offset = y_offset + 10
 		end
 		for i = 1, count do
-			self:FungalDrawSingleMaterial(x, y + y_offset, from[i])
+			self:FungalDrawSingleMaterial(x, y + y_offset, from[i], draw_id)
 			y_offset = y_offset + 10
 		end
 	end
@@ -61,7 +62,8 @@ end
 ---@param y number
 ---@param to number
 ---@param flask boolean
-function fungal:FungalDrawToMaterial(x, y, to, flask)
+---@param draw_id? boolean
+function fungal:FungalDrawToMaterial(x, y, to, flask, draw_id)
 	if not to then
 		local center = self:FungalGetShiftWindowOffset(1)
 		self:FungalDrawFlaskAvailablity(x, y + center, { 0.8, 0, 0 })
@@ -71,7 +73,7 @@ function fungal:FungalDrawToMaterial(x, y, to, flask)
 			self:FungalDrawFlaskAvailablity(x, y + y_offset)
 			y_offset = y_offset + 10
 		end
-		self:FungalDrawSingleMaterial(x, y + y_offset, to)
+		self:FungalDrawSingleMaterial(x, y + y_offset, to, draw_id)
 	end
 end
 

@@ -4,6 +4,7 @@ nxml.error_handler = function() end
 ---@alias material_colors {r:number, g:number, b:number, a:number}
 
 ---@class (exact) material_data
+---@field id string
 ---@field ui_name string
 ---@field color material_colors|false
 ---@field icon string
@@ -126,6 +127,7 @@ local function parse_element(element)
 	local material_icon = get_icon(element)
 	local material_color = material_icon == "data/items_gfx/potion.png" and abgr_to_rgb(get_color(element))
 	mat.buffer[element.attr.name] = {
+		id = element.attr.name,
 		ui_name = element.attr.ui_name,
 		icon = material_icon,
 		color = material_color,
@@ -153,6 +155,7 @@ function mat:parse()
 	end
 
 	self.invalid = {
+		id = "???",
 		ui_name = "???",
 		icon = "data/items_gfx/potion_normals.png",
 		color = false,
