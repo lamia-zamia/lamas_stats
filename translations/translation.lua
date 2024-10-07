@@ -47,7 +47,8 @@ local translations =
 		HeldMaterial = "Held Material",
 		Is = "is",
 		OrIf = "Or if",
-		PressShiftToSeeMore = "Hold Shift to see more info"
+		PressShiftToSeeMore = "Hold Shift to see more info",
+		ShiftHasBeenModified = "Shift has been modified",
 	},
 	["русский"] = {
 		lamas_stat_return = "Назад",
@@ -97,7 +98,8 @@ local translations =
 		HeldMaterial = "Материал в руке",
 		Is = "является",
 		OrIf = "Или если",
-		PressShiftToSeeMore = "Удерживайте шифт чтобы увидеть больше информации"
+		PressShiftToSeeMore = "Удерживайте шифт чтобы увидеть больше информации",
+		ShiftHasBeenModified = "Сдвиг был модифицирован",
 	},
 	["日本語"] = {
 		lamas_stat_return = "戻る",
@@ -146,7 +148,8 @@ local translations =
 		HeldMaterial = "手持ちの材料",
 		Is = "は",
 		OrIf = "またはもし",
-		PressShiftToSeeMore = "詳細を見るにはシフトを押したままにしてください"
+		PressShiftToSeeMore = "詳細を見るにはシフトを押したままにしてください",
+		ShiftHasBeenModified = "シフトを変更しました",
 	},
 }
 

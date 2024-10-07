@@ -35,7 +35,6 @@ local fs = {
 ---@return boolean
 ---@nodiscard
 function fs:IsShiftIdenticalToFailed(shift)
-	-- local fullmatch = 0 -- How many times there was an match between real shift and "failed" shift
 	for i = 1, #shift.from do
 		local material_from = shift.from[i]
 		local index = self.shifted.indexed + i - 1
@@ -92,6 +91,7 @@ function fs:AnalizePastShift(shift_number)
 	if seed_shift.force_failed and self:IsShiftIdenticalToFailed(seed_shift.force_failed) then
 		-- set it as failed
 		past_shift.from = seed_shift.force_failed.from
+		past_shift.flask = "force_failed"
 		self.shifted.indexed = self.shifted.indexed + #seed_shift.force_failed.from
 		return
 	end

@@ -8,14 +8,19 @@ local past = {}
 function past:FungalDrawPastTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0
+	local x = 0
 
 	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
 
-
-	self:Text(0, y, string.format(_T.lamas_stats_shift .. " %02d", i))
+	self:Color(0.7, 0.7, 0.7)
+	x = x + self:FungalText(x, y, string.format(_T.lamas_stats_shift .. " %02d", i))
+	if shift.flask then
+		self:Color(0.7, 0.7, 0.6)
+		self:Text(x + 3, y, "(" .. _T.ShiftHasBeenModified .. ")")
+	end
 	y = y + 10
 
-	local x = 3
+	x = 3
 	self.fungal.row_count = self:FungalCalculateRowCount(shift.from, shift.to, false)
 
 	self:FungalDrawFromMaterials(x, y, shift.from, false, self.alt)
