@@ -152,7 +152,7 @@ local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 		-- If "from" material is same with or without flask - it's a normal flask shift
 	elseif last_shift_result.from[1] == last_shift_without_flask.from[1] then
 		local correct_shift = last_shift_without_flask
-
+		correct_shift.flask = "to"
 		-- Forcing fail shift using same material as "from"
 		do_fungal_shift_with_material(last_shift_result.from[1])
 
