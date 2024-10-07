@@ -117,6 +117,38 @@ function future:FungalDrawFutureTooltip(shift, i)
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
+---Sets color for future shift row
+---@private
+---@param hovered boolean
+---@param i integer
+---@param greedy greedy_shift
+function future:FungalFutureDecideRowColor(hovered, i, greedy)
+	if greedy and greedy.success then
+		if hovered then
+			self:Color(1, 0.5, 1)
+		else
+			self:Color(1, 0, 1)
+		end
+		return
+	end
+
+	if hovered then
+		if i == self.fs.current_shift then
+			self:Color(0.4, 1, 0.5)
+		else
+			self:Color(0.2, 0.6, 0.7)
+		end
+		return
+	end
+
+	if i == self.fs.current_shift then
+		self:Color(0.6, 1, 0.1)
+	else
+		local color = i % 2 == 0 and 0.4 or 0.6
+		self:Color(color, color, color)
+	end
+end
+
 ---Draws future shifts
 ---@private
 function future:FungalDrawFuture()
@@ -126,18 +158,8 @@ function future:FungalDrawFuture()
 		self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
 		local height = self.fungal.row_count * 10
 		local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
-		if hovered then
-			if i == self.fs.current_shift then
-				self:Color(0.4, 1, 0.5)
-			else
-				self:Color(0.2, 0.6, 0.7)
-			end
-		elseif i == self.fs.current_shift then
-			self:Color(0.6, 1, 0.1)
-		else
-			local color = i % 2 == 0 and 0.4 or 0.6
-			self:Color(color, color, color)
-		end
+
+		self:FungalFutureDecideRowColor(hovered, i, shift.greedy)
 		self:SetZ(self.z + 4)
 		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
 
