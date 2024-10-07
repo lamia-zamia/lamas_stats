@@ -3,7 +3,7 @@
 ---@field description string
 ---@field sprite string
 
----@class (exact) action_parser
+---@class action_parser
 ---@field data {[string]:action_data}
 local actions_data = {
 	data = {}
@@ -19,7 +19,7 @@ local function add_action(action_data)
 end
 
 ---Parse perks in sandbox
-function actions_data:parse()
+function actions_data:Parse()
 	-- Starting sandbox to not load any globals
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
@@ -47,7 +47,7 @@ end
 ---Returns action data if exist
 ---@param id string
 ---@return action_data
-function actions_data:get_data(id)
+function actions_data:GetData(id)
 	return self.data[id] or self.data["lamas_stats_unknown"]
 end
 

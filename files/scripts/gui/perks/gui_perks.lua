@@ -110,7 +110,7 @@ end
 
 ---Initialize data for perks
 function pg:PerksInit()
-	self.perks:get_current_list()
+	self.perks:GetCurrentList()
 	-- self:FungalUpdateWindowDims()
 	-- self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
 	-- self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")

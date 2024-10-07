@@ -10,11 +10,10 @@ nxml.error_handler = function() end
 ---@field icon string
 ---@field static boolean
 
----@class (exact) material_parser
+---@class material_parser
 ---@field private buffer {[string]: material_data}|nil
 ---@field private invalid material_data
 ---@field data {[number]: material_data|nil}
----@field get_data fun(self, number):material_data
 local mat = {
 	buffer = {},
 	data = {},
@@ -148,7 +147,7 @@ local function parse_file(file)
 end
 
 ---Parses material list
-function mat:parse()
+function mat:Parse()
 	local files = ModMaterialFilesGet()
 	for i = 1, #files do
 		parse_file(files[i])
@@ -166,7 +165,7 @@ function mat:parse()
 end
 
 ---Converts buffer data into actual data
-function mat:convert()
+function mat:Convert()
 	for name, value in pairs(self.buffer) do
 		self.data[CellFactory_GetType(name)] = value
 	end
@@ -176,7 +175,7 @@ end
 ---Returns data
 ---@param material_type number
 ---@return material_data
-function mat:get_data(material_type)
+function mat:GetData(material_type)
 	return self.data[material_type] or self.invalid
 end
 

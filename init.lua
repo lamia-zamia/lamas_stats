@@ -22,7 +22,7 @@ end
 
 ---Idk why it's called before initialized
 function OnWorldPostUpdate()
-	gui:loop()
+	gui:Loop()
 end
 
 ---?

@@ -4,7 +4,7 @@
 ---@field perk_icon string
 ---@field picked_count number
 
----@class (exact) perks_parser
+---@class perks_parser
 ---@field data_perks {[string]:perk_data}
 ---@field data_list string[]
 ---@field total_amount number
@@ -26,7 +26,7 @@ local function add_perk(perk_data)
 end
 
 ---Parse perks in sandbox
-function perks:parse()
+function perks:Parse()
 	-- Starting sandbox to not load any globals
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
@@ -57,12 +57,12 @@ end
 ---Returns perk data if exist
 ---@param id string
 ---@return perk_data
-function perks:get_data(id)
+function perks:GetData(id)
 	return self.data_perks[id] or self.data_perks["lamas_stats_unknown"]
 end
 
 ---Updates currently owned perks
-function perks:get_current_list()
+function perks:GetCurrentList()
 	self.total_amount = 0
 	for i = 1, #self.data_list do
 		local id = self.data_list[i]

@@ -49,7 +49,7 @@ end
 ---@return string
 ---@nodiscard
 function helper:FungalGetName(material_type)
-	local locale = self:Locale(self.mat:get_data(material_type).ui_name)
+	local locale = self:Locale(self.mat:GetData(material_type).ui_name)
 	return string.gsub(" " .. locale, "%W%l", string.upper):sub(2)
 end
 
@@ -66,7 +66,7 @@ end
 ---@param y number
 ---@param material_type integer
 function helper:FungalDrawIcon(x, y, material_type)
-	local data = self.mat:get_data(material_type)
+	local data = self.mat:GetData(material_type)
 	if data.color then
 		self:FungalPotionColor(data.color)
 	end
@@ -87,7 +87,7 @@ function helper:FungalDrawSingleMaterial(x, y, material_type, draw_id)
 	if draw_id then
 		x = x + self:GetTextDimension(material_name) + 3
 		self:ColorGray()
-		self:Text(x, y, "(" .. self.mat:get_data(material_type).id .. ")")
+		self:Text(x, y, "(" .. self.mat:GetData(material_type).id .. ")")
 	end
 end
 
@@ -129,7 +129,7 @@ function helper:FungalSanitizeFromShifts(from)
 	if not from or #from == 1 then return from end
 	local arr = {}
 	for i = 1, #from do
-		local data = self.mat:get_data(from[i])
+		local data = self.mat:GetData(from[i])
 		if not data.static then
 			arr[#arr + 1] = from[i]
 		end
@@ -156,12 +156,12 @@ function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flas
 		end
 	end
 	if shift.to then
-		local id = draw_id and self:GetTextDimension("(" .. self.mat:get_data(shift.to).id .. ")") or 0
+		local id = draw_id and self:GetTextDimension("(" .. self.mat:GetData(shift.to).id .. ")") or 0
 		max_to = math.max(self:GetTextDimension(self:FungalGetName(shift.to)) + 9 + id, max_to)
 	end
 	if shift.from then
 		for j = 1, #shift.from do
-			local id = draw_id and self:GetTextDimension("(" .. self.mat:get_data(shift.from[j]).id .. ")") or 0
+			local id = draw_id and self:GetTextDimension("(" .. self.mat:GetData(shift.from[j]).id .. ")") or 0
 			max_from = math.max(max_from, self:GetTextDimension(self:FungalGetName(shift.from[j])) + 9 + id)
 		end
 	end

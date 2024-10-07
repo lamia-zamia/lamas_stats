@@ -82,14 +82,14 @@ end
 
 ---Gets data after materials are done
 function gui:PostBiomeInit()
-	self.mat:parse()
+	self.mat:Parse()
 end
 
 ---Gets data after worlds exist
 function gui:PostWorldInit()
-	self.perks:parse()
-	self.actions:parse()
-	self.mat:convert()
+	self.perks:Parse()
+	self.actions:Parse()
+	self.mat:Convert()
 	self.fs:Init()
 	self:GetSettings()
 	self.show = self.mod:GetSettingBoolean("enabled_at_start")
@@ -115,7 +115,7 @@ function gui:CalcAltMode()
 end
 
 ---Main function to draw gui
-function gui:loop()
+function gui:Loop()
 	self:StartFrame()
 	if InputIsKeyJustDown(self.hotkey) then
 		self.show = not self.show

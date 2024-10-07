@@ -167,7 +167,7 @@ end
 
 ---Init fungal shifts
 function fs:Init()
-	self.predictor:parse()
+	self.predictor:Parse()
 	self.max_shifts = self.predictor.max_shifts
 	self.cooldown = self.predictor.cooldown
 end
