@@ -234,7 +234,8 @@ local function get_greedy_shift_results(i)
 	if shift_predictor.shifts[i].flask ~= "to" then return end
 
 	shift_predictor.shifts[i].greedy = {}
-	
+	shift_predictor.current_predict_iter = i
+
 	local gold = CellFactory_GetType("gold")
 	do_fungal_shift_with_material(gold)
 	local gold_success = last_shift_result.to == gold
