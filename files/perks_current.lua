@@ -1,24 +1,4 @@
----@diagnostic disable: lowercase-global, missing-global-doc
-local perks_stats, perks_current_max_count
-
-local perks_current_scale = ModSettingGet("lamas_stats.current_perks_scale")
-local perks_current_icon_scale = 0.7 * perks_current_scale
-
-function gui_perks_show_stats(gui)
-	GuiLayoutBeginHorizontal(gui,0,0, false)
-	GuiImage(gui, id(), 0, 0, perk_png, 1, perks_scale * 0.7) --displaying img by id
-	GuiText(gui, 0, 0, perks_current_count, perks_scale)
-	
-	for perk,text in pairs(perks_stats) do
-		GuiImage(gui, id(), 0, 0, perks_data[perk].perk_icon, 1, perks_scale * 0.7)
-		GuiText(gui, 0, 0, text)
-	end
-
-	GuiImage(gui, id(), 0, 0, reroll_png, 1, perks_scale * 0.7) --displaying img by id
-	GuiText(gui, 0, 0, reroll_count, perks_scale)
-
-	GuiLayoutEnd(gui) 
-end
+---@diagnostic disable: lowercase-global, missing-global-doc, undefined-global
 
 function gui_perks_show_perks_on_screen(gui)
 	if perks_onscreen == nil then return end
@@ -92,24 +72,6 @@ function gui_perks_show_current_perks(gui)
 	GuiLayoutEndLayer(gui) 
 end
 
-function gui_perks_gather_stats()
-	gui_perks_gather_stats_owned_perks()
-	reroll_count = GlobalsGetValue("TEMPLE_PERK_REROLL_COUNT", "0")
-	perks_current_max_width = ModSettingGet("lamas_stats.current_perks_percentage")
-	perks_current_scale = ModSettingGet("lamas_stats.current_perks_scale")
-	perks_current_icon_scale = 0.7 * perks_current_scale
-end
-
-function gui_perks_gather_stats_owned_perks()
-	perks_stats = {}
-	local extra_perk_count = perks_current["EXTRA_PERK"] or 0
-	if extra_perk_count > 0 then perks_stats["EXTRA_PERK"] = tostring(extra_perk_count)	end
-	
-	local perks_lottery_count = perks_current["PERKS_LOTTERY"] or 0
-	if perks_lottery_count > 0 then 
-		perks_stats["PERKS_LOTTERY"] = tostring(100 - math.floor(GlobalsGetValue("TEMPLE_PERK_DESTROY_CHANCE", "100"))) .. "%" 
-	end
-end
 
 function gui_perks_get_perks_on_screen()
 	perks_onscreen = {}

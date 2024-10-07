@@ -38,20 +38,22 @@ end
 
 ---Adds clickable button
 ---@param text string
----@param tooltip_text string
 ---@param fn function
 ---@param run? function
-function menu:MenuAddButton(text, tooltip_text, fn, run)
+function menu:MenuAddButton(text, fn, run)
 	if self.menu.current_window == fn then
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, false)
 		if self:IsHovered() and self:IsLeftClicked() then
 			self.menu.current_window = nil
 		end
-	elseif self:IsButtonClicked(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, tooltip_text) then
-		self:FakeScrollBox_Reset()
-		self.scroll.height_max = 200
-		if run then run(self) end
-		self.menu.current_window = fn
+	else
+		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, true)
+		if self:IsHovered() and self:IsLeftClicked() then
+			self:FakeScrollBox_Reset()
+			self.scroll.height_max = self.max_height
+			if run then run(self) end
+			self.menu.current_window = fn
+		end
 	end
 	self.menu.pos_x = self.menu.pos_x + self:GetTextDimension(text) + 9
 end
@@ -66,9 +68,9 @@ function menu:MenuDraw()
 	self.menu.pos_y = self.menu.start_y + 15
 	self.menu.width = self:GetTextDimension(self.menu.header)
 
-	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, "", self.FungalDrawWindow, self.FungalInit) end
-	if self.menu.perks then self:MenuAddButton(_T.Perks, "", self.mod.GetGlobalNumber) end
-	if self.menu.kys then self:MenuAddButton(_T.KYS_Suicide, "", self.KysDraw) end
+	if self.menu.fungal then self:MenuAddButton(_T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
+	if self.menu.perks then self:MenuAddButton(_T.Perks, self.PerksDrawWindow, self.PerksInit) end
+	if self.menu.kys then self:MenuAddButton(_T.KYS_Suicide, self.KysDraw) end
 
 	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
 	self.menu.pos_y = self.menu.pos_y + 17

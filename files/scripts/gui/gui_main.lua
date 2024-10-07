@@ -15,6 +15,7 @@ local UI_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") ---@type U
 ---@field private perks perks_parser
 ---@field private actions action_parser
 ---@field private mat material_parser
+---@field private max_height number
 local gui = UI_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
@@ -31,6 +32,7 @@ gui.fs = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift.l
 gui.mat = dofile_once("mods/lamas_stats/files/scripts/material_parser.lua")
 gui.alt = false
 gui.shift_hold = 0
+gui.max_height = 180
 
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_header.lua",

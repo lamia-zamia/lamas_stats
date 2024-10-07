@@ -832,10 +832,7 @@ end
 ---@param scale_x? number
 ---@param scale_y? number
 function ui_class:Image(x, y, sprite, alpha, scale_x, scale_y)
-	alpha = alpha or 1
-	scale_x = scale_x or 1
-	scale_y = scale_y or 1
-	GuiImage(self.gui, self:id(), x, y, sprite, alpha, scale_x, scale_y, 0, 2)
+	GuiImage(self.gui, self:id(), x, y, sprite, alpha or 1, scale_x or 1, scale_y or scale_x or 1, 0, 2)
 end
 
 ---draw 9piece
