@@ -39,6 +39,8 @@ local const = {
 --- @field private gui_tooltip_size_cache gui_tooltip_size_cache
 --- @field private tooltip_z number
 --- @field private tooltip_gui_id number
+--- @field private animation_id number
+--- @field private tooltip_animation_id number
 --- @field public tooltip_margin number
 --- @field public tooltip_img string
 --- @field protected tooltip_reset boolean
@@ -61,6 +63,7 @@ local ui_class = {
 	tooltip_reset = true,
 	tooltip_previous = nil,
 	tooltip_margin = 5,
+	tooltip_animation_id = 100,
 	tooltip_img = "data/ui_gfx/decorations/9piece0_gray.png",
 	scroll = {
 		y = 0,
@@ -278,8 +281,8 @@ end
 --- @param key string
 --- @param ... any
 function ui_class:DrawTooltipOffScreen(x, y, ui_fn, key, ...)
-	local orig_gui, orig_id = self.gui, self.gui_id
-	self.gui, self.gui_id = self.gui_tooltip, self.tooltip_gui_id
+	local orig_gui, orig_id, anim_id = self.gui, self.gui_id, self.animation_id
+	self.gui, self.gui_id, self.animation_id = self.gui_tooltip, self.tooltip_gui_id, self.tooltip_animation_id
 	local offscreen_offset = 1000
 	GuiBeginAutoBox(self.gui)
 	GuiLayoutBeginVertical(self.gui, x + offscreen_offset, y + offscreen_offset, true)
@@ -287,7 +290,7 @@ function ui_class:DrawTooltipOffScreen(x, y, ui_fn, key, ...)
 	GuiLayoutEnd(self.gui)
 	GuiEndAutoBoxNinePiece(self.gui, self.tooltip_margin, 0, 0, false, 0, self.tooltip_img)
 	self:SetTooltipCache(x, y, key)
-	self.gui, self.gui_id = orig_gui, orig_id
+	self.gui, self.gui_id, self.animation_id = orig_gui, orig_id, anim_id
 end
 
 --- Retrieves a tooltip data, drawing it off-screen if necessary
@@ -326,8 +329,8 @@ end
 --- @param ui_fn function
 --- @param ... any
 function ui_class:DrawToolTip(x, y, ui_fn, ...)
-	local orig_gui, orig_id = self.gui, self.gui_id
-	self.gui, self.gui_id = self.gui_tooltip, self.tooltip_gui_id
+	local orig_gui, orig_id, anim_id = self.gui, self.gui_id, self.animation_id
+	self.gui, self.gui_id, self.animation_id = self.gui_tooltip, self.tooltip_gui_id, self.tooltip_animation_id
 	local cache = self:GetTooltipData(x, y, ui_fn, ...)
 	if self.tooltip_previous ~= cache then
 		self.tooltip_previous = cache
@@ -346,7 +349,7 @@ function ui_class:DrawToolTip(x, y, ui_fn, ...)
 	GuiEndAutoBoxNinePiece(self.gui, self.tooltip_margin, 0, 0, false, 0, self.tooltip_img)
 	self:AnimateE()
 	GuiZSet(self.gui, 0)
-	self.gui, self.gui_id = orig_gui, orig_id
+	self.gui, self.gui_id, self.animation_id = orig_gui, orig_id, anim_id
 end
 
 --- Custom tooltip.
@@ -861,7 +864,8 @@ end
 --- @param step integer
 --- @param reset boolean
 function ui_class:AnimateAlpha(speed, step, reset)
-	GuiAnimateAlphaFadeIn(self.gui, self:id(), speed, step, reset)
+	GuiAnimateAlphaFadeIn(self.gui, self.animation_id, speed, step, reset)
+	self.animation_id = self.animation_id + 1
 end
 
 --- Adds scale to animation
@@ -869,7 +873,8 @@ end
 --- @param acceleration number
 --- @param reset boolean
 function ui_class:AnimateScale(acceleration, reset)
-	GuiAnimateScaleIn(self.gui, self:id(), acceleration, reset)
+	GuiAnimateScaleIn(self.gui, self.animation_id, acceleration, reset)
+	self.animation_id = self.animation_id + 1
 end
 
 --- Ends an animation
@@ -893,6 +898,8 @@ end
 function ui_class:id_reset()
 	self.gui_id = 100000
 	self.tooltip_gui_id = 1000
+	self.animation_id = 100
+	self.tooltip_animation_id = 100
 end
 
 --- Returns an id with increment
