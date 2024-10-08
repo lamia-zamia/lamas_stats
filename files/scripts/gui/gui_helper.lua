@@ -1,5 +1,14 @@
 local helper = {} --- @class (exact) LS_Gui
 
+--- Starts animation
+--- @private
+--- @param reset boolean
+function helper:AnimateStart(reset)
+	self:AnimateB()
+	self:AnimateAlpha(0.1, 0.1, reset)
+	self:AnimateScale(0.1, reset)
+end
+
 --- Sets yellow color for next widget
 --- @private
 function helper:ColorYellow()

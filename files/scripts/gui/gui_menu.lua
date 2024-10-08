@@ -61,9 +61,7 @@ end
 --- Draw menu
 --- @private
 function menu:MenuDraw()
-	self:AnimateB()
-	self:AnimateAlpha(0.1, 0.1, false)
-	self:AnimateScale(0.1, false)
+	self:AnimateStart(false)
 	self.menu.pos_x = self.menu.start_x
 	self.menu.pos_y = self.menu.start_y + 15
 	self.menu.width = self:GetTextDimension(self.menu.header)
@@ -75,10 +73,7 @@ function menu:MenuDraw()
 	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
 	self.menu.pos_y = self.menu.pos_y + 17
 
-	local reset_anim = self.menu.previous_window ~= self.menu.current_window
-	self:AnimateB()
-	self:AnimateAlpha(0.1, 0.1, reset_anim)
-	self:AnimateScale(0.1, reset_anim)
+	self:AnimateStart(self.menu.previous_window ~= self.menu.current_window)
 	self.menu.pos_x = self.menu.start_x
 
 	if self.menu.current_window then self.menu.current_window(self) end

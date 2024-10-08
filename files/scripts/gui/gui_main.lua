@@ -130,7 +130,7 @@ function gui:Loop()
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
 	if self.stats.enabled then self:StatsDraw() end
-	self.gui_id = 200000
+	-- self.gui_id = 200000
 	if self.menu.opened then self:MenuDraw() end
 end
 
