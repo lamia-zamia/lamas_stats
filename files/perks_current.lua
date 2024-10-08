@@ -33,46 +33,6 @@ function gui_perks_show_perks_on_screen(gui)
 	end
 end
 
-function gui_perks_show_current_perks(gui)
-	GuiLayoutBeginHorizontal(gui,0,0, false)
-	GuiText(gui, 0, 0, "---- " .. T.lamas_stat_current .. " ----", perks_scale)
-	GuiLayoutEnd(gui)
-	local rows = 1 
-	GuiText(gui, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself
-	local width_icon = GuiGetImageDimensions(gui, perks_data["EXTRA_PERK"].perk_icon, perks_current_icon_scale) 
-	local width_space = GuiGetTextDimensions(gui, " ", perks_current_scale)
-	local width_text_max = GuiGetTextDimensions(gui, perks_current_max_count .. "x", perks_current_scale)
-	local _,_,_,x,y = GuiGetPreviousWidgetInfo(gui)
-	local width_screen = GuiGetScreenDimensions(gui)
-
-	GuiLayoutBeginLayer(gui)
-	
-	local idx = 1
-	for perk_id,count in pairs(perks_current) do
-		local text = count .. "x"
-		local width_text = GuiGetTextDimensions(gui,text,perks_current_scale)
-		GuiText(gui, width_text_max - width_text + x, y, text, perks_current_scale)
-		x = x + width_text_max
-		
-		GuiImage(gui, id(), x, y, perks_data[perk_id].perk_icon, 1, perks_current_icon_scale)
-		GuiTooltip(gui, perks_data[perk_id].ui_name, perks_data[perk_id].ui_description)
-		
-		local _,_,_,x_tmp = GuiGetPreviousWidgetInfo(gui)
-		
-		if (x_tmp/perks_current_max_width) > width_screen and idx < perks_current_count then
-			GuiLayoutEndLayer(gui)
-			GuiText(gui, 0, 0, " ", perks_current_scale) --phantom vertical text for next widgets to know where to put themself
-			_,_,_,x,y = GuiGetPreviousWidgetInfo(gui)
-			GuiLayoutBeginLayer(gui)
-		else
-			x = x + width_icon + width_space
-		end
-		idx = idx + 1
-	end
-	GuiLayoutEndLayer(gui) 
-end
-
-
 function gui_perks_get_perks_on_screen()
 	perks_onscreen = {}
 	
