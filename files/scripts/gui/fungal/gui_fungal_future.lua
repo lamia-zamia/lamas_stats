@@ -85,8 +85,14 @@ function future:FungalDrawFutureTooltip(shift, i)
 	local y = 0
 
 	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
-	offset_from = self:FungalGetLongestTextInShift(shift.failed, offset_from, 0, true, self.alt)
-	offset_from = self:FungalGetLongestTextInShift(shift.force_failed, offset_from, 0, true, self.alt)
+	if shift.failed then 
+		offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt)
+	end
+	-- offset_from = self:FungalGetLongestTextInShift(shift.failed, offset_from, 0, true, self.alt)
+	if shift.force_failed then
+		offset_from = self:FungalGetLongestMaterialName(shift.force_failed.from, offset_from, self.alt)
+	end
+	-- offset_from = self:FungalGetLongestTextInShift(shift.force_failed, offset_from, 0, true, self.alt)
 
 	self:Text(0, y, string.format(T.lamas_stats_shift .. " %02d", i))
 	y = y + 10
