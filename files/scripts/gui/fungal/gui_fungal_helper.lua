@@ -138,6 +138,31 @@ function helper:FungalSanitizeFromShifts(from)
 	return arr
 end
 
+--- Returns a length of material name
+--- @private
+--- @param material integer
+--- @param draw_id boolean?
+--- @return number
+--- @nodiscard
+function helper:FungalGetMaterialNameLength(material, draw_id)
+	local id = draw_id and self:GetTextDimension("(" .. self.mat:GetData(material).id .. ")") or 0
+	return self:GetTextDimension(self:FungalGetName(material)) + 9 + id
+end
+
+--- Returns longest material name from array of material types
+--- @private
+--- @param material_types integer[]
+--- @param max number
+--- @param draw_id? boolean
+--- @return number
+--- @nodiscard
+function helper:FungalGetLongestMaterialName(material_types, max, draw_id)
+	for i = 1, #material_types do
+		max = math.max(max, self:FungalGetMaterialNameLength(material_types[i], draw_id))
+	end
+	return max
+end
+
 --- Returns longest string from shift
 --- @private
 --- @param shift shift|failed_shift
@@ -156,14 +181,10 @@ function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flas
 		end
 	end
 	if shift.to then
-		local id = draw_id and self:GetTextDimension("(" .. self.mat:GetData(shift.to).id .. ")") or 0
-		max_to = math.max(self:GetTextDimension(self:FungalGetName(shift.to)) + 9 + id, max_to)
+		max_to = math.max(max_to, self:FungalGetMaterialNameLength(shift.to, draw_id))
 	end
 	if shift.from then
-		for j = 1, #shift.from do
-			local id = draw_id and self:GetTextDimension("(" .. self.mat:GetData(shift.from[j]).id .. ")") or 0
-			max_from = math.max(max_from, self:GetTextDimension(self:FungalGetName(shift.from[j])) + 9 + id)
-		end
+		max_from = self:FungalGetLongestMaterialName(shift.from, max_from, draw_id)
 	end
 	return max_from, max_to
 end
