@@ -3,8 +3,13 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 --- @alias APLC_materials {[number]:string|nil}
 
 --- @class APLC_recipe
---- @field lc {mats:string[], prob:number}
---- @field ap {mats:string[], prob:number}
+--- @field mats integer[]
+--- @field prob number
+--- @field result integer
+
+--- @class APLC_recipes
+--- @field lc APLC_recipe
+--- @field ap APLC_recipe
 
 --- @class APLC
 --- @field failed boolean
@@ -98,12 +103,12 @@ function aplc:random_recipe(rand_state, seed)
 		local num, mat = self:random_material(rand_state, liquids)
 		if not num or not mat then return false end
 		rand_state = num
-		materials[#materials + 1] = mat
+		materials[#materials + 1] = CellFactory_GetType(mat)
 	end
 	local num, mat = self:random_material(rand_state, organics)
 	if not num or not mat then return false end
 	rand_state = num
-	materials[#materials + 1] = mat
+	materials[#materials + 1] = CellFactory_GetType(mat)
 
 	rand_state = self:rng_next(rand_state)
 	local prob = 10 + math.floor((rand_state / 2^31) * 91)
@@ -121,7 +126,7 @@ function aplc:fail()
 end
 
 --- Returns APLC recipe
---- @return APLC_recipe
+--- @return APLC_recipes
 --- @nodiscard
 function aplc:get()
 	local seed = tonumber(StatsGetValue("world_seed")) or 1
@@ -139,7 +144,18 @@ function aplc:get()
 	success, rand_state, ap_mats, ap_prob = self:random_recipe(rand_state, seed)
 	if not success then self:fail() end
 
-	return { lc = { mats = lc_mats, prob = lc_prob }, ap = { mats = ap_mats, prob = ap_prob } }
+	return {
+		lc = {
+			mats = lc_mats,
+			prob = lc_prob,
+			result = CellFactory_GetType("magic_liquid_hp_regeneration_unstable")
+		},
+		ap = {
+			mats = ap_mats,
+			prob = ap_prob,
+			result = CellFactory_GetType("midas_precursor")
+		}
+	}
 end
 
 return aplc
