@@ -21,6 +21,7 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 --- @field cooldown number
 --- @field past_shifts shift
 --- @field current_shift integer
+--- @field aplc APLC_recipe|false
 local fs = {
 	predictor = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua"),
 	shifted = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_past_getter.lua"),
@@ -165,8 +166,20 @@ function fs:AnalysePastShifts()
 	end
 end
 
+--- Gets APLC recipe if success
+function fs:GetApLcRecipe()
+	local aplc = dofile_once("mods/lamas_stats/files/scripts/aplc.lua") ---@type APLC
+	local aplc_recipe = aplc:get()
+	if aplc.failed then
+		self.aplc = false
+	else
+		self.aplc = aplc_recipe
+	end
+end
+
 --- Init fungal shifts
 function fs:Init()
+	self:GetApLcRecipe()
 	self.predictor:Parse()
 	self.max_shifts = self.predictor.max_shifts
 	self.cooldown = self.predictor.cooldown
