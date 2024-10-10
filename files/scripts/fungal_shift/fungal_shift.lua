@@ -21,7 +21,7 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 --- @field cooldown number
 --- @field past_shifts shift
 --- @field current_shift integer
---- @field aplc APLC_recipe|false
+--- @field aplc APLC_recipes|false
 local fs = {
 	predictor = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua"),
 	shifted = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_past_getter.lua"),
