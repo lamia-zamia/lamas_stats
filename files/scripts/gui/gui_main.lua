@@ -16,12 +16,13 @@ local ui_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") --- @type 
 --- @field private actions action_parser
 --- @field private mat material_parser
 --- @field private max_height number
+--- @field private default_tooltip string
 local gui = ui_class:New()
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
 gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
 gui.scroll.scroll_img_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.png"
-gui.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
+gui.default_tooltip = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
 gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.perks = dofile_once("mods/lamas_stats/files/scripts/perks/perk_data_parser.lua")
@@ -127,6 +128,7 @@ function gui:Loop()
 	self:FetchData()
 	self:DetermineAltMode()
 
+	-- self.tooltip_img = self.default_tooltip
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
 	if self.stats.enabled then self:StatsDraw() end

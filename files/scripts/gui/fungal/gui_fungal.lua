@@ -19,7 +19,8 @@ local fungal = {
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_helper.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_future.lua",
-	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_past.lua"
+	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_past.lua",
+	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_aplc.lua"
 }
 
 for i = 1, #modules do
@@ -107,8 +108,10 @@ function fungal:FungalDrawWindow()
 			self.mod:SetModSetting("enable_fungal_future", self.fungal.future)
 		end
 	end
+	if self.fs.aplc then self:FungalApLcDraw(self.menu.start_x + self.fungal.width - 21, self.menu.start_y + 3) end
+
 	self.menu.pos_y = self.menu.pos_y + 12
-	self:ScrollBox(self.menu.pos_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self.FungalDraw)
+	self:ScrollBox(self.menu.start_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self.FungalDraw)
 	self:MenuSetWidth(self.scroll.width - 6)
 end
 
