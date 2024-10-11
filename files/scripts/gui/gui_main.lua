@@ -23,6 +23,7 @@ gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
 gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
 gui.scroll.scroll_img_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.png"
 gui.default_tooltip = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
+gui.tooltip_img = gui.default_tooltip
 gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.perks = dofile_once("mods/lamas_stats/files/scripts/perks/perk_data_parser.lua")

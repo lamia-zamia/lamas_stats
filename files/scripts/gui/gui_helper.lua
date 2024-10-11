@@ -15,6 +15,34 @@ function helper:ColorYellow()
 	self:Color(1, 1, 0.7)
 end
 
+--- Splits string and returns lines 
+--- @private
+--- @param text string
+--- @param length number
+--- @return string[]
+--- @nodiscard
+function helper:SplitString(text, length)
+	local lines = {}
+	local current_line = ""
+	for word in text:gmatch("%S+") do
+		local test_line = (current_line == "") and word or current_line .. " " .. word
+		local width = self:GetTextDimension(test_line)
+		if width > length then
+			lines[#lines + 1] = current_line
+			current_line = word
+		else
+			current_line = test_line
+		end
+	end
+
+	-- Add the last line if it's not empty
+	if current_line ~= "" then
+		lines[#lines + 1] = current_line
+	end
+
+	return lines
+end
+
 --- Draws checbox
 --- @param x number
 --- @param y number

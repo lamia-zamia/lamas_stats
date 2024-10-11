@@ -49,6 +49,8 @@ local translations =
 		OrIf = "Or if",
 		PressShiftToSeeMore = "Hold Shift to see more info",
 		ShiftHasBeenModified = "Shift has been modified",
+		Count = "Count",
+		Max = "Max",
 	},
 	["русский"] = {
 		lamas_stat_return = "Назад",
@@ -100,6 +102,8 @@ local translations =
 		OrIf = "Или если",
 		PressShiftToSeeMore = "Удерживайте шифт чтобы увидеть больше информации",
 		ShiftHasBeenModified = "Сдвиг был модифицирован",
+		Count = "Количество",
+		Max = "Макс",
 	},
 	["日本語"] = {
 		lamas_stat_return = "戻る",
@@ -150,6 +154,8 @@ local translations =
 		OrIf = "またはもし",
 		PressShiftToSeeMore = "詳細を見るにはシフトを押したままにしてください",
 		ShiftHasBeenModified = "シフトを変更しました",
+		Count = "回数",
+		Max = "最大",
 	},
 }
 

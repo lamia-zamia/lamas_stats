@@ -17,6 +17,7 @@ local pg = {
 	}
 }
 
+
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_header.lua",
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_current.lua"
@@ -29,18 +30,33 @@ for i = 1, #modules do
 		pg[k] = v
 	end
 end
+pg.perk.current_window = pg.PerksDrawCurrentPerkScrollBox
+
+--- Returns true if perk is hovered
+--- @private
+--- @param x number
+--- @param y number
+--- @return boolean
+--- @nodiscard
+function pg:PerksIsHoverBoxHovered(x, y)
+	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.menu.pos_y + y + 29, 16, 16)
+	then
+		return true
+	end
+	return false
+end
 
 --- Draws stats and perks window
 function pg:PerksDrawWindow()
 	self.perk.x = self.menu.start_x
 	self.perk.y = self.menu.pos_y + 7
 	self:Draw9Piece(self.menu.start_x - 6, self.menu.pos_y + 4, self.z + 49, self.scroll.width + 6, 17)
-	self:PerksAddButton("Current", self.PerksDrawCurrentPerks)
+	self:PerksAddButton("Current", self.PerksDrawCurrentPerkScrollBox)
 	self:PerksAddButton("Predict", function() end)
 	self:PerksDrawStats()
 
-	self.perk.x = 3
-	self.perk.y = 1
+	self.perk.x = 0
+	self.perk.y = 0
 
 	self:AnimateStart(self.perk.previous_window ~= self.perk.current_window)
 	if self.perk.current_window then self.perk.current_window(self) end
@@ -54,7 +70,7 @@ end
 --- Initialize data for perks
 function pg:PerksInit()
 	self.perks:GetCurrentList()
-	self.perk.width = 0
+	self.scroll.width = 203
 	-- self:FungalUpdateWindowDims()
 	-- self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
 	-- self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")

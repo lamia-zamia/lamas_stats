@@ -44,7 +44,6 @@ function pg:PerksDrawStats()
 	end
 
 	self.perk.x = 0
-	-- tostring(100 - math.floor(GlobalsGetValue("TEMPLE_PERK_DESTROY_CHANCE", "100"))) .. "%"
 end
 
 --- Adds clickable button
