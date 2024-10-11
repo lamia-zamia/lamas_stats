@@ -83,6 +83,8 @@ end
 
 --- Gets data after materials are done
 function gui:PostBiomeInit()
+	local custom_img_id = ModImageMakeEditable("mods/lamas_stats/vfs/white.png", 1, 1)
+	ModImageSetPixel(custom_img_id, 0, 0, -1) -- white
 	self.mat:Parse()
 end
 
