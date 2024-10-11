@@ -48,6 +48,21 @@ function sm:Replace(pattern, replacement, n)
 	self.content = self.content:gsub(pattern, replacement, n)
 end
 
+--- Replaces find line with new string
+--- @param line_text string
+---@param replace string
+function sm:ReplaceLine(line_text, replace)
+	local lines = {}
+	for line in self.content:gmatch("[^\r\n]+") do
+		if line:find(line_text, 1, true) then
+			lines[#lines + 1] = replace
+		else
+			lines[#lines + 1] = line
+		end
+	end
+	self.content = table.concat(lines, "\n")
+end
+
 --- Inserts text before a specific line containing a search string.
 --- @param search_string string The string to search for in each line.
 --- @param text_to_insert string The text to insert before the matching line.
