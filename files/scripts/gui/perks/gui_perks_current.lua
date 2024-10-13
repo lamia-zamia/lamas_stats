@@ -7,15 +7,15 @@ local pg = {}
 function pg:PerksCurrentPerkTooltip(perk)
 	local ui_name = self:Locale(perk.ui_name)
 	local description_lines = self:SplitString(self:Locale(perk.ui_description), 200)
-	local picked_count = T.Count .. ": " .. perk.picked_count
-	local id = string.format("(%s)", perk.id)
-	local longest = #description_lines > 1 and 200 or
-		self:GetLongestText({ ui_name, description_lines[1], self.alt and "" or T.PressShiftToSeeMore }, perk.id)
-
+	local picked_count = T.PerkCount .. ": " .. perk.picked_count
+	local id = self.alt and string.format("(%s)", perk.id) or ""
+	local reminder = self.alt and "" or T.PressShiftToSeeMore
+	local longest = self:GetLongestText({ ui_name, id, reminder }, perk.id .. id)
+	longest = math.max(longest, self:GetLongestText(description_lines, perk.ui_description))
 	local name_pos = (longest - self:GetTextDimension(ui_name)) / 2
 	self:AddOptionForNext(self.c.options.Layout_NextSameLine)
-	self:Image(name_pos - 12, 0, perk.perk_icon, 1, 0.625)
-	self:Text(name_pos, 0, ui_name)
+	self:Image(name_pos - 6, 0, perk.perk_icon, 1, 0.625)
+	self:Text(name_pos + 6, 0, ui_name)
 	if self.alt then
 		self:ColorGray()
 		self:TextCentered(0, 0, id, longest)
@@ -29,11 +29,9 @@ function pg:PerksCurrentPerkTooltip(perk)
 	if self.alt then
 		self:ColorGray()
 		self:TextCentered(0, 0, T.Max .. ": " .. perk.max, longest)
-	end
-
-	if not self.alt then
+	else
 		self:ColorGray()
-		self:TextCentered(0, 0, T.PressShiftToSeeMore, longest)
+		self:TextCentered(0, 5, T.PressShiftToSeeMore, longest)
 	end
 end
 

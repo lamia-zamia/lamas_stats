@@ -35,10 +35,10 @@ function aplc:FungalApLcTooltip()
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
---- Draws aplc flasks 
+--- Draws aplc flasks
 --- @private
 --- @param x number
----@param y number
+--- @param y number
 function aplc:FungalApLcDraw(x, y)
 	self:FungalDrawIcon(x, y, self.fs.aplc.ap.result)
 	self:FungalDrawIcon(x + 9, y, self.fs.aplc.lc.result)

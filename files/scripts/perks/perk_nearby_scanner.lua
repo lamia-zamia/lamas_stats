@@ -2,6 +2,8 @@
 --- @field id string
 --- @field lottery? boolean
 --- @field cast? string
+--- @field x number x position of perk to sort them how they appears in game
+--- @field spawn_order number used to determine reroll position more accurately 
 
 --- @class perk_scanner
 --- @field entities entity_id[]
@@ -27,11 +29,14 @@ function scanner:ParseEntities()
 		local x, y = EntityGetTransform(entity_id)
 		local id = self:GetPerkId(entity_id)
 		parsed[#parsed + 1] = {
+			x = x,
 			id = id,
 			lottery = self:IsLotteryWon(x, y, id),
-			cast = id == "ALWAYS_CAST" and self:PredictAlwaysCast(x, y) or nil
+			cast = id == "ALWAYS_CAST" and self:PredictAlwaysCast(x, y) or nil,
+			spawn_order = i
 		}
 	end
+	table.sort(parsed, function(a, b) return a.x < b.x end)
 	self.data = parsed
 end
 

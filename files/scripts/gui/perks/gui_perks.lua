@@ -42,7 +42,7 @@ pg.perk.current_window = pg.PerksDrawCurrentPerkScrollBox
 --- @nodiscard
 function pg:PerksIsHoverBoxHovered(x, y)
 	-- y = y + 
-	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start, 16, 16)
+	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start + y, 16, 16)
 	then
 		return true
 	end
@@ -60,8 +60,8 @@ function pg:PerksDrawWindow()
 	self.perk.y = self.menu.pos_y + 7
 
 	
-	self:PerksAddButton("Current", self.PerksDrawCurrentPerkScrollBox)
-	self:PerksAddButton("Predict", function() end)
+	self:PerksAddButton(T.lamas_stat_current, self.PerksDrawCurrentPerkScrollBox)
+	self:PerksAddButton(T.lamas_stats_perks_next, function() end)
 	self:PerksDrawStats()
 	self.perk.y = self.perk.y + 10
 
