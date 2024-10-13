@@ -22,7 +22,7 @@ local function redefine_functions()
 	local nil_fn = function() end
 	local fn_to_nil = { "GameCreateParticle", "GlobalsSetValue", "EntityRemoveIngestionStatusEffect",
 		"GameTriggerMusicFadeOutAndDequeueAll", "GameTriggerMusicEvent", "EntityLoad", "EntityAddChild", "GamePrint",
-		"GamePrintImportant", "EntityCreateNew", "EntityAddComponent", "EntityAddComponent2", "ConvertMaterialEverywhere", "print" }
+		"GamePrintImportant", "EntityCreateNew", "EntityAddComponent", "EntityAddComponent2", "ConvertMaterialEverywhere", "print", "GameTextGet", "CrossCall" }
 
 	for i = 1, #fn_to_nil do
 		_G[fn_to_nil[i]] = nil_fn
