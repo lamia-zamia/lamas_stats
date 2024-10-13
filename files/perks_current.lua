@@ -1,36 +1,21 @@
 --- @diagnostic disable: lowercase-global, missing-global-doc, undefined-global
 
 function gui_perks_show_perks_on_screen(gui)
-	if perks_onscreen == nil then return end
-	if #perks_onscreen > 0 then
-		GuiZSetForNextWidget(gui, GuiZ)
-		GuiText(gui, 0, 0, "---- " .. T.lamas_stats_nearby_perks .. " ----", perks_scale)
+	GuiLayoutBeginHorizontal(gui, 0, 0, false)
+	for i, perk in ipairs(perks_onscreen) do
+		local tooltip_name = GameTextGetTranslatedOrNot(perks_data[perk.perk_id].ui_name)
+		local tooltip_desc = GameTextGetTranslatedOrNot(perks_data[perk.perk_id].ui_description)
+		GuiZSetForNextWidget(gui, GuiZ - 1)
+		GuiImage(gui, id(), 0, 0, perks_data[perk.perk_id].perk_icon, 1, perks_scale) -- displaying img by id
 
-		local width_icon = GuiGetImageDimensions(gui, perks_data["EXTRA_PERK"].perk_icon, perks_scale)
-		GuiLayoutBeginHorizontal(gui, 0, 0, false)
-		for i, perk in ipairs(perks_onscreen) do
-			local tooltip_name = GameTextGetTranslatedOrNot(perks_data[perk.perk_id].ui_name)
-			local tooltip_desc = GameTextGetTranslatedOrNot(perks_data[perk.perk_id].ui_description)
-			GuiZSetForNextWidget(gui, GuiZ - 1)
-			GuiImage(gui, id(), 0, 0, perks_data[perk.perk_id].perk_icon, 1, perks_scale) -- displaying img by id
-
-			if perk.cast ~= nil then
-				tooltip_desc = tooltip_desc .. "\n" .. "==== " .. T.lamas_stats_perks_always_cast .. " ===="
-				tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].name)
-				tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].description)
-			end
-			GuiTooltip(gui, tooltip_name, tooltip_desc)
-			if perk.lottery then
-				local _, _, _, x, y = GuiGetPreviousWidgetInfo(gui)
-
-				GuiLayoutBeginLayer(gui)
-				GuiZSetForNextWidget(gui, GuiZ - 2)
-				GuiImage(gui, id(), x + (width_icon / 1.5), y - (width_icon / 6), perks_data["PERKS_LOTTERY"].perk_icon, 1, perks_scale * 0.5) -- displaying img by id
-				GuiLayoutEndLayer(gui)
-			end
+		if perk.cast ~= nil then
+			tooltip_desc = tooltip_desc .. "\n" .. "==== " .. T.lamas_stats_perks_always_cast .. " ===="
+			tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].name)
+			tooltip_desc = tooltip_desc .. "\n" .. GameTextGetTranslatedOrNot(actions_data[perk.cast].description)
 		end
-		GuiLayoutEnd(gui)
+		GuiTooltip(gui, tooltip_name, tooltip_desc)
 	end
+	GuiLayoutEnd(gui)
 end
 
 function gui_perks_get_perks_on_screen()
