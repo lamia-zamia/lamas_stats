@@ -52,10 +52,7 @@ function pg:PerksDrawCurrentPerk(perk_id)
 	self:Image(self.perk.x - off, self.perk.y - off, perk.perk_icon, 1, hovered and 1.15 or 1)
 	self.tooltip_reset = false
 	if hovered then
-		self.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png"
-		self:ShowTooltip(self.menu.start_x + self.scroll.width + 12, self.menu.start_y + 3, self.PerksCurrentPerkTooltip,
-			perk)
-		self.tooltip_img = self.default_tooltip
+		self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", self.PerksCurrentPerkTooltip, perk)
 	end
 	self.perk.x = self.perk.x + 17
 end
@@ -63,6 +60,8 @@ end
 --- Draws current perks
 --- @private
 function pg:PerksDrawCurrentPerks()
+	self.perk.x = 0
+	self.perk.y = 0
 	for i = 1, #self.perks.data.list do
 		self:PerksDrawCurrentPerk(self.perks.data.list[i])
 	end
@@ -70,7 +69,7 @@ function pg:PerksDrawCurrentPerks()
 end
 
 function pg:PerksDrawCurrentPerkScrollBox()
-	self:ScrollBox(self.menu.pos_x - 3, self.menu.pos_y + 29, self.z + 5, self.c.default_9piece, 3, 3,
+	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3,
 		self.PerksDrawCurrentPerks)
 end
 

@@ -4,6 +4,7 @@
 --- @field current_window function|nil
 --- @field previous_window function|nil
 --- @field width number
+--- @field scrollbox_start number
 
 --- @class (exact) LS_Gui
 --- @field perk LS_Gui_perks
@@ -13,7 +14,8 @@ local pg = {
 		y = 0,
 		current_window = nil,
 		previous_window = nil,
-		width = 0
+		width = 0,
+		scrollbox_start = 0
 	}
 }
 
@@ -39,7 +41,8 @@ pg.perk.current_window = pg.PerksDrawCurrentPerkScrollBox
 --- @return boolean
 --- @nodiscard
 function pg:PerksIsHoverBoxHovered(x, y)
-	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.menu.pos_y + y + 29, 16, 16)
+	-- y = y + 
+	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start, 16, 16)
 	then
 		return true
 	end
@@ -56,19 +59,22 @@ function pg:PerksDrawWindow()
 	self.perk.x = self.menu.start_x
 	self.perk.y = self.menu.pos_y + 7
 
-	local header_height = 17
-	if current_nearby_perks > 0 then
-		self:PerksDrawNearby()
-		header_height = header_height + 18
-	end
-
-	self:Draw9Piece(self.menu.start_x - 6, self.menu.pos_y + 4, self.z + 49, self.scroll.width + 6, header_height)
+	
 	self:PerksAddButton("Current", self.PerksDrawCurrentPerkScrollBox)
 	self:PerksAddButton("Predict", function() end)
 	self:PerksDrawStats()
+	self.perk.y = self.perk.y + 10
 
-	self.perk.x = 0
-	self.perk.y = 0
+	local header_height = 17
+	if current_nearby_perks > 0 then
+		self.perk.y = self.perk.y + 5
+		self:PerksDrawNearby()
+		-- header_height = header_height + 16
+		self.perk.y = self.perk.y + 12
+	end
+	self:Draw9Piece(self.menu.start_x - 6, self.menu.pos_y + 4, self.z + 49, self.scroll.width + 6, self.perk.y - self.menu.pos_y)
+
+	self.perk.scrollbox_start = self.perk.y + 12
 
 	self:AnimateStart(self.perk.previous_window ~= self.perk.current_window)
 	if self.perk.current_window then self.perk.current_window(self) end

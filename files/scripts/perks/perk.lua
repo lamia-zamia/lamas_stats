@@ -1,5 +1,5 @@
 --- @class perk_helpers
---- @field current perks_parser
+--- @field data perks_parser
 --- @field nearby perk_scanner
 --- @field total_amount number
 local perk = {

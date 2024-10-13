@@ -16,21 +16,23 @@ function scanner:Scan()
 	local player = EntityGetWithTag("player_unit")[1]
 	if not player then return end
 	local x, y = EntityGetTransform(player)
-	self.entities = EntityGetInRadiusWithTag(x, y, 300, "item_perk")
+	self.entities = EntityGetInRadiusWithTag(x, y, 250, "item_perk")
 end
 
 --- Parses entities found nearby
 function scanner:ParseEntities()
+	local parsed = {}
 	for i = 1, #self.entities do
 		local entity_id = self.entities[i]
 		local x, y = EntityGetTransform(entity_id)
 		local id = self:GetPerkId(entity_id)
-		self.data[#self.data + 1] = {
+		parsed[#parsed + 1] = {
 			id = id,
 			lottery = self:IsLotteryWon(x, y, id),
 			cast = id == "ALWAYS_CAST" and self:PredictAlwaysCast(x, y) or nil
 		}
 	end
+	self.data = parsed
 end
 
 --- Predicts perk lottery result

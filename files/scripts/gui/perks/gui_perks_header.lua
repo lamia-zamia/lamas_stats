@@ -42,8 +42,6 @@ function pg:PerksDrawStats()
 		self:Text(self.perk.x, self.perk.y, text)
 		self.perk.x = self.perk.x + offset + 4
 	end
-
-	self.perk.x = 0
 end
 
 --- Adds clickable button
