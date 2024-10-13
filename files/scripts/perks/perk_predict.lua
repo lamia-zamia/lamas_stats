@@ -1,6 +1,5 @@
 local predict = {}
 
-
 -- function gui_perks_get_future_perks() -- function for calculating future perk and writing them into a variable so we don't have to query them every frame
 -- 	future_perks = {}                 -- emptying old array
 -- 	local next_perk_index = tonumber(GlobalsGetValue("TEMPLE_NEXT_PERK_INDEX", "1"))

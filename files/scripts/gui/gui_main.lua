@@ -12,7 +12,7 @@ local ui_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") --- @type 
 --- @field private fs fungal_shift
 --- @field private alt boolean
 --- @field private shift_hold number
---- @field private perks perks_parser
+--- @field private perks perk_helpers
 --- @field private actions action_parser
 --- @field private mat material_parser
 --- @field private max_height number
@@ -91,7 +91,7 @@ end
 
 --- Gets data after worlds exist
 function gui:PostWorldInit()
-	self.perks:Parse()
+	self.perks.data:Parse()
 	self.actions:Parse()
 	self.mat:Convert()
 	self.fs:Init()

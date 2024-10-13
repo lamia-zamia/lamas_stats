@@ -7,19 +7,17 @@
 --- @field max number
 
 --- @class perks_parser
---- @field data_perks {[string]:perk_data}
---- @field data_list string[]
---- @field total_amount number
+--- @field perks {[string]:perk_data}
+--- @field list string[]
 local perks = {
-	data_perks = {},
-	data_list = {},
-	total_amount = 0
+	perks = {},
+	list = {},
 }
 
 --- Add perks to the list
 local function add_perk(perk_data)
-	perks.data_list[#perks.data_list + 1] = perk_data.id
-	perks.data_perks[perk_data.id] = {
+	perks.list[#perks.list + 1] = perk_data.id
+	perks.perks[perk_data.id] = {
 		id = perk_data.id,
 		ui_name = perk_data.ui_name,
 		ui_description = perk_data.ui_description,
@@ -45,7 +43,7 @@ function perks:Parse()
 		add_perk(perk)
 	end
 
-	perks.data_perks["lamas_stats_unknown"] = {
+	perks.perks["lamas_stats_unknown"] = {
 		ui_name = "???",
 		ui_description = "???",
 		perk_icon = "data/items_gfx/perk.png",
@@ -54,7 +52,7 @@ function perks:Parse()
 		max = 0
 	}
 
-	table.sort(perks.data_list)
+	table.sort(perks.list)
 
 	-- Reverting globals to its formal state
 	sandbox:end_sandbox()
@@ -64,18 +62,7 @@ end
 --- @param id string
 --- @return perk_data
 function perks:GetData(id)
-	return self.data_perks[id] or self.data_perks["lamas_stats_unknown"]
-end
-
---- Updates currently owned perks
-function perks:GetCurrentList()
-	self.total_amount = 0
-	for i = 1, #self.data_list do
-		local id = self.data_list[i]
-		local pickup_count = tonumber(GlobalsGetValue("PERK_PICKED_" .. id .. "_PICKUP_COUNT", "0")) or 0
-		self.total_amount = self.total_amount + pickup_count
-		self.data_perks[id].picked_count = pickup_count
-	end
+	return self.perks[id] or self.perks["lamas_stats_unknown"]
 end
 
 return perks

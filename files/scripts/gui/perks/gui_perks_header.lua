@@ -4,8 +4,8 @@ local pg = {}
 --- Draws stats for perks
 --- @private
 function pg:PerksDrawStats()
-	local extra_perk = self.perks.data_perks["EXTRA_PERK"]
-	local perks_lottery = self.perks.data_perks["PERKS_LOTTERY"]
+	local extra_perk = self.perks.data.perks["EXTRA_PERK"]
+	local perks_lottery = self.perks.data.perks["PERKS_LOTTERY"]
 	local reroll_count = self.mod:GetGlobalNumber("TEMPLE_PERK_REROLL_COUNT")
 
 	if self.perks.total_amount > 0 then

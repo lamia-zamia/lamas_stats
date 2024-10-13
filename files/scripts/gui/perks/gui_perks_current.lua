@@ -41,7 +41,7 @@ end
 --- @private
 --- @param perk_id string
 function pg:PerksDrawCurrentPerk(perk_id)
-	local perk = self.perks:GetData(perk_id)
+	local perk = self.perks.data:GetData(perk_id)
 	if perk.picked_count < 1 then return end
 	if self.perk.x > 190 then
 		self.perk.x = 0
@@ -63,8 +63,8 @@ end
 --- Draws current perks
 --- @private
 function pg:PerksDrawCurrentPerks()
-	for i = 1, #self.perks.data_list do
-		self:PerksDrawCurrentPerk(self.perks.data_list[i])
+	for i = 1, #self.perks.data.list do
+		self:PerksDrawCurrentPerk(self.perks.data.list[i])
 	end
 	self:Text(self.perk.x, self.perk.y + 16, "")
 end
