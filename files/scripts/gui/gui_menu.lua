@@ -29,6 +29,16 @@ local menu = {
 	}
 }
 
+--- Draws tooltip near menu
+--- @param background string
+--- @param tooltip_fn function
+--- @param ... any
+function menu:MenuTooltip(background, tooltip_fn, ...)
+	self.tooltip_img = background
+	self:ShowTooltip(self.menu.start_x + self.scroll.width + 12, self.menu.start_y + 3, tooltip_fn, ...)
+	self.tooltip_img = self.default_tooltip
+end
+
 --- Sets width if it's higher than current width
 --- @private
 --- @param value number

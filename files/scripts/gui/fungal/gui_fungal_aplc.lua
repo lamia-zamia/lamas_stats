@@ -45,9 +45,7 @@ function aplc:FungalApLcDraw(x, y)
 	self:AddOptionForNext(self.c.options.ForceFocusable)
 	self:Draw9Piece(x, y + 1, self.z + 5, 16, 8, self.buttons.img, self.buttons.img_hl)
 	if self:IsHovered() then
-		self.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png"
-		self:ShowTooltip(self.menu.start_x + self.fungal.width + 12, self.menu.start_y + 3, self.FungalApLcTooltip)
-		self.tooltip_img = self.default_tooltip
+		self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", self.FungalApLcTooltip)
 	end
 end
 

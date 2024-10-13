@@ -85,7 +85,7 @@ function future:FungalDrawFutureTooltip(shift, i)
 	local y = 0
 
 	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
-	if shift.failed then 
+	if shift.failed then
 		offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt)
 	end
 	-- offset_from = self:FungalGetLongestTextInShift(shift.failed, offset_from, 0, true, self.alt)
@@ -178,9 +178,7 @@ function future:FungalDrawFuture()
 		self.fungal.x = self.fungal.x + self.fungal.offset.to
 
 		if hovered then
-			self:ShowTooltip(self.menu.start_x + self.fungal.width + 12, self.menu.start_y + 3,
-				self.FungalDrawFutureTooltip,
-				shift, i)
+			self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawFutureTooltip, shift, i)
 		end
 
 		self.fungal.y = self.fungal.y + height + 1
