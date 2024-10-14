@@ -76,6 +76,22 @@ function future:FungalDrawFutureTooltipGreedy(y, greedy, offset)
 	self:FungalDrawSingleMaterial(x, y + 10, greedy.grass)
 end
 
+--- Gets longest material name
+--- @private
+--- @param shift shift
+--- @return number
+--- @nodiscard
+function future:FungalFutureCalculateOffset(shift)
+	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
+	if shift.failed then
+		offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt)
+	end
+	if shift.force_failed then
+		offset_from = self:FungalGetLongestMaterialName(shift.force_failed.from, offset_from, self.alt)
+	end
+	return offset_from
+end
+
 --- Draws tooltip for future shift
 --- @private
 --- @param shift shift
@@ -84,15 +100,7 @@ function future:FungalDrawFutureTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0
 
-	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
-	if shift.failed then
-		offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt)
-	end
-	-- offset_from = self:FungalGetLongestTextInShift(shift.failed, offset_from, 0, true, self.alt)
-	if shift.force_failed then
-		offset_from = self:FungalGetLongestMaterialName(shift.force_failed.from, offset_from, self.alt)
-	end
-	-- offset_from = self:FungalGetLongestTextInShift(shift.force_failed, offset_from, 0, true, self.alt)
+	local offset_from = self:FungalFutureCalculateOffset(shift)
 
 	self:Text(0, y, string.format(T.lamas_stats_shift .. " %02d", i))
 	y = y + 10
@@ -129,7 +137,8 @@ end
 --- @param i integer
 --- @param greedy greedy_shift
 function future:FungalFutureDecideRowColor(hovered, i, greedy)
-	if greedy and greedy.success then
+	local is_greedy_success = greedy and greedy.success
+	if is_greedy_success then
 		if hovered then
 			self:Color(1, 0.5, 1)
 		else
@@ -138,8 +147,9 @@ function future:FungalFutureDecideRowColor(hovered, i, greedy)
 		return
 	end
 
+	local is_shift_current = i == self.fs.current_shift
 	if hovered then
-		if i == self.fs.current_shift then
+		if is_shift_current then
 			self:Color(0.4, 1, 0.5)
 		else
 			self:Color(0.2, 0.6, 0.7)
@@ -147,7 +157,7 @@ function future:FungalFutureDecideRowColor(hovered, i, greedy)
 		return
 	end
 
-	if i == self.fs.current_shift then
+	if is_shift_current then
 		self:Color(0.6, 1, 0.1)
 	else
 		local color = i % 2 == 0 and 0.4 or 0.6
