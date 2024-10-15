@@ -14,11 +14,6 @@ local predict = {
 	mountain_visits = 0
 }
 
---- Supposed to return perks to spawn
---- @param x number
---- @param y number
-function perk_spawn_many(x, y) end
-
 local globals_get_value
 
 function predict:UpdatePerkList()
