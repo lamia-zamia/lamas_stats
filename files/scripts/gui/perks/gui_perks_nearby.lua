@@ -74,7 +74,7 @@ function pg:PerksDrawNearby()
 		local nearby_perk = self.perks.nearby.data[i] --- @type nearby_perks_data
 		local perk_data = self.perks.data:GetData(nearby_perk.id)
 		local hovered = self:IsHoverBoxHovered(x, self.perk.y, 16, 16)
-		self:PerksDrawPerk(x, self.perk.y, hovered, perk_data, self.PerksNearbyTooltip, nearby_perk)
+		self:PerksDrawPerk(x, self.perk.y, hovered, perk_data, self.PerksNearbyTooltip, nearby_perk, self.alt)
 		if nearby_perk.lottery then
 			self:SetZ(self.z - 50)
 			self:Image(x, self.perk.y, "mods/lamas_stats/files/gfx/lottery_glow.png", 1, 1)

@@ -46,7 +46,7 @@ function pg:PerksDrawCurrentPerk(perk_id)
 		self.perk.y = self.perk.y + 17
 	end
 	local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
-	self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk, self.PerksCurrentPerkTooltip, perk)
+	self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk, self.PerksCurrentPerkTooltip, perk, self.alt)
 	self.perk.x = self.perk.x + 17
 end
 

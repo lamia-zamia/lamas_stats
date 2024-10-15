@@ -14,7 +14,7 @@ function pg:PerksDrawFuturePerks()
 			local perk_id = perks[j]
 			local perk_data = self.perks.data:GetData(perk_id)
 			local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
-			self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk_data, self.PerksCurrentPerkTooltip, perk_data)
+			self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk_data, self.PerksCurrentPerkTooltip, perk_data, self.alt)
 			self.perk.x = self.perk.x + 17
 		end
 		self.perk.x = 0
