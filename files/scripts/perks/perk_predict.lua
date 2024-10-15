@@ -1,62 +1,103 @@
-local predict = {}
+--- @diagnostic disable: lowercase-global, unused-local, missing-global-doc
 
-function predict:GetPerkList()
-	local future_perks = {}                 -- emptying old array
-	local next_perk_index = tonumber(GlobalsGetValue("TEMPLE_NEXT_PERK_INDEX", "1"))
-	local perk_count = tonumber(GlobalsGetValue("TEMPLE_PERK_COUNT", "3"))
+--- @class perk_predict
+--- @field future_perks string[][]
+--- @field reroll_perks string[][]
+--- @field max_perks number
+local predict = {
+	future_perks = {},
+	max_perks = 0,
+	reroll_perks = {},
+	perk_index = 1,
+	reroll_index = 1,
+	mountain_index = 1,
+	mountain_visits = 0
+}
 
-	for i = 1, 8 * perk_count do -- gathering perks for display, rows * perks per temple
-		local perk_id = perks[next_perk_index]
-		if perk_id == nil then                 -- if we got empty response, which happens usually when we hit an end of perk deck
-			next_perk_index = 1                -- starting from start
-			perk_id = perks[next_perk_index]
-		end
-		while perk_id == "" do -- the game forcefully sets perk_id into "" if it rolled non-stackable perk, so we are increasing perk index untill we get an valid or null perk
-			next_perk_index = next_perk_index + 1
-			perk_id = perks[next_perk_index]
-			if perk_id == nil then -- if we got empty response, which happens usually when we hit an end of perk deck
-				next_perk_index = 1 -- starting from start
-				perk_id = perks[next_perk_index]
-			end
-		end
+--- Supposed to return perks to spawn
+--- @param x number
+--- @param y number
+function perk_spawn_many(x, y) end
 
-		table.insert(future_perks, perk_id)
-		next_perk_index = next_perk_index + 1
+local globals_get_value
+
+function predict:UpdatePerkList()
+	self.max_perks = 0
+	self.future_perks = {}
+	self.perk_index = tonumber(GLOBALS_GET_VALUE("TEMPLE_NEXT_PERK_INDEX")) or 1
+	self.mountain_visits = (tonumber(GLOBALS_GET_VALUE("HOLY_MOUNTAIN_VISITS")) or 0) + 1
+	function perk_spawn(x, y, perk_id, dont_remove_other_perks_)
+		local arr = predict.future_perks[predict.mountain_index]
+		arr[#arr + 1] = perk_id
 	end
-	future_index = {}
-	for i = 1, perk_count do
-		table.insert(future_index, i)
+
+	for i = 1, 8 do
+		self.mountain_index = i
+		self.future_perks[i] = {}
+		perk_spawn_many(0, 0)
+		self.max_perks = math.max(self.max_perks, #self.future_perks[i])
+		self.mountain_visits = self.mountain_visits + 1
+	end
+
+	local perks = perk_get_spawn_order()
+	self.reroll_perks = {}
+	self.reroll_index = tonumber(GLOBALS_GET_VALUE("TEMPLE_REROLL_PERK_INDEX")) or #perks
+	function perk_spawn(x, y, perk_id, dont_remove_other_perks_)
+		local arr = predict.reroll_perks[predict.mountain_index]
+		arr[#arr + 1] = perk_id
+	end
+
+	for i = 1, 8 do
+		self.mountain_index = i
+		self.reroll_perks[i] = {}
+		perk_reroll_perks()
 	end
 end
 
+function predict:Init()
+	globals_get_value = GlobalsGetValue
+	function GlobalsGetValue(key, default_value)
+		if key == "TEMPLE_NEXT_PERK_INDEX" then
+			return predict.perk_index
+		end
+		if key == "HOLY_MOUNTAIN_VISITS" then
+			return predict.mountain_visits
+		end
+		if key == "TEMPLE_REROLL_PERK_INDEX" then
+			return predict.reroll_index
+		end
+		return globals_get_value(key, default_value)
+	end
+
+	function GlobalsSetValue(key, value)
+		if key == "TEMPLE_NEXT_PERK_INDEX" then
+			predict.perk_index = tonumber(value) --[[@as number]]
+		end
+		if key == "TEMPLE_REROLL_PERK_INDEX" then
+			predict.reroll_index = tonumber(value) --[[@as number]]
+		end
+	end
+
+	--- Redefined to nil
+	function GameAddFlagRun() end
+
+	function EntityKill() end
+
+	--- @param tag string
+	--- @return entity_id[]
+	function EntityGetWithTag(tag)
+		local entities = ENTITY_GET_WITH_TAG(tag)
+		if tag == "perk" then
+			return #entities > 0 and entities or predict.future_perks[1]
+		end
+		return entities
+	end
+
+	function EntityGetTransform()
+		return 0, 0
+	end
+
+	dofile_once("data/scripts/perks/perk.lua") -- ugh
+end
+
 return predict
-
--- function gui_perks_get_future_perks() -- function for calculating future perk and writing them into a variable so we don't have to query them every frame
--- 	future_perks = {}                 -- emptying old array
--- 	local next_perk_index = tonumber(GlobalsGetValue("TEMPLE_NEXT_PERK_INDEX", "1"))
--- 	local perk_count = tonumber(GlobalsGetValue("TEMPLE_PERK_COUNT", "3"))
-
--- 	how_many_into_future = ModSettingGet("lamas_stats.future_perks_amount")
--- 	for i = 1, how_many_into_future * perk_count do -- gathering perks for display, rows * perks per temple
--- 		local perk_id = perks[next_perk_index]
--- 		if perk_id == nil then                 -- if we got empty response, which happens usually when we hit an end of perk deck
--- 			next_perk_index = 1                -- starting from start
--- 			perk_id = perks[next_perk_index]
--- 		end
--- 		while perk_id == "" do -- the game forcefully sets perk_id into "" if it rolled non-stackable perk, so we are increasing perk index untill we get an valid or null perk
--- 			next_perk_index = next_perk_index + 1
--- 			perk_id = perks[next_perk_index]
--- 			if perk_id == nil then -- if we got empty response, which happens usually when we hit an end of perk deck
--- 				next_perk_index = 1 -- starting from start
--- 				perk_id = perks[next_perk_index]
--- 			end
--- 		end
-
--- 		table.insert(future_perks, perk_id)
--- 		next_perk_index = next_perk_index + 1
--- 	end
--- 	future_index = {}
--- 	for i = 1, perk_count do
--- 		table.insert(future_index, i)
--- 	end
--- end

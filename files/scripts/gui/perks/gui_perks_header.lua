@@ -4,9 +4,7 @@ local pg = {}
 --- Draws stats for perks
 --- @private
 function pg:PerksDrawStats()
-	local extra_perk = self.perks.data.perks["EXTRA_PERK"]
 	local perks_lottery = self.perks.data.perks["PERKS_LOTTERY"]
-	local reroll_count = self.mod:GetGlobalNumber("TEMPLE_PERK_REROLL_COUNT")
 
 	if self.perks.total_amount > 0 then
 		local text = string.format(T.Perks .. ": %d", self.perks.total_amount)
@@ -15,19 +13,10 @@ function pg:PerksDrawStats()
 		self.perk.x = self.perk.x + offset + 4
 	end
 
-	if reroll_count > 0 then
-		local text = tostring(reroll_count)
+	if self.perk.reroll_count > 0 then
+		local text = tostring(self.perk.reroll_count)
 		local offset = self:GetTextDimension(text)
 		self:Image(self.perk.x, self.perk.y - 2.5, "mods/lamas_stats/files/gfx/reroll_machine.png", 1, 1)
-		self.perk.x = self.perk.x + 17
-		self:Text(self.perk.x, self.perk.y, text)
-		self.perk.x = self.perk.x + offset + 4
-	end
-
-	if extra_perk.picked_count > 0 then
-		local text = tostring(extra_perk.picked_count)
-		local offset = self:GetTextDimension(text)
-		self:Image(self.perk.x, self.perk.y - 2.5, extra_perk.perk_icon, 1, 1)
 		self.perk.x = self.perk.x + 17
 		self:Text(self.perk.x, self.perk.y, text)
 		self.perk.x = self.perk.x + offset + 4

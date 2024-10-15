@@ -30,7 +30,7 @@ end
 --- @param default? number
 --- @return number
 function util:GetGlobalNumber(id, default)
-	return tonumber(GlobalsGetValue(id, tostring(default or 0))) or 0
+	return tonumber(GLOBALS_GET_VALUE(id, tostring(default or 0))) or 0
 end
 
 --- Sets settings

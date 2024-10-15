@@ -135,7 +135,7 @@ end
 --- @private
 function stats:StatsKillTooltip()
 	self:Text(0, 0, T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
-	self:Text(0, 0, T.lamas_stats_progress_kills_innocent .. " " .. GlobalsGetValue("HELPLESS_KILLS", "0"))
+	self:Text(0, 0, T.lamas_stats_progress_kills_innocent .. " " .. GLOBALS_GET_VALUE("HELPLESS_KILLS", "0"))
 end
 
 --- Draws kills stat

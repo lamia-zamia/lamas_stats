@@ -15,9 +15,9 @@ local scanner = {
 
 --- Scans nearby entities
 function scanner:Scan()
-	local player = EntityGetWithTag("player_unit")[1]
+	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
 	if not player then return end
-	local x, y = EntityGetTransform(player)
+	local x, y = ENTITY_GET_TRANSFORM(player)
 	self.entities = EntityGetInRadiusWithTag(x, y, 250, "item_perk")
 end
 
@@ -26,7 +26,7 @@ function scanner:ParseEntities()
 	local parsed = {}
 	for i = 1, #self.entities do
 		local entity_id = self.entities[i]
-		local x, y = EntityGetTransform(entity_id)
+		local x, y = ENTITY_GET_TRANSFORM(entity_id)
 		local id = self:GetPerkId(entity_id)
 		parsed[#parsed + 1] = {
 			x = x,
@@ -47,7 +47,7 @@ end
 --- @param id string
 --- @return boolean
 function scanner:IsLotteryWon(x, y, id)
-	local perk_destroy_chance = tonumber(GlobalsGetValue("TEMPLE_PERK_DESTROY_CHANCE", "100")) or 100
+	local perk_destroy_chance = tonumber(GLOBALS_GET_VALUE("TEMPLE_PERK_DESTROY_CHANCE", "100")) or 100
 	SetRandomSeed(x, y)
 	local rand = Random(1, 100)
 	if id == "PERKS_LOTTERY" then perk_destroy_chance = perk_destroy_chance / 2 end
@@ -93,28 +93,3 @@ function scanner:PredictAlwaysCast(x, y)
 end
 
 return scanner
--- function gui_perks_get_perks_on_screen()
--- 	perks_onscreen = {}
-
--- 	local x,y = EntityGetTransform(player)
--- 	local all_perks = EntityGetInRadiusWithTag(x, y, 500, "item_perk")
-
--- 	for i,perk_entity in ipairs(all_perks) do
--- 		local entity_x,entity_y = EntityGetTransform(perk_entity)
--- 		local perkComponent = EntityGetFirstComponent(perk_entity, "VariableStorageComponent")
--- 		local perk_id = nil
-
--- 		if perkComponent == nil then
--- 			perk_id = "lamas_unknown"
--- 		else
--- 			perk_id = ComponentGetValue2(perkComponent, "value_string")
--- 		end
--- 		perks_onscreen[i] = {}
--- 		perks_onscreen[i].perk_id = perk_id
--- 		perks_onscreen[i].x = entity_x
--- 		perks_onscreen[i].y = entity_y
--- 		perks_onscreen[i].pos = i
--- 		end
--- 	end
--- 	table.sort(perks_onscreen, function(a, b) return a.x < b.x end)
--- end

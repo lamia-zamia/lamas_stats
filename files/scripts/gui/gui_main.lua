@@ -57,7 +57,7 @@ end
 --- Fetches common data
 --- @private
 function gui:FetchData()
-	self.player_x, self.player_y = EntityGetTransform(self.player)
+	self.player_x, self.player_y = ENTITY_GET_TRANSFORM(self.player)
 	if GameGetFrameNum() % 60 == 0 then
 		self:ScanPWPosition()
 	end
@@ -79,7 +79,7 @@ function gui:GetSettings()
 	self:HeaderGetSettings()
 	self:KysGetSettings()
 	self:FungalGetSettings()
-	self.scroll.height_max = 200
+	self.max_height = 200
 end
 
 --- Gets data after materials are done
@@ -91,7 +91,7 @@ end
 
 --- Gets data after worlds exist
 function gui:PostWorldInit()
-	self.perks.data:Parse()
+	self.perks:Init()
 	self.actions:Parse()
 	self.mat:Convert()
 	self.fs:Init()
@@ -124,18 +124,17 @@ function gui:Loop()
 	if InputIsKeyJustDown(self.hotkey) then
 		self.show = not self.show
 	end
-	self.player = EntityGetWithTag("player_unit")[1]
+	self.player = ENTITY_GET_WITH_TAG("player_unit")[1]
 
 	if not self.show or not self.player or GameIsInventoryOpen() then return end
 
 	self:FetchData()
 	self:DetermineAltMode()
 
-	-- self.tooltip_img = self.default_tooltip
+	self.scroll.height_max = self.max_height
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
 	if self.stats.enabled then self:StatsDraw() end
-	-- self.gui_id = 200000
 	if self.menu.opened then self:MenuDraw() end
 end
 

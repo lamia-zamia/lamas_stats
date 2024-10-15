@@ -41,17 +41,12 @@ end
 function pg:PerksDrawCurrentPerk(perk_id)
 	local perk = self.perks.data:GetData(perk_id)
 	if perk.picked_count < 1 then return end
-	if self.perk.x > 190 then
+	if self.perk.x > self.scroll.width then
 		self.perk.x = 0
 		self.perk.y = self.perk.y + 17
 	end
 	local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
-	local off = hovered and 1.2 or 0
-	self:Image(self.perk.x - off, self.perk.y - off, perk.perk_icon, 1, hovered and 1.15 or 1)
-	self.tooltip_reset = false
-	if hovered then
-		self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", self.PerksCurrentPerkTooltip, perk)
-	end
+	self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk, self.PerksCurrentPerkTooltip, perk)
 	self.perk.x = self.perk.x + 17
 end
 

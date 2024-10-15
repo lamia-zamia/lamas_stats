@@ -67,18 +67,14 @@ end
 function pg:PerksDrawNearby()
 	local x = self.menu.start_x - 3
 	for i = 1, #self.perks.nearby.data do
-		if x > 200 then
+		if x > self.scroll.width then
 			x = self.menu.start_x - 3
 			self.perk.y = self.perk.y + 17
 		end
 		local nearby_perk = self.perks.nearby.data[i] --- @type nearby_perks_data
 		local perk_data = self.perks.data:GetData(nearby_perk.id)
 		local hovered = self:IsHoverBoxHovered(x, self.perk.y, 16, 16)
-		if hovered then
-			self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.PerksNearbyTooltip, nearby_perk)
-		end
-		local off = hovered and 1.2 or 0
-		self:Image(x - off, self.perk.y - off, perk_data.perk_icon, 1, hovered and 1.15 or 1)
+		self:PerksDrawPerk(x, self.perk.y, hovered, perk_data, self.PerksNearbyTooltip, nearby_perk)
 		if nearby_perk.lottery then
 			self:SetZ(self.z - 50)
 			self:Image(x, self.perk.y, "mods/lamas_stats/files/gfx/lottery_glow.png", 1, 1)

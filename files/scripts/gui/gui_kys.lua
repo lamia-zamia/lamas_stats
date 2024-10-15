@@ -30,7 +30,7 @@ function kys:KysDraw()
 		local gsc_id = EntityGetFirstComponentIncludingDisabled(self.player, "GameStatsComponent")
 		if not gsc_id then return end
 		ComponentSetValue2(gsc_id, "extra_death_msg", T.KYS_Suicide)
-		EntityKill(self.player)
+		ENTITY_KILL(self.player)
 	end
 	self:Draw9Piece(pos_x - 6, self.menu.pos_y + 30, self.z + 55, kys_warn_string_width + 12, 42)
 end
