@@ -18,7 +18,7 @@ function pg:PerksNearbyTooltip(nearby_perk)
 	self:AddOptionForNext(self.c.options.Layout_NextSameLine)
 	self:Image(name_pos - 6, 0, perk.perk_icon, 1, 0.625)
 	self:Text(name_pos + 6, 0, ui_name)
-	if nearby_perk.lottery then
+	if nearby_perk.lottery and self.config.enable_nearby_lottery then
 		self:Color(0.58, 0.85, 0.88)
 		self:TextCentered(0, 0, "[" .. T.LotteryWin .. "]", longest)
 	end
@@ -31,7 +31,7 @@ function pg:PerksNearbyTooltip(nearby_perk)
 		self:TextCentered(0, 0, description_lines[i], longest)
 	end
 
-	if nearby_perk.cast then
+	if nearby_perk.cast and self.config.enable_nearby_always_cast then
 		local cast_length = self:GetTextDimension(always_cast)
 		local cast_pos = (longest - cast_length) / 2 - 6
 		local cast_data = self.actions:GetData(nearby_perk.cast)

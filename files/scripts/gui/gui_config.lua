@@ -24,7 +24,9 @@ local config = {
 				"stats_show_player_biome"
 			},
 			Perks = {
-
+				"enable_nearby_perks",
+				"enable_nearby_lottery",
+				"enable_nearby_always_cast",
 			}
 		},
 		unfolded = {
@@ -61,7 +63,8 @@ function config:ConfigDrawConfig(entry)
 	local hovered = self:ConfigIsHovered()
 	if hovered then self:ColorYellow() end
 	self:Text(8, self.config.y, text)
-	self:Draw9Piece(self.menu.start_x + text_dim + 9, self.menu.pos_y + self.config.y + 9, self.z, 6, 6, hovered and self.buttons.img_hl or self.buttons.img)
+	self:Draw9Piece(self.menu.start_x + text_dim + 9, self.menu.pos_y + self.config.y + 9, self.z, 6, 6,
+		hovered and self.buttons.img_hl or self.buttons.img)
 	if value then
 		self:Color(0, 0.8, 0)
 		self:Text(text_dim + 13, self.config.y, "V")

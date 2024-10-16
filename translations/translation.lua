@@ -53,6 +53,10 @@ local translations =
 		stats_show_player_pos = "Show player position",
 		stats_show_player_biome = "Show location",
 		stats_show_fungal_cooldown = "Show fungal shift cooldown",
+		enable_nearby_perks = "Show nearby perks",
+		enable_nearby_lottery = "Show lottery icon",
+		enable_nearby_always_cast = "Predict always cast",
+		config = "Config"
 	},
 	["русский"] = {
 		lamas_stat_current = "Текущие",
@@ -108,6 +112,10 @@ local translations =
 		stats_show_player_pos = "Показывать позицию игрока",
 		stats_show_player_biome = "Показывать локацию",
 		stats_show_fungal_cooldown = "Показывать откат грибного сдвига",
+		enable_nearby_perks = "Показывать перки рядом",
+		enable_nearby_lottery = "Показывать лотерею",
+		enable_nearby_always_cast = "Предсказать постоянное заклинание",
+		config = "Настройки"
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -162,6 +170,10 @@ local translations =
 		stats_show_player_pos = "プレイヤーの位置を表示",
 		stats_show_player_biome = "位置を表示",
 		stats_show_fungal_cooldown = "キノコシフトのクールダウンを表示",
+		enable_nearby_perks = "近くのパークを表示",
+		enable_nearby_lottery = "宝くじアイコンを表示",
+		enable_nearby_always_cast = "常時キャストを予測",
+		config = "構成"
 	},
 }
 

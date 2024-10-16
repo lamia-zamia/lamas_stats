@@ -89,7 +89,7 @@ function pg:PerksDrawWindow()
 	local start_y = self.perk.y
 	self.perk.y = self.perk.y + 10
 
-	if current_nearby_perks > 0 then
+	if self.config.enable_nearby_perks and current_nearby_perks > 0 then
 		self.perk.y = self.perk.y + 5
 		self:PerksDrawNearby()
 		self.perk.y = self.perk.y + 12

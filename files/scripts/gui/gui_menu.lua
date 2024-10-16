@@ -79,7 +79,7 @@ function menu:MenuDraw()
 	if self.config.show_fungal_menu then self:MenuAddButton(T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
 	if self.config.show_perks_menu then self:MenuAddButton(T.Perks, self.PerksDrawWindow, self.PerksInit) end
 	if self.config.show_kys_menu then self:MenuAddButton(T.KYS_Suicide, self.KysDraw) end
-	self:MenuAddButton("Config", self.ConfigDrawScrollBox, self.ConfigInit)
+	self:MenuAddButton(T.config, self.ConfigDrawScrollBox, self.ConfigInit)
 
 	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
 	self.menu.pos_y = self.menu.pos_y + 17

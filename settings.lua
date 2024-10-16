@@ -388,27 +388,15 @@ local translations =
 		Perks = "Perks",
 		PerksDesc = "Info about perks, predicting perks in HM and rerolls",
 		
-		
-		current_perks_cat = "Current perks",
-		EnableCurrentPerks = "Show current",
-		EnableCurrentPerksDesc = "Shows current perks better than the game",
-		current_perks_percentage = "Current max width",
-		current_perks_percentageDesc = "How many percent of the screen width to move to a new line after",
-		current_perks_scale = "Current scale",
-		current_perks_scaleDesc = "You can make current perks smaller",
-		current_perks_hide_vanilla = "Hide vanilla's perk HUD",
-		EnablefuturePerks = "Predict future",
-		EnablefuturePerksDesc =
-		"Shows perks that's going to spawn in the next holy mountain.\nPerks spawn on first visit, \nif you skip holy mountain the next mountain will spawn the perks in list.\nAlso predicts rerolls",
-		enable_nearby_perks = "Show nearby perks",
+
 		enable_nearby_perksDesc = "To show nearby perks in perks window",
-		enable_nearby_lottery = "Show lottery icon",
+		
 		enable_nearby_lotteryDesc = "Add lottery icon to perks that you can grab for free",
 		nearby_perks_cat = "Nearby perks",
 		nearby_predict_cat = "Predict perks",
 		future_perks_amount = "How many mountains",
 		future_perks_amountDesc = "How far to calculate future perks",
-		enable_nearby_alwayscast = "Predict always cast",
+		
 		enable_nearby_alwayscastDesc = "Will show you which cast you will get on hover",
 		EnablePerksAutoUpdate = "Enable auto-update",
 		EnablePerksAutoUpdateDesc = "Update perk list periodically",
@@ -497,15 +485,15 @@ local translations =
 		EnablefuturePerks = "Рассчитать будущие",
 		EnablefuturePerksDesc =
 		"Показывает перки, которые будут заспавлены в будущей горе.\nПерки спавнятся при первом визите, даже если пропустить гору и пойти в следующий\n - заспавнится то, что в списке.\nТак же предсказывает рероллы",
-		enable_nearby_perks = "Показывать перки рядом",
+		
 		enable_nearby_perksDesc = "Показывать перки рядом в интерфейсе перков",
-		enable_nearby_lottery = "Показывать лотерею",
+		
 		enable_nearby_lotteryDesc = "Добавляет иконку лотереи к перкам, которые можно взять бесплатно",
 		nearby_perks_cat = "Перки рядом",
 		nearby_predict_cat = "Будущие перки",
 		future_perks_amount = "Сколько гор",
 		future_perks_amountDesc = "Как далеко заглядывать в будущее",
-		enable_nearby_alwayscast = "Предсказать постоянное заклинание",
+		
 		enable_nearby_alwayscastDesc = "При наведении мыши будет показывать какое заклинание получит посох",
 		EnablePerksAutoUpdate = "Включить автообновление",
 		EnablePerksAutoUpdateDesc = "Периодически обновляет список перков",
@@ -592,15 +580,15 @@ local translations =
 		EnablefuturePerks = "未来を予測",
 		EnablefuturePerksDesc =
 		"次のホーリーマウンテンに出現するパークを表示します。\n初回訪問時にパークがスポーンし、\nホーリーマウンテンをスキップすると次の山にリストのパークがスポーンします。\nリロールも予測します。",
-		enable_nearby_perks = "近くのパークを表示",
+		
 		enable_nearby_perksDesc = "パークウィンドウに近くのパークを表示する",
-		enable_nearby_lottery = "宝くじアイコンを表示",
+		
 		enable_nearby_lotteryDesc = "無料で取れるパークに宝くじアイコンを追加",
 		nearby_perks_cat = "近くのパーク",
 		nearby_predict_cat = "パークを予測",
 		future_perks_amount = "いくつの山を計算するか",
 		future_perks_amountDesc = "未来のパークをどれだけ計算するか",
-		enable_nearby_alwayscast = "常時キャストを予測",
+		
 		enable_nearby_alwayscastDesc = "ホバーで得られるキャストを表示",
 		EnablePerksAutoUpdate = "自動更新を有効にする",
 		EnablePerksAutoUpdateDesc = "定期的にパークリストを更新",
@@ -659,7 +647,10 @@ D = {
 	stats_showkills = true,
 	stats_show_player_pos = false,
 	stats_show_player_biome = false,
-	stats_show_fungal_cooldown = true
+	stats_show_fungal_cooldown = true,
+	enable_nearby_perks = true,
+	enable_nearby_lottery = true,
+	enable_nearby_always_cast = true
 }
 
 local function build_settings()
