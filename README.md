@@ -26,23 +26,23 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
 ## Showcase
 <details>
   <summary>Settings</summary>
-  <img src="showcase/settings.png" width="300" />
+  <img src="showcase/settings.png"/>
 </details>
 <details>
   <summary>Fungal shift interface</summary>
-  <img src="showcase/fungal.png" width="300" />
+  <img src="showcase/fungal.png" />
 </details>
 <details>
   <summary>Fungal shift tooltip</summary>
-  <img src="showcase/fungal_tooltip.png" width="300" />
+  <img src="showcase/fungal_tooltip.png"/>
 </details>
 <details>
   <summary>AP/LC Recipe</summary>
-  <img src="showcase/APLC.png" width="300" />
+  <img src="showcase/APLC.png"/>
 </details>
 <details>
   <summary>Perks interface</summary>
-  <img src="showcase/perks.png" width="300" />
+  <img src="showcase/perks.png"/>
 </details>
   
 ## Localization
