@@ -6,7 +6,14 @@ local mod_prfx = mod_id .. "."
 local T = {}
 local D = {}
 local current_language_last_frame = nil
-local gui_id = 1000
+
+local mod_id_hash = 0
+for i = 1, #mod_id do
+	local char = mod_id:sub(i, i)
+	mod_id_hash = mod_id_hash + char:byte() * i
+end
+
+local gui_id = mod_id_hash * 1000
 local function id()
 	gui_id = gui_id + 1
 	return gui_id
@@ -172,6 +179,7 @@ do -- gui helpers
 		GuiZSetForNextWidget(gui, -1)
 		G.button_options(gui)
 		GuiImageNinePiece(gui, id(), x + 2, y, offset_w, 10, 10, U.empty, U.empty) -- hover box
+		G.tooltip(gui, setting_name)
 		local _, _, hovered = GuiGetPreviousWidgetInfo(gui)
 		GuiZSetForNextWidget(gui, 1)
 		GuiImageNinePiece(gui, id(), x + 2, y + 2, 6, 6) -- check box
@@ -189,7 +197,6 @@ do -- gui helpers
 			G.yellow_if_hovered(gui, hovered)
 		end
 		GuiText(gui, 0, 0, text)
-		G.tooltip(gui, setting_name)
 		if hovered then
 			G.on_clicks(setting_name, not value, D[setting_name])
 		end
@@ -199,13 +206,13 @@ do -- gui helpers
 	--- @param setting mod_setting_number
 	--- @return number, number
 	function G.mod_setting_number(gui, setting)
-		GuiLayoutBeginHorizontal(gui, 0, 0, false, 0, 0)
+		GuiLayoutBeginHorizontal(gui, 0, 0, true, 0, 0)
 		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
 		local _, _, _, x_start, y_start = GuiGetPreviousWidgetInfo(gui)
 		local w = GuiGetTextDimensions(gui, setting.ui_name)
-		local value = tonumber(ModSettingGetNextValue(mod_setting_get_id(mod_id, setting))) or setting.value_default
+		local value = tonumber(U.get_setting_next(setting.id)) or setting.value_default
 		local multiplier = setting.value_display_multiplier or 1
-		local value_new = GuiSlider(gui, id(), U.offset - w, 0, "", value, setting
+		local value_new = GuiSlider(gui, id(), U.offset - w + 6, 0, "", value, setting
 			.value_min,
 			setting.value_max, setting.value_default, multiplier, " ", 64)
 		GuiColorSetForNextWidget(gui, 0.81, 0.81, 0.81, 1)
@@ -248,55 +255,6 @@ do -- gui helpers
 			GuiTooltip(gui, description, "")
 		end
 	end
-
-	--- @param gui gui
-	--- @param x number
-	--- @param y number
-	--- @param width number
-	--- @param height number
-	--- @param fn fun(gui:gui, width:number, height:number, ...:any)
-	--- @param ... any
-	function G.ImageClip(gui, x, y, width, height, fn, ...)
-		GuiText(gui, x, y, " ")
-		local _, _, _, _, prev_y = GuiGetPreviousWidgetInfo(gui)
-		if prev_y + height > U.max_y then
-			height = U.max_y - prev_y - 1
-		end
-		if prev_y < U.min_y then
-			height = prev_y - U.min_y + height
-			y = y + U.min_y - prev_y
-		end
-		if height < 0 then return end
-		GuiAnimateBegin(gui)
-		GuiAnimateAlphaFadeIn(gui, id(), 0, 0, true)
-		GuiBeginAutoBox(gui)
-
-		GuiZSetForNextWidget(gui, 1000)
-		GuiBeginScrollContainer(gui, id(), x, y, width, height, false, 0, 0)
-		GuiEndAutoBoxNinePiece(gui)
-		GuiAnimateEnd(gui)
-		fn(gui, width, height, ...)
-		GuiEndScrollContainer(gui)
-	end
-
-	function G.draw_outline(gui, width, height)
-		GuiColorSetForNextWidget(gui, 0.4752, 0.2768, 0.2215, 1)
-		GuiZSetForNextWidget(gui, 4)
-		GuiImage(gui, id(), 0, 0, U.whitebox, 0.85, width / 20, height / 20)
-	end
-
-	function G.draw_bar_color(gui, width, height, health)
-		if health then
-			GuiColorSetForNextWidget(gui, 0.53, 0.75, 0.1, 1)
-		else
-			local r = tonumber(U.get_setting_next("exp_bar_red")) or D.exp_bar_red
-			local g = tonumber(U.get_setting_next("exp_bar_green")) or D.exp_bar_green
-			local b = tonumber(U.get_setting_next("exp_bar_blue")) or D.exp_bar_blue
-			GuiColorSetForNextWidget(gui, r, g, b, 1)
-		end
-		GuiZSetForNextWidget(gui, 3)
-		GuiImage(gui, id(), 0, 0, U.whitebox, 1, width / 20, height / 20)
-	end
 end
 -- ###########################################
 -- ########		Settings GUI		##########
@@ -306,68 +264,6 @@ local S = {
 
 }
 do -- Settings GUI
-	function S.draw_bar_position(_, gui, _, _, _)
-		GuiOptionsAdd(gui, GUI_OPTION.Layout_NextSameLine)
-
-		local thickness = 1 + tonumber(U.get_setting_next("exp_barThickness")) or D.exp_barThickness
-		local position = U.get_setting_next("exp_bar_position")
-		local x = mod_setting_group_x_offset + U.offset + 92
-		local y = 8
-		GuiText(gui, x, y + 5, " ")
-		local _, _, _, x_no_layout, y_no_layout = GuiGetPreviousWidgetInfo(gui)
-
-		GuiZSetForNextWidget(gui, 5)
-		GuiImageNinePiece(gui, id(), x_no_layout, y_no_layout, 74, 38)
-		G.ImageClip(gui, x + 15, y + 14, 44, 7, G.draw_outline)
-		G.ImageClip(gui, x + 16, y + 15, 42, 5, G.draw_bar_color, true)
-
-		if position == "under_health" then
-			G.ImageClip(gui, x + 15, y + 20.5, 44, thickness + 1, G.draw_outline)
-			G.ImageClip(gui, x + 16, y + 20.5, 42, thickness, G.draw_bar_color)
-		elseif position == "onTop" then
-			G.ImageClip(gui, x + 15, y + 7, 44, thickness + 2, G.draw_outline)
-			G.ImageClip(gui, x + 16, y + 8, 42, thickness, G.draw_bar_color)
-		elseif position == "on_left" then
-			G.ImageClip(gui, x + 2, y + 14, thickness + 2, 29.25, G.draw_outline)
-			G.ImageClip(gui, x + 3, y + 15, thickness, 27.25, G.draw_bar_color)
-		else
-			G.ImageClip(gui, x + 66, y + 14, thickness + 2, 29.25, G.draw_outline)
-			G.ImageClip(gui, x + 67, y + 15, thickness, 27.25, G.draw_bar_color)
-		end
-
-		if U.get_setting_next("exp_bar_show_perc") then GuiText(gui, x + 66, y + 5, "%") end
-		GuiOptionsRemove(gui, GUI_OPTION.Layout_NextSameLine)
-	end
-
-	--- @param setting mod_setting_number
-	--- @param gui gui
-	function S.draw_barThickness(_, gui, _, _, setting)
-		local position = U.get_setting_next("exp_bar_position")
-		if position == "under_health" then
-			setting.value_max = 2
-			if U.get_setting_next(setting.id) > 2 then
-				U.set_setting(setting.id, 2)
-			end
-		else
-			setting.value_max = 4
-		end
-		-- setting.value_max = U.get_setting_next("exp_bar_position") == "under_health" and 2 or 4
-		local value, value_new = G.mod_setting_number(gui, setting)
-		value_new = math.floor(value_new + 0.5)
-		if value ~= value_new then
-			U.set_setting(setting.id, value_new)
-		end
-	end
-
-	--- @param setting mod_setting_number
-	--- @param gui gui
-	function S.mod_setting_number_float(_, gui, _, _, setting)
-		local value, value_new = G.mod_setting_number(gui, setting)
-		if value ~= value_new then
-			U.set_setting(setting.id, value_new)
-		end
-	end
-
 	--- @param setting mod_setting_number
 	--- @param gui gui
 	function S.mod_setting_number_integer(_, gui, _, _, setting)
@@ -376,21 +272,6 @@ do -- Settings GUI
 		if value ~= value_new then
 			U.set_setting(setting.id, value_new)
 		end
-	end
-
-	function S.mod_setting_better_string(_, gui, _, _, setting)
-		local value = tostring(U.get_setting_next(setting.id))
-		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
-		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
-		GuiLayoutBeginHorizontal(gui, U.offset, 0, true, 0, 0)
-		GuiText(gui, 8, 0, "")
-		for _, button in ipairs(setting.buttons) do
-			local color = value == button and { 0.7, 0.7, 0.7 } or nil
-			if G.button(gui, 0, T[button], color) then
-				U.set_setting(setting.id, button)
-			end
-		end
-		GuiLayoutEnd(gui)
 	end
 
 	function S.mod_setting_better_boolean(_, gui, _, _, setting)
@@ -406,12 +287,12 @@ do -- Settings GUI
 	end
 
 	function S.get_input(_, gui, _, _, setting)
-		local current_key = "[" .. U.keycodes[U.get_setting("open_ui_hotkey")] .. "]"
+		local current_key = "[" .. U.keycodes[U.get_setting("input_key")] .. "]"
 		if U.waiting_for_input then
 			current_key = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_pressakey")
 			local new_key = U.pending_input()
 			if new_key then
-				U.set_setting("open_ui_hotkey", new_key)
+				U.set_setting("input_key", new_key)
 				U.waiting_for_input = false
 			end
 		end
@@ -428,13 +309,13 @@ do -- Settings GUI
 		local _, _, hovered = GuiGetPreviousWidgetInfo(gui)
 		if hovered then
 			GuiColorSetForNextWidget(gui, 1, 1, 0.7, 1)
-			GuiTooltip(gui, T.open_ui_hotkey_d, GameTextGetTranslatedOrNot("$menuoptions_reset_keyboard"))
+			GuiTooltip(gui, T.Hotkey_d, GameTextGetTranslatedOrNot("$menuoptions_reset_keyboard"))
 			if InputIsMouseButtonJustDown(1) then
 				U.waiting_for_input = true
 			end
 			if InputIsMouseButtonJustDown(2) then
 				GamePlaySound("ui", "ui/button_click", 0, 0)
-				U.set_setting("open_ui_hotkey", 0)
+				U.set_setting("input_key", D.input_key)
 				U.waiting_for_input = false
 			end
 		end
@@ -449,7 +330,7 @@ do -- Settings GUI
 			GuiText(gui, mod_setting_group_x_offset, 0, "ERR")
 			return
 		end
-		if G.button(gui, mod_setting_group_x_offset, T.reset_cat, { 1, 0.4, 0.4 }) then
+		if G.button(gui, mod_setting_group_x_offset, T.reset, { 1, 0.4, 0.4 }) then
 			fn()
 		end
 	end
@@ -463,11 +344,14 @@ local translations =
 {
 	["English"] = {
 		Hotkey = "Hotkey",
-		HotkeyDesc = "Hotkey to enable overlay",
+		Hotkey_d = "Hotkey to enable overlay",
+		overlay_enabled = "Overlay",
+		overlay_enabled_d = "Should the overlay be enabled on spawn",
+		menu_enabled = "Menu",
+		menu_enabled_d = "Open menu by default",
 		Overlay = "Overlay",
 		OverlayDesc = "Overlay settings",
 		StartEnabled = "Start enabled",
-		StartEnabledDesc = "Should the overlay be enabled on spawn",
 		overlay_x = "Overlay X position",
 		overlay_y = "Overlay Y position",
 		overlay_y_desc = "Why though?",
@@ -514,7 +398,6 @@ local translations =
 		LamasMenuSetting = "Menu",
 		LamasMenuName = "Menu's header",
 		LamasMenuSettingDesc = "Settings for menu that called by pressing main button",
-		LamasMenuEnabledByDefault = "Open menu by default",
 		Perks = "Perks",
 		PerksDesc = "Info about perks, predicting perks in HM and rerolls",
 		EnablePerks = "Enable perks",
@@ -550,7 +433,8 @@ local translations =
 		stats_show_player_pos_pwDesc = "Show how far you are into PW on hover on position",
 		stats_show_player_biome = "Show location",
 		stats_show_player_biomeDesc = "Show biome name",
-		ResetSettings = "Reset settings",
+		reset_settings = "Reset settings",
+		reset = "Reset",
 		KYScat = "Kill yourself",
 		KYScatDesc = "Category for suicide, in case you are too far into godrun",
 		KYS_Button = "Enable suicide button",
@@ -776,14 +660,10 @@ setmetatable(T, mt)
 
 D = {
 	input_key = "60",
-	enabled_at_start = false,
+	overlay_enabled = true,
+	menu_enabled = false,
 	overlay_x = 13,
 	overlay_y = 8,
-	stats_enable = true,
-	lamas_menu_header = "== LAMA'S STATS ==",
-	lamas_menu_enabled_default = false,
-	KYS_Button = false,
-	KYS_Button_Hide = true,
 }
 
 local function build_settings()
@@ -794,89 +674,35 @@ local function build_settings()
 			ui_name = T.Hotkey,
 			ui_description = T.HotkeyDesc,
 			value_default = D.input_key,
-			-- ui_fn = InputKeyUI,
+			ui_fn = S.get_input,
 		},
 		{
-			category_id = "overlay",
-			ui_name = T.Overlay,
-			ui_description = T.OverlayDesc,
-			foldable = true,
-			_folded = true,
-
-			settings =
-			{
-				{
-					id = "enabled_at_start",
-					ui_name = T.StartEnabled,
-					ui_description = T.StartEnabledDesc,
-					value_default = D.enabled_at_start,
-				},
-				{
-					id = "overlay_x",
-					ui_name = T.overlay_x,
-					value_default = D.overlay_x,
-					value_min = 0,
-					value_max = 100,
-					-- ui_fn = mod_setting_number_integer,
-				},
-				{
-					id = "overlay_y",
-					ui_name = T.overlay_y,
-					ui_description = T.overlay_y_desc,
-					value_default = D.overlay_y,
-					value_min = 0,
-					value_max = 100,
-					-- ui_fn = mod_setting_number_integer,
-				},
-			},
+			not_setting = true,
+			id = "enable_at_start",
+			ui_fn = S.mod_setting_better_boolean,
+			ui_name = T.StartEnabled,
+			checkboxes = { "overlay_enabled", "menu_enabled" }
 		},
 		{
-			category_id = "lamas_menu_setting",
-			ui_name = T.LamasMenuSetting,
-			ui_description = T.LamasMenuSettingDesc,
-			foldable = true,
-			_folded = true,
-
-			settings =
-			{
-				{
-					id = "lamas_menu_header",
-					ui_name = T.LamasMenuName,
-					value_default = D.lamas_menu_header,
-				},
-				{
-					id = "lamas_menu_enabled_default",
-					ui_name = T.LamasMenuEnabledByDefault,
-					value_default = D.lamas_menu_enabled_default,
-				},
-				{
-					category_id = "KYS",
-					ui_name = T.KYScat,
-					ui_description = T.KYScatDesc,
-					foldable = true,
-					_folded = true,
-
-					settings =
-					{
-						{
-							id = "KYS_Button",
-							ui_name = T.KYS_Button,
-							ui_description = T.KYS_ButtonDesc,
-							value_default = D.KYS_Button,
-						},
-						{
-							id = "KYS_Button_Hide",
-							ui_name = T.KYS_Button_Hide,
-							ui_description = T.KYS_Button_HideDesc,
-							value_default = D.KYS_Button_Hide,
-						},
-					},
-				},
-			},
+			id = "overlay_x",
+			ui_name = T.overlay_x,
+			value_default = D.overlay_x,
+			value_min = 0,
+			value_max = 640,
+			ui_fn = S.mod_setting_number_integer,
+		},
+		{
+			id = "overlay_y",
+			ui_name = T.overlay_y,
+			ui_description = T.overlay_y_desc,
+			value_default = D.overlay_y,
+			value_min = 0,
+			value_max = 360,
+			ui_fn = S.mod_setting_number_integer,
 		},
 		{
 			category_id = "reset_settings_cat",
-			ui_name = T.ResetSettings,
+			ui_name = T.reset_settings,
 			foldable = true,
 			_folded = true,
 
@@ -886,11 +712,10 @@ local function build_settings()
 					id = "reset_settings",
 					not_setting = true,
 					ui_name = T.ResetSettings,
-					-- ui_fn = ResetSettingsUI, -- custom widget
+					ui_fn = S.reset_stuff
 				},
 			},
 		},
-		-- end of settings
 	}
 	U.offset = U.calculate_elements_offset(settings)
 	return settings
@@ -922,8 +747,8 @@ end
 --- @param gui gui
 --- @param in_main_menu boolean
 function ModSettingsGui(gui, in_main_menu)
-	gui_id = 1000
 	GuiIdPushString(gui, mod_prfx)
+	gui_id = mod_id_hash * 1000
 	mod_settings_gui(mod_id, mod_settings, gui, in_main_menu)
 	GuiIdPop(gui)
 end
