@@ -115,7 +115,7 @@ function config:ConfigGetSettings()
 		for j = 1, #entries do
 			local config_key = entries[j]
 			self.config[config_key] = self.mod:GetSettingBoolean(config_key)
-			max = math.max(max, self:GetTextDimension(T[config_key]) + 9)
+			max = math.max(max, self:GetTextDimension(T[config_key]) + 22)
 		end
 	end
 	self.config.width = max
