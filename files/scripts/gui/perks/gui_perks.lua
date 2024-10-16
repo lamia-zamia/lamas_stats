@@ -85,7 +85,7 @@ function pg:PerksDrawWindow()
 	self:PerksAddButton(T.lamas_stats_perks_reroll, self.PerksDrawRerollPerkScrollBox)
 	self:PerksDrawStats()
 	self:PerksSetWidth(math.ceil(self.perk.x / 17))
-	self.scroll.width = self.perk.width * 17 - 1
+	self.scroll.width = math.max(self.menu.width + 6, self.perk.width * 17 - 1)
 	local start_y = self.perk.y
 	self.perk.y = self.perk.y + 10
 

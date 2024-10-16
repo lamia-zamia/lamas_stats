@@ -22,7 +22,7 @@ gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
 gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
 gui.scroll.scroll_img_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.png"
-gui.default_tooltip = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
+gui.default_tooltip = "mods/lamas_stats/files/gfx/ui_9piece_tooltip_darkest.png"
 gui.tooltip_img = gui.default_tooltip
 gui.c.default_9piece = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
@@ -76,7 +76,6 @@ function gui:GetSettings()
 	self.stats.position_pw_west = self.mod:GetGlobalNumber("lamas_stats_farthest_west")
 	self.stats.position_pw_east = self.mod:GetGlobalNumber("lamas_stats_farthest_east")
 	self:HeaderGetSettings()
-	self:KysGetSettings()
 	self:FungalGetSettings()
 	self:ConfigGetSettings()
 	self.max_height = self.mod:GetSettingNumber("max_height")
@@ -96,8 +95,8 @@ function gui:PostWorldInit()
 	self.mat:Convert()
 	self.fs:Init()
 	self:GetSettings()
-	self.show = self.mod:GetSettingBoolean("enabled_at_start")
-	self.menu.opened = self.mod:GetSettingBoolean("lamas_menu_enabled_default")
+	self.show = self.mod:GetSettingBoolean("overlay_enabled")
+	self.menu.opened = self.mod:GetSettingBoolean("menu_enabled")
 end
 
 --- Sets alt mode when shift is holded
