@@ -45,7 +45,7 @@ end
 --- @private
 --- @return boolean
 function stats:StatsFungal()
-	if not self.stats.shift_cd or self.fungal_cd <= 0 then return false end
+	if not self.config.stats_show_fungal_cooldown or self.fungal_cd <= 0 then return false end
 	self:AddOptionForNext(self.c.options.NonInteractive)
 	self:Image(self.stats.x - 3, self.stats.y - 3, "data/ui_gfx/status_indicators/fungal_shift.png")
 	if self:IsHoverBoxHovered(self.stats.x - 3, self.stats.y - 3, 13, 13, true) then
@@ -60,7 +60,7 @@ end
 --- @private
 --- @return boolean
 function stats:StatsBiome()
-	if not self.stats.biome then return false end
+	if not self.config.stats_show_player_biome then return false end
 	local biome = BiomeMapGetName(self.player_x, self.player_y)
 	if biome == "_EMPTY_" then biome = T.lamas_stats_unknown end
 	local text = T.lamas_stats_location .. ": " .. self:Locale(biome)
@@ -103,7 +103,7 @@ end
 --- @private
 --- @return boolean
 function stats:StatsPosition()
-	if not self.stats.position then return false end
+	if not self.config.stats_show_player_pos then return false end
 	local position_string = T.lamas_stats_position
 	local position_string_width = self:GetTextDimension(position_string)
 	local offset = position_string_width + 5
@@ -123,9 +123,7 @@ function stats:StatsPosition()
 		self.stats.position_toggle = not self.stats.position_toggle
 	end
 
-	if self.stats.position_pw then
-		self:IfStatEntryHovered(offset, self.StatsPositionTooltip)
-	end
+	self:IfStatEntryHovered(offset, self.StatsPositionTooltip)
 
 	self.stats.x = self.stats.x + offset
 	return true
@@ -142,7 +140,7 @@ end
 --- @private
 --- @return boolean
 function stats:StatsKills()
-	if not self.stats.kills then return false end
+	if not self.config.stats_showkills then return false end
 	local kill_string = T.lamas_stats_progress_kills
 	local kill_string_width = self:GetTextDimension(kill_string)
 	local offset = kill_string_width + 30
@@ -178,7 +176,7 @@ end
 --- @private
 --- @return boolean
 function stats:StatsTime()
-	if not self.stats.time then return false end
+	if not self.config.stats_showtime then return false end
 	local time_string = self:Locale("$stat_time ")
 	local time_string_width = self:GetTextDimension(time_string)
 	local time = StatsGetValue("playtime_str")
@@ -211,18 +209,6 @@ function stats:StatsDraw()
 			self.stats.x = self.stats.x + 5
 		end
 	end
-end
-
---- Fetches settings
---- @private
-function stats:StatsGetSettings()
-	self.stats.time = self.mod:GetSettingBoolean("stats_showtime")
-	self.stats.kills = self.mod:GetSettingBoolean("stats_showkills")
-	self.stats.position = self.mod:GetSettingBoolean("stats_show_player_pos")
-	self.stats.position_pw = self.mod:GetSettingBoolean("stats_show_player_pos_pw")
-	self.stats.biome = self.mod:GetSettingBoolean("stats_show_player_biome")
-	self.stats.shift_cd = self.mod:GetSettingBoolean("stats_show_fungal_cooldown")
-	self.stats.enabled = self.mod:GetSettingBoolean("stats_enable")
 end
 
 return stats

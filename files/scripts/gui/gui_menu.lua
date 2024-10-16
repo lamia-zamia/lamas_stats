@@ -20,7 +20,7 @@ local menu = {
 		start_y = 48,
 		pos_y = 44,
 		opened = false,
-		header = "",
+		header = "== LAMA'S STATS ==",
 		fungal = false,
 		perks = false,
 		kys = false,
@@ -76,9 +76,10 @@ function menu:MenuDraw()
 	self.menu.pos_y = self.menu.start_y + 15
 	self.menu.width = self:GetTextDimension(self.menu.header)
 
-	if self.menu.fungal then self:MenuAddButton(T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
-	if self.menu.perks then self:MenuAddButton(T.Perks, self.PerksDrawWindow, self.PerksInit) end
-	if self.menu.kys then self:MenuAddButton(T.KYS_Suicide, self.KysDraw) end
+	if self.config.show_fungal_menu then self:MenuAddButton(T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
+	if self.config.show_perks_menu then self:MenuAddButton(T.Perks, self.PerksDrawWindow, self.PerksInit) end
+	if self.config.show_kys_menu then self:MenuAddButton(T.KYS_Suicide, self.KysDraw) end
+	self:MenuAddButton("Config", self.ConfigDrawScrollBox, self.ConfigInit)
 
 	self:MenuSetWidth(self.menu.pos_x - self.menu.start_x - 9)
 	self.menu.pos_y = self.menu.pos_y + 17
@@ -95,15 +96,6 @@ function menu:MenuDraw()
 	self:Text(self.menu.start_x, self.menu.start_y, self.menu.header)
 	self:AnimateE()
 	self.menu.previous_window = self.menu.current_window
-end
-
---- Fetch settings
---- @private
-function menu:MenuGetSettings()
-	self.menu.header = self.mod:GetSettingString("lamas_menu_header")
-	self.menu.fungal = self.mod:GetSettingBoolean("enable_fungal")
-	self.menu.perks = self.mod:GetSettingBoolean("enable_perks")
-	self.menu.kys = self.mod:GetSettingBoolean("KYS_Button")
 end
 
 return menu

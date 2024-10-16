@@ -43,7 +43,8 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_stats.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_kys.lua",
-	"mods/lamas_stats/files/scripts/gui/perks/gui_perks.lua"
+	"mods/lamas_stats/files/scripts/gui/perks/gui_perks.lua",
+	"mods/lamas_stats/files/scripts/gui/gui_config.lua"
 }
 
 for i = 1, #modules do
@@ -74,11 +75,10 @@ function gui:GetSettings()
 	self.hotkey = self.mod:GetSettingNumber("input_key")
 	self.stats.position_pw_west = self.mod:GetGlobalNumber("lamas_stats_farthest_west")
 	self.stats.position_pw_east = self.mod:GetGlobalNumber("lamas_stats_farthest_east")
-	self:MenuGetSettings()
-	self:StatsGetSettings()
 	self:HeaderGetSettings()
 	self:KysGetSettings()
 	self:FungalGetSettings()
+	self:ConfigGetSettings()
 	self.max_height = 200
 end
 
@@ -134,7 +134,7 @@ function gui:Loop()
 	self.scroll.height_max = self.max_height
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
-	if self.stats.enabled then self:StatsDraw() end
+	if self.config.stats_enable then self:StatsDraw() end
 	if self.menu.opened then self:MenuDraw() end
 end
 
