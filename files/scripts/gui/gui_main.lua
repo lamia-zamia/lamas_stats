@@ -79,7 +79,7 @@ function gui:GetSettings()
 	self:KysGetSettings()
 	self:FungalGetSettings()
 	self:ConfigGetSettings()
-	self.max_height = 200
+	self.max_height = self.mod:GetSettingNumber("max_height")
 end
 
 --- Gets data after materials are done
