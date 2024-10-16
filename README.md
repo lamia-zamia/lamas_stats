@@ -5,17 +5,17 @@ By default this mod only serves as a QOL mod, but can be further expanded into a
   
 ![overlay](showcase/overlay.png)
 ## Basic functions
-* Show various stats on overlay or in hidden menu in a non-intrusive way, togglable by hotkey
+* Show various stats on overlay, togglable by hotkey
 * Show previous fungal shifts including results with flask
 * Show fungal shift cooldown
 * Show nearby and owned perks in a more convenient window (late-game QOL)
 * Suicide button if you become too OP
-## Predicting functions (turned off by default)
+## Predicting functions
 * Show next fungal shifts including flask resolutions
 * Predict failed shifts including nested fails
 * Show AP/LC recipes
 * Show perks in next holy mountain
-* Show perks reroll
+* Show perks reroll results
 * Show perk lottery result
 * Show result of an always-cast perk
 ## Compatibility
