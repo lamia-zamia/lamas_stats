@@ -205,7 +205,7 @@ function stats:StatsDraw()
 	for i = 1, count do
 		local shown = stat_fns[i](self)
 		if shown and i < count then
-			self:Text(self.stats.x, self.stats.y, "|")
+			-- self:Text(self.stats.x, self.stats.y, "|")
 			self.stats.x = self.stats.x + 5
 		end
 	end
