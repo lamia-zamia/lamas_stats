@@ -106,6 +106,18 @@ do -- helpers
 
 	--- Resets settings
 	function U.reset_settings()
+		local count = ModSettingGetCount()
+		local setting_list = {}
+		for i = 0, count do
+			local setting_id = ModSettingGetAtIndex(i)
+			if setting_id and setting_id:find("^lamas_stats%.") then
+				setting_list[#setting_list + 1] = setting_id
+			end
+		end
+		for i = 1, #setting_list do
+			ModSettingRemove(setting_list[i])
+		end
+
 		U.set_default(true)
 	end
 end
@@ -664,6 +676,11 @@ D = {
 	menu_enabled = false,
 	overlay_x = 13,
 	overlay_y = 8,
+	enable_fungal = true,
+	enable_perks = true,
+	KYS_Button = false,
+	enable_fungal_past = true,
+	enable_fungal_future = false,
 }
 
 local function build_settings()
@@ -727,8 +744,8 @@ end
 
 --- @param init_scope number
 function ModSettingsUpdate(init_scope)
-	if init_scope == 0 then -- On new game
-		U.check_for_winstreak()
+	if not U.get_setting("overlay_enabled") then
+		U.reset_settings()
 	end
 	U.set_default(false)
 	U.waiting_for_input = false
