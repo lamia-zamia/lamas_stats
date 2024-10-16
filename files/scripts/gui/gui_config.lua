@@ -2,6 +2,7 @@
 --- @field config_list {[string]:string[]}
 --- @field unfolded {[string]:boolean}
 --- @field y number
+--- @field width number
 --- @field [string] boolean
 
 --- @class LS_Gui
@@ -9,6 +10,7 @@
 local config = {
 	config = {
 		y = 0,
+		width = 10,
 		config_list = {
 			Menu = {
 				"show_fungal_menu",
@@ -95,6 +97,7 @@ function config:ConfigDraw()
 			self:ConfigDrawConfigs(category)
 		end
 	end
+	self.scroll.width = math.max(self.menu.width + 6, self.config.width)
 	self:Text(0, self.config.y + self.scroll.y + 10, "")
 end
 
@@ -106,17 +109,20 @@ end
 --- Fetch settings
 --- @private
 function config:ConfigGetSettings()
+	local max = 0
 	for category, _ in pairs(self.config.config_list) do
 		local entries = self.config.config_list[category]
 		for j = 1, #entries do
 			local config_key = entries[j]
 			self.config[config_key] = self.mod:GetSettingBoolean(config_key)
+			max = math.max(max, self:GetTextDimension(T[config_key]) + 9)
 		end
 	end
+	self.config.width = max
 end
 
 function config:ConfigInit()
-	self.scroll.width = 200
+	self:ConfigGetSettings()
 end
 
 return config
