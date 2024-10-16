@@ -1,5 +1,463 @@
+--- @diagnostic disable: name-style-check
 dofile_once("data/scripts/lib/mod_settings.lua")
-local waitingForKey = false --flag for async waiting for keypress
+
+local mod_id = "lamas_stats"
+local mod_prfx = mod_id .. "."
+local T = {}
+local D = {}
+local current_language_last_frame = nil
+local gui_id = 1000
+local function id()
+	gui_id = gui_id + 1
+	return gui_id
+end
+
+-- ###########################################
+-- ############		Helpers		##############
+-- ###########################################
+
+local U = {
+	whitebox = "data/debug/whitebox.png",
+	empty = "data/debug/empty.png",
+	offset = 0,
+	max_y = 300,
+	min_y = 50,
+	keycodes = {},
+	keycodes_file = "data/scripts/debug/keycodes.lua",
+	waiting_for_input = false,
+}
+do -- helpers
+	--- @param setting_name setting_id
+	--- @param value setting_value
+	function U.set_setting(setting_name, value)
+		ModSettingSet(mod_prfx .. setting_name, value)
+		ModSettingSetNextValue(mod_prfx .. setting_name, value, false)
+	end
+
+	--- @param setting_name setting_id
+	--- @return setting_value?
+	function U.get_setting(setting_name)
+		return ModSettingGet(mod_prfx .. setting_name)
+	end
+
+	--- @param setting_name setting_id
+	--- @return setting_value?
+	function U.get_setting_next(setting_name)
+		return ModSettingGetNextValue(mod_prfx .. setting_name)
+	end
+
+	--- @param array mod_settings_global|mod_settings
+	--- @param gui? gui
+	--- @return number
+	function U.calculate_elements_offset(array, gui)
+		if not gui then
+			gui = GuiCreate()
+			GuiStartFrame(gui)
+		end
+		local max_width = 10
+		for _, setting in ipairs(array) do
+			if setting.category_id then
+				local cat_max_width = U.calculate_elements_offset(setting.settings, gui)
+				max_width = math.max(max_width, cat_max_width)
+			end
+			if setting.ui_name then
+				local name_length = GuiGetTextDimensions(gui, setting.ui_name)
+				max_width = math.max(max_width, name_length)
+			end
+		end
+		GuiDestroy(gui)
+		return max_width + 3
+	end
+
+	--- @param all boolean reset all
+	function U.set_default(all)
+		for setting, value in pairs(D) do
+			if U.get_setting(setting) == nil or all then
+				U.set_setting(setting, value)
+			end
+		end
+	end
+
+	--- gather keycodes from game file
+	function U.gather_key_codes()
+		U.keycodes = {}
+		U.keycodes[0] = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_action_unbound")
+		local keycodes_all = ModTextFileGetContent(U.keycodes_file)
+		for line in keycodes_all:gmatch("Key_.-\n") do
+			local _, key, code = line:match("(Key_)(.+) = (%d+)")
+			U.keycodes[code] = key:upper()
+		end
+	end
+
+	function U.pending_input()
+		for code, _ in pairs(U.keycodes) do
+			if InputIsKeyJustDown(code) then
+				return code
+			end
+		end
+	end
+
+	--- Resets settings
+	function U.reset_settings()
+		U.set_default(true)
+	end
+end
+
+-- ###########################################
+-- ##########		GUI Helpers		##########
+-- ###########################################
+
+local G = {
+
+}
+do -- gui helpers
+	function G.button_options(gui)
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.ClickCancelsDoubleClick)
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.ForceFocusable)
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.HandleDoubleClickAsClick)
+	end
+
+	--- @param gui gui
+	--- @param hovered boolean
+	function G.yellow_if_hovered(gui, hovered)
+		if hovered then GuiColorSetForNextWidget(gui, 1, 1, 0.7, 1) end
+	end
+
+	--- @param gui gui
+	--- @param x_pos number
+	--- @param text string
+	--- @param color? table
+	--- @return boolean
+	--- @nodiscard
+	function G.button(gui, x_pos, text, color)
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
+		GuiText(gui, x_pos, 0, "")
+		local _, _, _, x, y = GuiGetPreviousWidgetInfo(gui)
+		text = "[" .. text .. "]"
+		local width, height = GuiGetTextDimensions(gui, text)
+		G.button_options(gui)
+		GuiImageNinePiece(gui, id(), x, y, width, height, 0)
+		local clicked, _, hovered = GuiGetPreviousWidgetInfo(gui)
+		if color then
+			local r, g, b = unpack(color)
+			GuiColorSetForNextWidget(gui, r, g, b, 1)
+		end
+		G.yellow_if_hovered(gui, hovered)
+		GuiText(gui, x_pos, 0, text)
+		return clicked
+	end
+
+	--- @param setting_name setting_id
+	--- @param value setting_value
+	--- @param default setting_value
+	function G.on_clicks(setting_name, value, default)
+		if InputIsMouseButtonJustDown(1) then
+			U.set_setting(setting_name, value)
+		end
+		if InputIsMouseButtonJustDown(2) then
+			GamePlaySound("ui", "ui/button_click", 0, 0)
+			U.set_setting(setting_name, default)
+		end
+	end
+
+	--- @param gui gui
+	--- @param setting_name setting_id
+	function G.toggle_checkbox_boolean(gui, setting_name)
+		local text = T[setting_name]
+		local _, _, _, prev_x, y, prev_w = GuiGetPreviousWidgetInfo(gui)
+		local x = prev_x + prev_w + 1
+		local value = U.get_setting_next(setting_name)
+		local offset_w = GuiGetTextDimensions(gui, text) + 8
+
+		GuiZSetForNextWidget(gui, -1)
+		G.button_options(gui)
+		GuiImageNinePiece(gui, id(), x + 2, y, offset_w, 10, 10, U.empty, U.empty) -- hover box
+		local _, _, hovered = GuiGetPreviousWidgetInfo(gui)
+		GuiZSetForNextWidget(gui, 1)
+		GuiImageNinePiece(gui, id(), x + 2, y + 2, 6, 6) -- check box
+
+		GuiText(gui, 4, 0, "")
+		if value then
+			GuiColorSetForNextWidget(gui, 0, 0.8, 0, 1)
+			GuiText(gui, 0, 0, "V")
+			GuiText(gui, 0, 0, " ")
+			G.yellow_if_hovered(gui, hovered)
+		else
+			GuiColorSetForNextWidget(gui, 0.8, 0, 0, 1)
+			GuiText(gui, 0, 0, "X")
+			GuiText(gui, 0, 0, " ")
+			G.yellow_if_hovered(gui, hovered)
+		end
+		GuiText(gui, 0, 0, text)
+		G.tooltip(gui, setting_name)
+		if hovered then
+			G.on_clicks(setting_name, not value, D[setting_name])
+		end
+	end
+
+	--- @param gui gui
+	--- @param setting mod_setting_number
+	--- @return number, number
+	function G.mod_setting_number(gui, setting)
+		GuiLayoutBeginHorizontal(gui, 0, 0, false, 0, 0)
+		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
+		local _, _, _, x_start, y_start = GuiGetPreviousWidgetInfo(gui)
+		local w = GuiGetTextDimensions(gui, setting.ui_name)
+		local value = tonumber(ModSettingGetNextValue(mod_setting_get_id(mod_id, setting))) or setting.value_default
+		local multiplier = setting.value_display_multiplier or 1
+		local value_new = GuiSlider(gui, id(), U.offset - w, 0, "", value, setting
+			.value_min,
+			setting.value_max, setting.value_default, multiplier, " ", 64)
+		GuiColorSetForNextWidget(gui, 0.81, 0.81, 0.81, 1)
+		local format = setting.format or ""
+		GuiText(gui, 3, 0, tostring(math.floor(value * multiplier)) .. format)
+		GuiLayoutEnd(gui)
+		local _, _, _, x_end, _, t_w = GuiGetPreviousWidgetInfo(gui)
+		GuiImageNinePiece(gui, id(), x_start, y_start, x_end - x_start + t_w, 8, 0, U.empty, U.empty)
+		G.tooltip(gui, setting.id, setting.scope)
+		return value, value_new
+	end
+
+	--- @param gui gui
+	--- @param setting_name setting_id
+	--- @param scope? mod_setting_scopes
+	function G.tooltip(gui, setting_name, scope)
+		local description = T[setting_name .. "_d"]
+		local value = U.get_setting_next(setting_name)
+		local value_now = U.get_setting(setting_name)
+
+		if value ~= value_now then
+			if scope == MOD_SETTING_SCOPE_RUNTIME_RESTART then
+				if description then
+					GuiTooltip(gui, description, "$menu_modsettings_changes_restart")
+				else
+					GuiTooltip(gui, "$menu_modsettings_changes_restart", "")
+				end
+				return
+			elseif scope == MOD_SETTING_SCOPE_NEW_GAME then
+				if description then
+					GuiTooltip(gui, description, "$menu_modsettings_changes_worldgen")
+				else
+					GuiTooltip(gui, "$menu_modsettings_changes_worldgen", "")
+				end
+				return
+			end
+		end
+
+		if description then
+			GuiTooltip(gui, description, "")
+		end
+	end
+
+	--- @param gui gui
+	--- @param x number
+	--- @param y number
+	--- @param width number
+	--- @param height number
+	--- @param fn fun(gui:gui, width:number, height:number, ...:any)
+	--- @param ... any
+	function G.ImageClip(gui, x, y, width, height, fn, ...)
+		GuiText(gui, x, y, " ")
+		local _, _, _, _, prev_y = GuiGetPreviousWidgetInfo(gui)
+		if prev_y + height > U.max_y then
+			height = U.max_y - prev_y - 1
+		end
+		if prev_y < U.min_y then
+			height = prev_y - U.min_y + height
+			y = y + U.min_y - prev_y
+		end
+		if height < 0 then return end
+		GuiAnimateBegin(gui)
+		GuiAnimateAlphaFadeIn(gui, id(), 0, 0, true)
+		GuiBeginAutoBox(gui)
+
+		GuiZSetForNextWidget(gui, 1000)
+		GuiBeginScrollContainer(gui, id(), x, y, width, height, false, 0, 0)
+		GuiEndAutoBoxNinePiece(gui)
+		GuiAnimateEnd(gui)
+		fn(gui, width, height, ...)
+		GuiEndScrollContainer(gui)
+	end
+
+	function G.draw_outline(gui, width, height)
+		GuiColorSetForNextWidget(gui, 0.4752, 0.2768, 0.2215, 1)
+		GuiZSetForNextWidget(gui, 4)
+		GuiImage(gui, id(), 0, 0, U.whitebox, 0.85, width / 20, height / 20)
+	end
+
+	function G.draw_bar_color(gui, width, height, health)
+		if health then
+			GuiColorSetForNextWidget(gui, 0.53, 0.75, 0.1, 1)
+		else
+			local r = tonumber(U.get_setting_next("exp_bar_red")) or D.exp_bar_red
+			local g = tonumber(U.get_setting_next("exp_bar_green")) or D.exp_bar_green
+			local b = tonumber(U.get_setting_next("exp_bar_blue")) or D.exp_bar_blue
+			GuiColorSetForNextWidget(gui, r, g, b, 1)
+		end
+		GuiZSetForNextWidget(gui, 3)
+		GuiImage(gui, id(), 0, 0, U.whitebox, 1, width / 20, height / 20)
+	end
+end
+-- ###########################################
+-- ########		Settings GUI		##########
+-- ###########################################
+
+local S = {
+
+}
+do -- Settings GUI
+	function S.draw_bar_position(_, gui, _, _, _)
+		GuiOptionsAdd(gui, GUI_OPTION.Layout_NextSameLine)
+
+		local thickness = 1 + tonumber(U.get_setting_next("exp_barThickness")) or D.exp_barThickness
+		local position = U.get_setting_next("exp_bar_position")
+		local x = mod_setting_group_x_offset + U.offset + 92
+		local y = 8
+		GuiText(gui, x, y + 5, " ")
+		local _, _, _, x_no_layout, y_no_layout = GuiGetPreviousWidgetInfo(gui)
+
+		GuiZSetForNextWidget(gui, 5)
+		GuiImageNinePiece(gui, id(), x_no_layout, y_no_layout, 74, 38)
+		G.ImageClip(gui, x + 15, y + 14, 44, 7, G.draw_outline)
+		G.ImageClip(gui, x + 16, y + 15, 42, 5, G.draw_bar_color, true)
+
+		if position == "under_health" then
+			G.ImageClip(gui, x + 15, y + 20.5, 44, thickness + 1, G.draw_outline)
+			G.ImageClip(gui, x + 16, y + 20.5, 42, thickness, G.draw_bar_color)
+		elseif position == "onTop" then
+			G.ImageClip(gui, x + 15, y + 7, 44, thickness + 2, G.draw_outline)
+			G.ImageClip(gui, x + 16, y + 8, 42, thickness, G.draw_bar_color)
+		elseif position == "on_left" then
+			G.ImageClip(gui, x + 2, y + 14, thickness + 2, 29.25, G.draw_outline)
+			G.ImageClip(gui, x + 3, y + 15, thickness, 27.25, G.draw_bar_color)
+		else
+			G.ImageClip(gui, x + 66, y + 14, thickness + 2, 29.25, G.draw_outline)
+			G.ImageClip(gui, x + 67, y + 15, thickness, 27.25, G.draw_bar_color)
+		end
+
+		if U.get_setting_next("exp_bar_show_perc") then GuiText(gui, x + 66, y + 5, "%") end
+		GuiOptionsRemove(gui, GUI_OPTION.Layout_NextSameLine)
+	end
+
+	--- @param setting mod_setting_number
+	--- @param gui gui
+	function S.draw_barThickness(_, gui, _, _, setting)
+		local position = U.get_setting_next("exp_bar_position")
+		if position == "under_health" then
+			setting.value_max = 2
+			if U.get_setting_next(setting.id) > 2 then
+				U.set_setting(setting.id, 2)
+			end
+		else
+			setting.value_max = 4
+		end
+		-- setting.value_max = U.get_setting_next("exp_bar_position") == "under_health" and 2 or 4
+		local value, value_new = G.mod_setting_number(gui, setting)
+		value_new = math.floor(value_new + 0.5)
+		if value ~= value_new then
+			U.set_setting(setting.id, value_new)
+		end
+	end
+
+	--- @param setting mod_setting_number
+	--- @param gui gui
+	function S.mod_setting_number_float(_, gui, _, _, setting)
+		local value, value_new = G.mod_setting_number(gui, setting)
+		if value ~= value_new then
+			U.set_setting(setting.id, value_new)
+		end
+	end
+
+	--- @param setting mod_setting_number
+	--- @param gui gui
+	function S.mod_setting_number_integer(_, gui, _, _, setting)
+		local value, value_new = G.mod_setting_number(gui, setting)
+		value_new = math.floor(value_new + 0.5)
+		if value ~= value_new then
+			U.set_setting(setting.id, value_new)
+		end
+	end
+
+	function S.mod_setting_better_string(_, gui, _, _, setting)
+		local value = tostring(U.get_setting_next(setting.id))
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
+		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
+		GuiLayoutBeginHorizontal(gui, U.offset, 0, true, 0, 0)
+		GuiText(gui, 8, 0, "")
+		for _, button in ipairs(setting.buttons) do
+			local color = value == button and { 0.7, 0.7, 0.7 } or nil
+			if G.button(gui, 0, T[button], color) then
+				U.set_setting(setting.id, button)
+			end
+		end
+		GuiLayoutEnd(gui)
+	end
+
+	function S.mod_setting_better_boolean(_, gui, _, _, setting)
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
+		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
+		G.tooltip(gui, setting.id)
+		GuiLayoutBeginHorizontal(gui, U.offset, 0, true, 0, 0)
+		GuiText(gui, 7, 0, "")
+		for _, setting_id in ipairs(setting.checkboxes) do
+			G.toggle_checkbox_boolean(gui, setting_id)
+		end
+		GuiLayoutEnd(gui)
+	end
+
+	function S.get_input(_, gui, _, _, setting)
+		local current_key = "[" .. U.keycodes[U.get_setting("open_ui_hotkey")] .. "]"
+		if U.waiting_for_input then
+			current_key = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_pressakey")
+			local new_key = U.pending_input()
+			if new_key then
+				U.set_setting("open_ui_hotkey", new_key)
+				U.waiting_for_input = false
+			end
+		end
+
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
+		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
+
+		GuiLayoutBeginHorizontal(gui, U.offset, 0, true, 0, 0)
+		GuiText(gui, 8, 0, "")
+		local _, _, _, x, y = GuiGetPreviousWidgetInfo(gui)
+		local w, h = GuiGetTextDimensions(gui, current_key)
+		G.button_options(gui)
+		GuiImageNinePiece(gui, id(), x, y, w, h, 0)
+		local _, _, hovered = GuiGetPreviousWidgetInfo(gui)
+		if hovered then
+			GuiColorSetForNextWidget(gui, 1, 1, 0.7, 1)
+			GuiTooltip(gui, T.open_ui_hotkey_d, GameTextGetTranslatedOrNot("$menuoptions_reset_keyboard"))
+			if InputIsMouseButtonJustDown(1) then
+				U.waiting_for_input = true
+			end
+			if InputIsMouseButtonJustDown(2) then
+				GamePlaySound("ui", "ui/button_click", 0, 0)
+				U.set_setting("open_ui_hotkey", 0)
+				U.waiting_for_input = false
+			end
+		end
+		GuiText(gui, 0, 0, current_key)
+
+		GuiLayoutEnd(gui)
+	end
+
+	function S.reset_stuff(_, gui, _, _, setting)
+		local fn = U[setting.id]
+		if not fn then
+			GuiText(gui, mod_setting_group_x_offset, 0, "ERR")
+			return
+		end
+		if G.button(gui, mod_setting_group_x_offset, T.reset_cat, { 1, 0.4, 0.4 }) then
+			fn()
+		end
+	end
+end
+
+-- ###########################################
+-- ########		Translations		##########
+-- ###########################################
 
 local translations =
 {
@@ -295,180 +753,53 @@ local translations =
 	},
 }
 
-local _T = setmetatable({},
-	{
-		__index = function (t, k)
-			local currentLang = GameTextGetTranslatedOrNot("$current_language")
-			if currentLang == "русский(Neonomi)" or currentLang == "русский(Сообщество)" then --compatibility with custom langs
-				currentLang = "русский"
-			end
-			if currentLang == "自然な日本語" then
-				currentLang = "日本語"
-			end
-			if not translations[currentLang] then
-				currentLang = "English"
-			end
-			if not translations[currentLang][k] then
-				print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, currentLang))
-				currentLang = "English"
-			end
-			return translations[currentLang][k]
+local mt = {
+	__index = function(t, k)
+		local currentLang = GameTextGetTranslatedOrNot("$current_language")
+		if currentLang == "русский(Neonomi)" or currentLang == "русский(Сообщество)" then -- compatibility with custom langs
+			currentLang = "русский"
 		end
-	})
-
-local function GatherKeyCodes() --function to get keycodes from game file
-	local keycodes = {}
-	local keycodes_all = ModTextFileGetContent("data/scripts/debug/keycodes.lua")
-	local startgather = false                   --triger to stop and start of writing keycodes
-	for line in keycodes_all:gmatch("[^\r\n]+") do --parsing keycodes
-		if string.find(line, "gamepad") then    --end of keyboard inputs
-			break
+		if currentLang == "自然な日本語" then
+			currentLang = "日本語"
 		end
-		if startgather then
-			local temp = {}
-			for str in string.gmatch(line, "%S+") do
-				table.insert(temp, str)
-			end
-			-- table.insert(keycodes,{temp[3], temp[1]})
-			keycodes[temp[3]] = temp[1]
+		if not translations[currentLang] then
+			currentLang = "English"
 		end
-		if string.find(line, "InputIsButtonDown") then --start of keyboard inputs
-			startgather = true
-		end
+		return translations[currentLang][k]
 	end
-	return keycodes
-end
+}
+setmetatable(T, mt)
 
-local keycodes = GatherKeyCodes() --gathered combo of keycodes to keyname
+-- ###########################################
+-- #########		Settings		##########
+-- ###########################################
 
-function GetInput()               --function to wait for input
-	waitingForKey = true
-	for code, keyname in pairs(keycodes) do
-		if InputIsKeyDown(code) == true then   --when key is detected
-			ModSettingSet("lamas_stats.input_key", code) -- i have no idea why it doesn't work unless there are two of them
-			ModSettingSetNextValue("lamas_stats.input_key", code, false)
-			waitingForKey = false
-			break
-		end
-	end
-end
-
---ui for getting hotkey
-function InputKeyUI(mod_id, gui, in_main_menu, im_id, setting)
-	if waitingForKey == false then
-		local value = ModSettingGet(mod_setting_get_id(mod_id, setting)) --getting current setting
-		local text = setting.ui_name .. ": " .. keycodes[value]
-
-		if GuiButton(gui, im_id, mod_setting_group_x_offset, 0, text) then
-			waitingForKey = true
-		end
-	else
-		GuiColorSetForNextWidget(gui, 1, 1, 0.698, 1)
-		-- menuoptions_configurecontrols_pressakey
-		GuiText(gui, mod_setting_group_x_offset, 0,
-			setting.ui_name .. ": " .. GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_pressakey"))
-		-- GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name .. ": " .. GameTextGetTranslatedOrNot("$lamas_stat_test"))
-	end
-	mod_setting_tooltip(mod_id, gui, in_main_menu, setting)
-end
-
-function reminder_about_greedy_shift(mod_id, gui, in_main_menu, im_id, setting)
-	GuiColorSetForNextWidget(gui, 0.5, 0.5, 0.5, 1)
-	GuiText(gui, mod_setting_group_x_offset, 0, _T.GreedyShiftReminder)
-	GuiTooltip(gui, _T.GreedyShiftReminderDesc, "")
-end
-
-local function mod_setting_number_integer(mod_id, gui, in_main_menu, im_id, setting)
-	local value = ModSettingGetNextValue(mod_setting_get_id(mod_id, setting))
-	local value_new = GuiSlider(gui, im_id, mod_setting_group_x_offset, 0, setting.ui_name, value, setting.value_min,
-		setting.value_max, setting.value_default, setting.value_display_multiplier or 1,
-		setting.value_display_formatting or "", 64)
-	value_new = math.floor(value_new + 0.5)
-	if value ~= value_new then
-		ModSettingSetNextValue(mod_setting_get_id(mod_id, setting), value_new, false)
-		mod_setting_handle_change_callback(mod_id, gui, in_main_menu, setting, value, value_new)
-	end
-
-	mod_setting_tooltip(mod_id, gui, in_main_menu, setting)
-end
-
-local mod_id = "lamas_stats"
-mod_settings_version = 1
-
-local default =
-{
-	["lamas_stats.setting_changed"] = true,
-	["input_key"] = "60",
-	["enabled_at_start"] = false,
-	["overlay_x"] = 13,
-	["overlay_y"] = 8,
-	["stats_enable"] = true,
-	["stats_position"] = "on top",
-	["stats_showtime"] = true,
-	["stats_showkills"] = true,
-	["stats_show_innocent"] = true,
-	["stats_show_fungal_cooldown"] = true,
-	["stats_show_fungal_order"] = "first",
-	["stats_show_fungal_type"] = "image",
-	["lamas_menu_header"] = "== LAMA'S STATS ==",
-	["lamas_menu_enabled_default"] = false,
-	["enable_fungal"] = true,
-	["fungal_scale"] = 1,
-	["fungal_group_type"] = "group",
-	["fungal_shift_max"] = 20,
-	["enable_fungal_greedy_tip"] = true,
-	["enable_fungal_greedy_gold"] = true,
-	["enable_fungal_greedy_grass"] = false,
-	["enable_perks"] = true,
-	["enable_current_perks"] = true,
-	["current_perks_percentage"] = 0.5,
-	["current_perks_scale"] = 1,
-	["enable_future_perks"] = false,
-	["enable_nearby_perks"] = true,
-	["enable_nearby_lottery"] = false,
-	["future_perks_amount"] = 7,
-	["enable_nearby_alwayscast"] = false,
-	["enable_perks_autoupdate"] = true,
-	["enable_fungal_recipes"] = false,
-	["stats_show_player_pos"] = false,
-	["stats_show_player_pos_pw"] = true,
-	["stats_show_player_biome"] = false,
-	["KYS_Button"] = false,
-	["KYS_Button_Hide"] = true,
-	["stats_show_farthest_pw"] = true,
-	["current_perks_hide_vanilla"] = false,
+D = {
+	input_key = "60",
+	enabled_at_start = false,
+	overlay_x = 13,
+	overlay_y = 8,
+	stats_enable = true,
+	lamas_menu_header = "== LAMA'S STATS ==",
+	lamas_menu_enabled_default = false,
+	KYS_Button = false,
+	KYS_Button_Hide = true,
 }
 
-function ResetSettings(mod_id, gui, in_main_menu, im_id, setting)
-	for key, value in pairs(default) do
-		ModSettingSet("lamas_stats." .. key, value) -- i have no idea why it doesn't work unless there are two of them
-		ModSettingSetNextValue("lamas_stats." .. key, value, false)
-	end
-end
-
---ui for reset settings
-function ResetSettingsUI(mod_id, gui, in_main_menu, im_id, setting)
-	local text = setting.ui_name
-
-	if GuiButton(gui, im_id, mod_setting_group_x_offset, 0, text) then
-		ResetSettings(mod_id, gui, in_main_menu, im_id, setting)
-	end
-end
-
 local function build_settings()
-	return {
+	--- @type mod_settings_global
+	local settings = {
 		{
 			id = "input_key",
-			ui_name = _T.Hotkey,
-			ui_description = _T.HotkeyDesc,
-			value_default = default["input_key"],
-			scope = MOD_SETTING_SCOPE_RUNTIME,
-			ui_fn = InputKeyUI,
+			ui_name = T.Hotkey,
+			ui_description = T.HotkeyDesc,
+			value_default = D.input_key,
+			-- ui_fn = InputKeyUI,
 		},
 		{
 			category_id = "overlay",
-			ui_name = _T.Overlay,
-			ui_description = _T.OverlayDesc,
+			ui_name = T.Overlay,
+			ui_description = T.OverlayDesc,
 			foldable = true,
 			_folded = true,
 
@@ -476,164 +807,33 @@ local function build_settings()
 			{
 				{
 					id = "enabled_at_start",
-					ui_name = _T.StartEnabled,
-					ui_description = _T.StartEnabledDesc,
-					value_default = default["enabled_at_start"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
+					ui_name = T.StartEnabled,
+					ui_description = T.StartEnabledDesc,
+					value_default = D.enabled_at_start,
 				},
 				{
 					id = "overlay_x",
-					ui_name = _T.overlay_x,
-					value_default = default["overlay_x"],
+					ui_name = T.overlay_x,
+					value_default = D.overlay_x,
 					value_min = 0,
 					value_max = 100,
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-					ui_fn = mod_setting_number_integer,
+					-- ui_fn = mod_setting_number_integer,
 				},
 				{
 					id = "overlay_y",
-					ui_name = _T.overlay_y,
-					ui_description = _T.overlay_y_desc,
-					value_default = default["overlay_y"],
+					ui_name = T.overlay_y,
+					ui_description = T.overlay_y_desc,
+					value_default = D.overlay_y,
 					value_min = 0,
 					value_max = 100,
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-					ui_fn = mod_setting_number_integer,
-				},
-			},
-		},
-		{
-			category_id = "stats",
-			ui_name = _T.Stats,
-			ui_description = _T.StatsDesc,
-			foldable = true,
-			_folded = true,
-
-			settings =
-			{
-				{
-					id = "stats_enable",
-					ui_name = _T.StatsEnable,
-					value_default = default["stats_enable"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-
-				},
-				{
-					id = "stats_position",
-					ui_name = _T.StatsPosition,
-					value_default = default["stats_position"],
-					values = { { "merged", _T.StatsInMenu }, { "on top", _T.StatsOnOverlay } },
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					id = "stats_showtime",
-					ui_name = _T.StatsShowTime,
-					ui_description = _T.StatsShowTimeDesc,
-					value_default = default["stats_showtime"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					id = "stats_showkills",
-					ui_name = _T.StatsShowKills,
-					value_default = default["stats_showkills"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					id = "stats_show_innocent",
-					ui_name = _T.StatsShowKillsInnocent,
-					ui_description = _T.StatsShowKillsInnocentDesc,
-					value_default = default["stats_show_innocent"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					id = "stats_show_player_pos",
-					ui_name = _T.stats_show_player_pos,
-					ui_description = _T.stats_show_player_posDesc,
-					value_default = default["stats_show_player_pos"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					id = "stats_show_player_pos_pw",
-					ui_name = _T.stats_show_player_pos_pw,
-					ui_description = _T.stats_show_player_pos_pwDesc,
-					value_default = default["stats_show_player_pos_pw"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					id = "stats_show_player_biome",
-					ui_name = _T.stats_show_player_biome,
-					ui_description = _T.stats_show_player_biomeDesc,
-					value_default = default["stats_show_player_biome"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
-				},
-				{
-					category_id = "stats_show_fungal_category",
-					ui_name = _T.StatsShowFungalCat,
-					foldable = true,
-					_folded = true,
-
-					settings =
-					{
-						{
-							id = "stats_show_fungal_cooldown",
-							ui_name = _T.StatsShowFungalCooldown,
-							value_default = default["stats_show_fungal_cooldown"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "stats_show_fungal_order",
-							ui_name = _T.StatsShowFungalOrder,
-							value_default = default["stats_show_fungal_order"],
-							values = { { "first", _T.StatsShowFungalOrderFirst }, { "last", _T.StatsShowFungalOrderLast } },
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "stats_show_fungal_type",
-							ui_name = _T.StatsShowFungalType,
-							value_default = default["stats_show_fungal_type"],
-							values = { { "time", _T.StatsShowFungalTypeTime }, { "image", _T.StatsShowFungalTypeImage } },
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-					},
-				},
-				{
-					category_id = "stats_show_custom_category",
-					ui_name = _T.StatsShowCustomCat,
-					ui_description = _T.StatsShowCustomCatDesc,
-					foldable = true,
-					_folded = true,
-
-					settings =
-					{
-						{
-							id = "stats_show_farthest_pw",
-							ui_name = _T.stats_show_farthest_pw,
-							ui_description = _T.stats_show_farthest_pwDesc,
-							value_default = default["stats_show_farthest_pw"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-					},
+					-- ui_fn = mod_setting_number_integer,
 				},
 			},
 		},
 		{
 			category_id = "lamas_menu_setting",
-			ui_name = _T.LamasMenuSetting,
-			ui_description = _T.LamasMenuSettingDesc,
+			ui_name = T.LamasMenuSetting,
+			ui_description = T.LamasMenuSettingDesc,
 			foldable = true,
 			_folded = true,
 
@@ -641,245 +841,18 @@ local function build_settings()
 			{
 				{
 					id = "lamas_menu_header",
-					ui_name = _T.LamasMenuName,
-					value_default = default["lamas_menu_header"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					change_fn = mod_setting_change_callback,
+					ui_name = T.LamasMenuName,
+					value_default = D.lamas_menu_header,
 				},
 				{
 					id = "lamas_menu_enabled_default",
-					ui_name = _T.LamasMenuEnabledByDefault,
-					value_default = default["lamas_menu_enabled_default"],
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-				},
-				{
-					category_id = "fungal",
-					ui_name = _T.FungalShifts,
-					ui_description = _T.FungalShiftsDesc,
-					foldable = true,
-					_folded = true,
-
-					settings =
-					{
-						{
-							id = "enable_fungal",
-							ui_name = _T.EnableFungalModule,
-							value_default = default["enable_fungal"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "enable_fungal_recipes",
-							ui_name = _T.enable_fungal_recipes,
-							ui_description = _T.enable_fungal_recipesDesc,
-							value_default = default["enable_fungal_recipes"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "fungal_group_type",
-							ui_name = _T.FungalGroupType,
-							ui_description = _T.FungalGroupTypeDesc,
-							value_default = default["fungal_group_type"],
-							values = { { "group", _T.FungalGroupTypeTrue }, { "full", _T.FungalGroupTypeFalse } },
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "fungal_shift_max",
-							ui_name = _T.FungalShiftMax,
-							ui_description = _T.FungalShiftMaxDesc,
-							value_default = default["fungal_shift_max"],
-							value_min = 10,
-							value_max = 40,
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-							ui_fn = mod_setting_number_integer,
-						},
-						{
-							id = "enable_fungal_greedy_tip",
-							ui_name = _T.EnableFungalGreedyTip,
-							ui_description = _T.EnableFungalGreedyTipDesc,
-							value_default = default["enable_fungal_greedy_tip"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "reminder_about_greedy_shift",
-							ui_name = _T.GreedyShiftReminder,
-							value_default = true,
-							ui_fn = reminder_about_greedy_shift,
-						},
-						{
-							id = "enable_fungal_greedy_gold",
-							ui_name = _T.EnableFungalGreedyGold,
-							value_default = default["enable_fungal_greedy_gold"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "enable_fungal_greedy_grass",
-							ui_name = _T.EnableFungalGreedyGrass,
-							value_default = default["enable_fungal_greedy_grass"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "fungal_scale",
-							ui_name = _T.FungalScale,
-							value_default = default["fungal_scale"],
-							value_min = 0.7,
-							value_max = 1,
-							value_display_multiplier = 100,
-							value_display_formatting = " $0 %",
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-					},
-				},
-				{
-					category_id = "perks",
-					ui_name = _T.Perks,
-					ui_description = _T.PerksDesc,
-					foldable = true,
-					_folded = true,
-
-					settings =
-					{
-						{
-							id = "enable_perks",
-							ui_name = _T.EnablePerks,
-							ui_description = _T.EnablePerksDesc,
-							value_default = default["enable_perks"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
-						},
-						{
-							id = "enable_perks_autoupdate",
-							ui_name = _T.EnablePerksAutoUpdate,
-							ui_description = _T.EnablePerksAutoUpdateDesc,
-							value_default = default["enable_perks_autoupdate"],
-							scope = MOD_SETTING_SCOPE_RUNTIME_RESTART,
-						},
-						{
-							category_id = "current_perks_cat",
-							ui_name = _T.current_perks_cat,
-							foldable = true,
-							_folded = true,
-
-							settings =
-
-							{
-								{
-									id = "enable_current_perks",
-									ui_name = _T.EnableCurrentPerks,
-									ui_description = _T.EnableCurrentPerksDesc,
-									value_default = default["enable_current_perks"],
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-								{
-									id = "current_perks_percentage",
-									ui_name = _T.current_perks_percentage,
-									ui_description = _T.current_perks_percentageDesc,
-									value_default = default["current_perks_percentage"],
-									value_min = 0,
-									value_max = 0.8,
-									value_display_multiplier = 100,
-									value_display_formatting = " $0 %",
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-								{
-									id = "current_perks_scale",
-									ui_name = _T.current_perks_scale,
-									ui_description = _T.current_perks_scaleDesc,
-									value_default = default["current_perks_scale"],
-									value_min = 0.5,
-									value_max = 1,
-									value_display_multiplier = 100,
-									value_display_formatting = " $0 %",
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-								{
-									id = "current_perks_hide_vanilla",
-									ui_name = _T.current_perks_hide_vanilla,
-									ui_description = "It will break the removable perks mod, may fix later",
-									value_default = default["current_perks_hide_vanilla"],
-									scope = MOD_SETTING_SCOPE_RUNTIME_RESTART,
-								},
-							},
-						},
-						{
-							category_id = "nearby_perks_cat",
-							ui_name = _T.nearby_perks_cat,
-							foldable = true,
-							_folded = true,
-
-							settings =
-							{
-								{
-									id = "enable_nearby_perks",
-									ui_name = _T.enable_nearby_perks,
-									ui_description = _T.enable_nearby_perksDesc,
-									value_default = default["enable_nearby_perks"],
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-								{
-									id = "enable_nearby_lottery",
-									ui_name = _T.enable_nearby_lottery,
-									ui_description = _T.enable_nearby_lotteryDesc,
-									value_default = default["enable_nearby_lottery"],
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-								{
-									id = "enable_nearby_alwayscast",
-									ui_name = _T.enable_nearby_alwayscast,
-									ui_description = _T.enable_nearby_alwayscastDesc,
-									value_default = default["enable_nearby_alwayscast"],
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-							},
-						},
-						{
-							category_id = "nearby_predict_cat",
-							ui_name = _T.nearby_predict_cat,
-							foldable = true,
-							_folded = true,
-
-							settings =
-							{
-								{
-									id = "enable_future_perks",
-									ui_name = _T.EnablefuturePerks,
-									ui_description = _T.EnablefuturePerksDesc,
-									value_default = default["enable_future_perks"],
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-								},
-								{
-									id = "future_perks_amount",
-									ui_name = _T.future_perks_amount,
-									ui_description = _T.future_perks_amountDesc,
-									value_default = default["future_perks_amount"],
-									value_min = 1,
-									value_max = 13,
-									scope = MOD_SETTING_SCOPE_RUNTIME,
-									change_fn = mod_setting_change_callback,
-									ui_fn = mod_setting_number_integer,
-								},
-							},
-						},
-					},
+					ui_name = T.LamasMenuEnabledByDefault,
+					value_default = D.lamas_menu_enabled_default,
 				},
 				{
 					category_id = "KYS",
-					ui_name = _T.KYScat,
-					ui_description = _T.KYScatDesc,
+					ui_name = T.KYScat,
+					ui_description = T.KYScatDesc,
 					foldable = true,
 					_folded = true,
 
@@ -887,19 +860,15 @@ local function build_settings()
 					{
 						{
 							id = "KYS_Button",
-							ui_name = _T.KYS_Button,
-							ui_description = _T.KYS_ButtonDesc,
-							value_default = default["KYS_Button"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
+							ui_name = T.KYS_Button,
+							ui_description = T.KYS_ButtonDesc,
+							value_default = D.KYS_Button,
 						},
 						{
 							id = "KYS_Button_Hide",
-							ui_name = _T.KYS_Button_Hide,
-							ui_description = _T.KYS_Button_HideDesc,
-							value_default = default["KYS_Button_Hide"],
-							scope = MOD_SETTING_SCOPE_RUNTIME,
-							change_fn = mod_setting_change_callback,
+							ui_name = T.KYS_Button_Hide,
+							ui_description = T.KYS_Button_HideDesc,
+							value_default = D.KYS_Button_Hide,
 						},
 					},
 				},
@@ -907,7 +876,7 @@ local function build_settings()
 		},
 		{
 			category_id = "reset_settings_cat",
-			ui_name = _T.ResetSettings,
+			ui_name = T.ResetSettings,
 			foldable = true,
 			_folded = true,
 
@@ -915,42 +884,51 @@ local function build_settings()
 			{
 				{
 					id = "reset_settings",
-					ui_name = _T.ResetSettings,
-					scope = MOD_SETTING_SCOPE_RUNTIME,
-					ui_fn = ResetSettingsUI, -- custom widget
+					not_setting = true,
+					ui_name = T.ResetSettings,
+					-- ui_fn = ResetSettingsUI, -- custom widget
 				},
 			},
 		},
-		--end of settings
+		-- end of settings
 	}
+	U.offset = U.calculate_elements_offset(settings)
+	return settings
 end
 
-function mod_setting_change_callback(mod_id, gui, in_main_menu, setting, old_value, new_value) --setting to tell game to restart gui
-	ModSettingSet("lamas_stats.setting_changed", true)
-end
+-- ###########################################
+-- #############		Meh		##############
+-- ###########################################
 
+--- @param init_scope number
 function ModSettingsUpdate(init_scope)
-	waitingForKey = false
-	local old_version = mod_settings_get_version(mod_id)
-	mod_settings_update(mod_id, mod_settings, init_scope)
-end
-
-function ModSettingsGuiCount()
-	return mod_settings_gui_count(mod_id, mod_settings)
-end
-
-function ModSettingsGui(gui, in_main_menu)
-	mod_settings_gui(mod_id, mod_settings, gui, in_main_menu)
-	if waitingForKey == true then --async wait for input
-		GetInput()
+	if init_scope == 0 then -- On new game
+		U.check_for_winstreak()
 	end
-
+	U.set_default(false)
+	U.waiting_for_input = false
 	local current_language = GameTextGetTranslatedOrNot("$current_language")
-
 	if current_language ~= current_language_last_frame then
 		mod_settings = build_settings()
 	end
 	current_language_last_frame = current_language
 end
 
+--- @return number
+function ModSettingsGuiCount()
+	return mod_settings_gui_count(mod_id, mod_settings)
+end
+
+--- @param gui gui
+--- @param in_main_menu boolean
+function ModSettingsGui(gui, in_main_menu)
+	gui_id = 1000
+	GuiIdPushString(gui, mod_prfx)
+	mod_settings_gui(mod_id, mod_settings, gui, in_main_menu)
+	GuiIdPop(gui)
+end
+
+U.gather_key_codes()
+
+--- @type mod_settings_global
 mod_settings = build_settings()
