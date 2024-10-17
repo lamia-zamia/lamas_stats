@@ -92,7 +92,8 @@ function predict:Init()
 		return 0, 0
 	end
 
-	dofile_once("data/scripts/perks/perk.lua") -- ugh
+	dofile("data/scripts/perks/perk.lua") -- ugh
+	dofile("data/scripts/perks/perk_list.lua")
 end
 
 return predict

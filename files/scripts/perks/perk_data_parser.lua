@@ -34,7 +34,7 @@ function perks:Parse()
 	sandbox:start_sandbox()
 
 	-- Redefining some functions so fungal shift would do nothing
-	dofile_once = dofile
+	-- dofile_once = dofile
 	perk_list = {}
 	dofile("data/scripts/perks/perk_list.lua")
 
