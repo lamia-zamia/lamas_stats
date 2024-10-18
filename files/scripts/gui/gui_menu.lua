@@ -92,6 +92,7 @@ function menu:MenuDraw()
 	self:AnimateE()
 	self:Draw9Piece(self.menu.start_x - 6, self.menu.start_y - 1, self.z + 50, self.menu.width + 12,
 		self.menu.pos_y - self.menu.start_y)
+	if self:IsHovered() then self:BlockInput() end
 
 	self:Text(self.menu.start_x, self.menu.start_y, self.menu.header)
 	self:AnimateE()
