@@ -51,14 +51,6 @@ local function redefine_functions()
 		return cell_factory_get_type(material)
 	end
 
-	-- ---@param material_id integer
-	-- ---@param tag string
-	-- ---@return boolean[]
-	-- ---@nodiscard
-	-- function CellFactory_HasTag(material_id, tag)
-
-	-- end
-
 	dofile_once = dofile
 end
 
@@ -131,11 +123,7 @@ local function do_fungal_shift_with_material(material)
 	last_shift_result = {
 		from = {},
 	}
-	local success, result = pcall(fungal_shift, 1, 0, 0, true)
-	if not success then
-		report("bad shift #" .. shift_predictor.current_predict_iter .. ", material: " .. material)
-		return
-	end
+	fungal_shift(1, 0, 0, true)
 end
 
 --- Checks for failed shifts with flask from
