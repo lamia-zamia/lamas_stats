@@ -1,4 +1,5 @@
-local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua") --- @type nxml
+local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua")                   --- @type nxml
+local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") --- @type error_reporter
 nxml.error_handler = function() end
 
 --- @alias material_colors {r:number, g:number, b:number, a:number}
@@ -137,7 +138,12 @@ end
 --- Parses a file
 --- @param file string
 local function parse_file(file)
-	local xml = nxml.parse(ModTextFileGetContent(file))
+	local success, result = pcall(nxml.parse, ModTextFileGetContent(file))
+	if not success then
+		reporter:Report("couldn't parse material file " .. file)
+		return
+	end
+	local xml = result
 
 	for _, element_name in ipairs { "CellData", "CellDataChild" } do
 		for elem in xml:each_of(element_name) do
