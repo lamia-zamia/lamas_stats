@@ -84,7 +84,7 @@ function stats:StatsPositionTooltip()
 	self:ColorGray()
 	self:Text(0, 0, T.lamas_stats_position_toggle)
 
-	if not self.stats.position_toggle then
+	if not self.config.stats_position_expanded then
 		self:Text(0, 0, "X: " .. tostring(math.floor(self.player_x)))
 		self:Text(0, 0, "Y: " .. tostring(math.floor(self.player_y)))
 	end
@@ -109,7 +109,7 @@ function stats:StatsPosition()
 	local offset = position_string_width + 5
 	self:Text(self.stats.x, self.stats.y, position_string)
 
-	if self.stats.position_toggle then
+	if self.config.stats_position_expanded then
 		local x = tostring(math.floor(self.player_x))
 		local y = tostring(math.floor(self.player_y))
 		local stat_max = math.max(#x, #y) * 8
@@ -120,7 +120,8 @@ function stats:StatsPosition()
 	end
 
 	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, offset, 11) and self:IsLeftClicked() then
-		self.stats.position_toggle = not self.stats.position_toggle
+		self.config.stats_position_expanded = not self.config.stats_position_expanded
+		self.mod:SetModSetting("stats_position_expanded", self.config.stats_position_expanded)
 	end
 
 	self:IfStatEntryHovered(offset, self.StatsPositionTooltip)
@@ -206,7 +207,7 @@ function stats:StatsDraw()
 		local shown = stat_fns[i](self)
 		if shown and i < count then
 			-- self:Text(self.stats.x, self.stats.y, "|")
-			self.stats.x = self.stats.x + 5
+			self.stats.x = self.stats.x + 7
 		end
 	end
 end

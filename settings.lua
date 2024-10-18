@@ -436,6 +436,7 @@ D = {
 	stats_showtime = true,
 	stats_showkills = true,
 	stats_show_player_pos = false,
+	stats_position_expanded = true,
 	stats_show_player_biome = false,
 	stats_show_fungal_cooldown = true,
 	enable_nearby_perks = true,
