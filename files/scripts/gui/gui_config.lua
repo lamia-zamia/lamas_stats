@@ -41,7 +41,7 @@ local config = {
 }
 
 function config:ConfigIsHovered()
-	return self:IsHoverBoxHovered(self.menu.start_x - 3, self.menu.pos_y + self.config.y + 7, self.scroll.width, 9)
+	return self:IsHoverBoxHovered(self.menu.start_x - 3, self.menu.pos_y + self.config.y + 7, self.scroll.width - 6, 9)
 end
 
 function config:ConfigDrawCategory(category)
@@ -116,7 +116,7 @@ function config:ConfigGetSettings()
 		for j = 1, #entries do
 			local config_key = entries[j]
 			self.config[config_key] = self.mod:GetSettingBoolean(config_key)
-			max = math.max(max, self:GetTextDimension(T[config_key]) + 22)
+			max = math.max(max, self:GetTextDimension(T[config_key]) + 25)
 		end
 	end
 	self.config.width = max
