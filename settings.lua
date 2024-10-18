@@ -191,8 +191,9 @@ do -- gui helpers
 		GuiZSetForNextWidget(gui, -1)
 		G.button_options(gui)
 		GuiImageNinePiece(gui, id(), x + 2, y, offset_w, 10, 10, U.empty, U.empty) -- hover box
-		G.tooltip(gui, setting_name)
 		local _, _, hovered = GuiGetPreviousWidgetInfo(gui)
+		G.tooltip(gui, setting_name)
+		
 		GuiZSetForNextWidget(gui, 1)
 		GuiImageNinePiece(gui, id(), x + 2, y + 2, 6, 6) -- check box
 
@@ -511,7 +512,7 @@ end
 
 --- @param init_scope number
 function ModSettingsUpdate(init_scope)
-	if not U.get_setting("overlay_enabled") then
+	if U.get_setting("overlay_enabled") == nil then
 		U.reset_settings()
 	end
 	U.set_default(false)
