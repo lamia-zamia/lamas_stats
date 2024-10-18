@@ -1,4 +1,15 @@
----@diagnostic disable: name-style-check
+local old_print = print
+local old_game_print = GamePrint
+local function report(text)
+	local err_msg = "[Lamas Stats]: error - " .. (text or "unknown error")
+	old_print("\27[31m[Lamas Stats Error]\27[0m")
+	old_print(err_msg)
+	old_game_print(err_msg)
+end
+
+local nest, gold, grass
+
+--- @diagnostic disable: name-style-check
 --- @class shift_predictor
 --- @field cooldown integer
 --- @field max_shifts integer
@@ -15,18 +26,38 @@ local shift_predictor = {
 
 local last_shift_result
 local flask
-local _GamePrint = GamePrint
 
 --- Redefines functions so they would do nothing
 local function redefine_functions()
 	local nil_fn = function() end
 	local fn_to_nil = { "GameCreateParticle", "GlobalsSetValue", "EntityRemoveIngestionStatusEffect",
 		"GameTriggerMusicFadeOutAndDequeueAll", "GameTriggerMusicEvent", "EntityLoad", "EntityAddChild", "GamePrint",
-		"GamePrintImportant", "EntityCreateNew", "EntityAddComponent", "EntityAddComponent2", "ConvertMaterialEverywhere", "print", "GameTextGet", "CrossCall" }
+		"GamePrintImportant", "EntityCreateNew", "EntityAddComponent", "EntityAddComponent2", "ConvertMaterialEverywhere", "print", "GameTextGet",
+		"CrossCall" }
 
 	for i = 1, #fn_to_nil do
 		_G[fn_to_nil[i]] = nil_fn
 	end
+
+	local cell_factory_get_type = CellFactory_GetType
+	--- @param material string
+	--- @return number
+	function CellFactory_GetType(material)
+		if not material then
+			report("Some mod broke fungal shifts, shift number: " ..
+				shift_predictor.current_predict_iter .. ", tried to shift material: " .. tostring(material))
+			return nest
+		end
+		return cell_factory_get_type(material)
+	end
+
+	-- ---@param material_id integer
+	-- ---@param tag string
+	-- ---@return boolean[]
+	-- ---@nodiscard
+	-- function CellFactory_HasTag(material_id, tag)
+
+	-- end
 
 	dofile_once = dofile
 end
@@ -100,7 +131,11 @@ local function do_fungal_shift_with_material(material)
 	last_shift_result = {
 		from = {},
 	}
-	fungal_shift(1, 0, 0, true)
+	local success, result = pcall(fungal_shift, 1, 0, 0, true)
+	if not success then
+		report("bad shift #" .. shift_predictor.current_predict_iter .. ", material: " .. material)
+		return
+	end
 end
 
 --- Checks for failed shifts with flask from
@@ -186,7 +221,7 @@ local function check_for_flask_shift()
 	local last_shift_without_flask = last_shift_result
 
 	-- Shifting with nest
-	do_fungal_shift_with_material(CellFactory_GetType("nest_static"))
+	do_fungal_shift_with_material(nest)
 
 	-- Material "to" was changed to flask, calculating failed shift
 	if last_shift_result.to == flask then
@@ -214,7 +249,7 @@ local function get_shift_materials()
 
 	-- Something failed
 	if not last_shift_result.from[1] or not last_shift_result.to then
-		_GamePrint("couldn't parse shift list")
+		report("couldn't parse shift list #" .. shift_predictor.current_predict_iter)
 	end
 	-- Checking for flasks
 	return check_for_flask_shift()
@@ -237,12 +272,10 @@ local function get_greedy_shift_results(i)
 	shift_predictor.shifts[i].greedy = {}
 	shift_predictor.current_predict_iter = i
 
-	local gold = CellFactory_GetType("gold")
 	do_fungal_shift_with_material(gold)
 	local gold_success = last_shift_result.to == gold
 	shift_predictor.shifts[i].greedy.gold = last_shift_result.to
 
-	local grass = CellFactory_GetType("grass_holy")
 	do_fungal_shift_with_material(grass)
 	local grass_success = last_shift_result.to == grass
 	shift_predictor.shifts[i].greedy.grass = last_shift_result.to
@@ -255,6 +288,10 @@ function shift_predictor:Parse()
 	-- Starting sandbox to not load any globals
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") --- @type ML_sandbox
 	sandbox:start_sandbox()
+
+	nest = CellFactory_GetType("nest_static")
+	gold = CellFactory_GetType("gold")
+	grass = CellFactory_GetType("grass_holy")
 
 	-- Redefining some functions so fungal shift would do nothing
 	redefine_functions()
@@ -309,7 +346,7 @@ function shift_predictor:Parse()
 
 	-- Removing vars
 	last_shift_result = nil --- @diagnostic disable-line: cast-local-type
-	flask = nil --- @diagnostic disable-line: cast-local-type
+	flask = nil          --- @diagnostic disable-line: cast-local-type
 
 	-- Reverting globals to its formal state
 	sandbox:end_sandbox()
