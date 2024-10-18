@@ -90,9 +90,10 @@ function menu:MenuDraw()
 	if self.menu.current_window then self.menu.current_window(self) end
 
 	self:AnimateE()
-	self:Draw9Piece(self.menu.start_x - 6, self.menu.start_y - 1, self.z + 50, self.menu.width + 12,
-		self.menu.pos_y - self.menu.start_y)
-	if self:IsHovered() then self:BlockInput() end
+	self:Draw9Piece(self.menu.start_x - 6, self.menu.start_y - 1, self.z + 50, self.menu.width + 12, self.menu.pos_y - self.menu.start_y)
+	if self:IsHoverBoxHovered(self.menu.start_x - 9, self.menu.start_y - 4, self.menu.width + 18, self.menu.pos_y - self.menu.start_y + 6, true) then
+		self:BlockInput()
+	end
 
 	self:Text(self.menu.start_x, self.menu.start_y, self.menu.header)
 	self:AnimateE()

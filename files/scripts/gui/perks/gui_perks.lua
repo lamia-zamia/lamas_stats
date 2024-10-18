@@ -96,6 +96,9 @@ function pg:PerksDrawWindow()
 	end
 	self.scroll.height_max = self.scroll.height_max - self.perk.y + start_y
 	self:Draw9Piece(self.menu.start_x - 6, self.menu.pos_y + 4, self.z + 49, self.scroll.width + 6, self.perk.y - self.menu.pos_y)
+	if self:IsHoverBoxHovered(self.menu.start_x - 9, self.menu.pos_y + 1, self.scroll.width + 12, self.perk.y - self.menu.pos_y + 12, true) then
+		self:BlockInput()
+	end
 
 	self.perk.scrollbox_start = self.perk.y + 12
 
