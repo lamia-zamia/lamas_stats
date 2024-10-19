@@ -17,7 +17,7 @@ local ui_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") --- @type 
 --- @field private mat material_parser
 --- @field private max_height number
 --- @field private default_tooltip string
-local gui = ui_class:New()
+local gui = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua")
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
 gui.scroll.scroll_img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"

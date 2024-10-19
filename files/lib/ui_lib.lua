@@ -919,4 +919,4 @@ function ui_class:StartFrame()
 	if self.gui_tooltip then GuiStartFrame(self.gui_tooltip) end
 end
 
-return ui_class
+return ui_class:New()
