@@ -48,7 +48,7 @@ function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	self:FungalDrawHeldMaterial(x, y, { 0.7, 0.7, 0.7 })
 	x = x + self.fungal.offset.held + 12
 	x = x + self:FungalText(x, y, T.Is) + 3
-	local material = shift.flask == "from" and shift.to or shift.force_failed.from[1]
+	local material = shift.flask == "from" and shift.to or shift.from[1]
 	self:FungalDrawSingleMaterial(x, y, material)
 
 	self:FungalDrawFutureTooltipShift(y + 10, shift.force_failed, offset)
@@ -83,12 +83,8 @@ end
 --- @nodiscard
 function future:FungalFutureCalculateOffset(shift)
 	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
-	if shift.failed then
-		offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt)
-	end
-	if shift.force_failed then
-		offset_from = self:FungalGetLongestMaterialName(shift.force_failed.from, offset_from, self.alt)
-	end
+	if shift.failed then offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt) end
+	if shift.force_failed then offset_from = self:FungalGetLongestMaterialName(shift.force_failed.from, offset_from, self.alt) end
 	return offset_from
 end
 
@@ -187,9 +183,7 @@ function future:FungalDrawFuture()
 		self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, shift.flask == "to")
 		self.fungal.x = self.fungal.x + self.fungal.offset.to
 
-		if hovered then
-			self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawFutureTooltip, shift, i, self.alt)
-		end
+		if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawFutureTooltip, shift, i, self.alt) end
 
 		self.fungal.y = self.fungal.y + height + 1
 		self.fungal.x = 3
