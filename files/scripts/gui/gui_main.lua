@@ -1,5 +1,3 @@
-local ui_class = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua") --- @type UI_class
-
 --- @class (exact) LS_Gui:UI_class
 --- @field private mod mod_util
 --- @field private show boolean
