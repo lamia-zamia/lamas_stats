@@ -80,63 +80,16 @@ function scanner:PredictAlwaysCast(x, y)
 	if r <= 50 then
 		local p = Random(1, 100)
 		if p <= 86 then
-			card = GetRandomActionWithType(x, y, level, ACTION_TYPE_MODIFIER, 666)
+			card = GetRandomActionWithType(x, y, level, 2, 666)
 		elseif p <= 93 then
-			card = GetRandomActionWithType(x, y, level, ACTION_TYPE_STATIC_PROJECTILE, 666)
+			card = GetRandomActionWithType(x, y, level, 1, 666)
 		elseif p < 100 then
-			card = GetRandomActionWithType(x, y, level, ACTION_TYPE_PROJECTILE, 666)
+			card = GetRandomActionWithType(x, y, level, 0, 666)
 		else
-			card = GetRandomActionWithType(x, y, level, ACTION_TYPE_UTILITY, 666)
+			card = GetRandomActionWithType(x, y, level, 6, 666)
 		end
 	end
 	return card
 end
 
 return scanner
-
--- func = function( entity_perk_item, entity_who_picked, item_name )
-
--- 	local good_cards = { "DAMAGE", "CRITICAL_HIT", "HOMING", "SPEED", "ACID_TRAIL", "SINEWAVE" }
-
--- 	-- "FREEZE", "MATTER_EATER", "ELECTRIC_CHARGE"
--- 	local x, y = EntityGetTransform( entity_perk_item )
--- 	SetRandomSeed( x, y )
-
--- 	local card = good_cards[ Random( 1, #good_cards ) ]
-
--- 	local r = Random( 1, 100 )
--- 	local level = 6
-
--- 	if( r <= 50 ) then
--- 		local p = Random(1,100)
--- 		if( p <= 86 ) then
--- 			card = GetRandomActionWithType( x, y, level, ACTION_TYPE_MODIFIER, 666 )
--- 		elseif( p <= 93 ) then
--- 			card = GetRandomActionWithType( x, y, level, ACTION_TYPE_STATIC_PROJECTILE, 666 )
--- 		elseif ( p < 100 ) then
--- 			card = GetRandomActionWithType( x, y, level, ACTION_TYPE_PROJECTILE, 666 )
--- 		else
--- 			card = GetRandomActionWithType( x, y, level, ACTION_TYPE_UTILITY, 666 )
--- 		end
--- 	end
-
--- 	local wand = find_the_wand_held( entity_who_picked )
-
--- 	if ( wand ~= NULL_ENTITY ) then
--- 		local comp = EntityGetFirstComponentIncludingDisabled( wand, "AbilityComponent" )
-
--- 		if ( comp ~= nil ) then
--- 			local deck_capacity = ComponentObjectGetValue( comp, "gun_config", "deck_capacity" )
--- 			local deck_capacity2 = EntityGetWandCapacity( wand )
-
--- 			local always_casts = deck_capacity - deck_capacity2
-
--- 			if ( always_casts < 4 ) then
--- 				AddGunActionPermanent( wand, card )
--- 			else
--- 				GamePrintImportant( "$log_always_cast_failed", "$logdesc_always_cast_failed" )
--- 			end
--- 		end
--- 	end
--- end,
--- },
