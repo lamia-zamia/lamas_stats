@@ -21,7 +21,7 @@ local shift_predictor = {
 	max_shifts = 20,
 	current_predict_iter = 1,
 	shifts = {},
-	is_using_new_shift = false
+	is_using_new_shift = false,
 }
 
 local last_shift_result
@@ -30,10 +30,24 @@ local flask
 --- Redefines functions so they would do nothing
 local function redefine_functions()
 	local nil_fn = function() end
-	local fn_to_nil = { "GameCreateParticle", "GlobalsSetValue", "EntityRemoveIngestionStatusEffect",
-		"GameTriggerMusicFadeOutAndDequeueAll", "GameTriggerMusicEvent", "EntityLoad", "EntityAddChild", "GamePrint",
-		"GamePrintImportant", "EntityCreateNew", "EntityAddComponent", "EntityAddComponent2", "ConvertMaterialEverywhere", "print", "GameTextGet",
-		"CrossCall" }
+	local fn_to_nil = {
+		"GameCreateParticle",
+		"GlobalsSetValue",
+		"EntityRemoveIngestionStatusEffect",
+		"GameTriggerMusicFadeOutAndDequeueAll",
+		"GameTriggerMusicEvent",
+		"EntityLoad",
+		"EntityAddChild",
+		"GamePrint",
+		"GamePrintImportant",
+		"EntityCreateNew",
+		"EntityAddComponent",
+		"EntityAddComponent2",
+		"ConvertMaterialEverywhere",
+		"print",
+		"GameTextGet",
+		"CrossCall",
+	}
 
 	for i = 1, #fn_to_nil do
 		_G[fn_to_nil[i]] = nil_fn
@@ -44,8 +58,12 @@ local function redefine_functions()
 	--- @return number
 	function CellFactory_GetType(material)
 		if not material then
-			report("Some mod broke fungal shifts, shift number: " ..
-				shift_predictor.current_predict_iter .. ", tried to shift material: " .. tostring(material))
+			report(
+				"Some mod broke fungal shifts, shift number: "
+					.. shift_predictor.current_predict_iter
+					.. ", tried to shift material: "
+					.. tostring(material)
+			)
 			return nest
 		end
 		return cell_factory_get_type(material)
@@ -61,9 +79,7 @@ local function determine_cooldown()
 
 	local globalsGetValue = function(key)
 		-- Returning frame 180000 - frame for checks
-		if key == "fungal_shift_last_frame" then
-			return 180000 - frame
-		end
+		if key == "fungal_shift_last_frame" then return 180000 - frame end
 		-- Returning iteration 5000 for it to exit after frame check
 		if key == "fungal_shift_iteration" then
 			passed_frame_check = true
@@ -168,8 +184,7 @@ local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 	-- If there's 2 or more from materials - shift can not fail
 	if from_count > 1 then
 		-- Chosing longest "from" list, otherwise it could exclude some results from group (for example toxic sludge, poison - > toxic sludge)
-		last_shift_without_flask.from = from_count > #last_shift_result.from and last_shift_without_flask.from or
-			last_shift_result.from
+		last_shift_without_flask.from = from_count > #last_shift_result.from and last_shift_without_flask.from or last_shift_result.from
 		last_shift_without_flask.flask = "to"
 		return last_shift_without_flask
 
@@ -212,13 +227,9 @@ local function check_for_flask_shift()
 	do_fungal_shift_with_material(nest)
 
 	-- Material "to" was changed to flask, calculating failed shift
-	if last_shift_result.to == flask then
-		return check_for_failed_shift_with_flask_to(last_shift_without_flask)
-	end
+	if last_shift_result.to == flask then return check_for_failed_shift_with_flask_to(last_shift_without_flask) end
 	-- Material "from" was changed to flask, calculating failed shift
-	if last_shift_result.from[1] == flask then
-		return check_for_failed_shift_with_flask_from(last_shift_without_flask)
-	end
+	if last_shift_result.from[1] == flask then return check_for_failed_shift_with_flask_from(last_shift_without_flask) end
 
 	-- Shift wasn't changed, returning as is
 	return last_shift_result
@@ -248,7 +259,7 @@ end
 local function is_pouch_shift_possible()
 	local file = "data/scripts/magic/fungal_shift.lua"
 	local content = ModTextFileGetContent(file)
-	if content:find("\"powder_stash\"") then return true end
+	if content:find('"powder_stash"') then return true end
 	return false
 end
 
@@ -295,9 +306,7 @@ function shift_predictor:Parse()
 	end
 	GameGetFrameNum = gameGetFrameNum
 	local globalsGetValue = function(key, default)
-		if key == "fungal_shift_iteration" then
-			return shift_predictor.current_predict_iter - 1
-		end
+		if key == "fungal_shift_iteration" then return shift_predictor.current_predict_iter - 1 end
 		return default
 	end
 	GlobalsGetValue = globalsGetValue
@@ -334,7 +343,7 @@ function shift_predictor:Parse()
 
 	-- Removing vars
 	last_shift_result = nil --- @diagnostic disable-line: cast-local-type
-	flask = nil          --- @diagnostic disable-line: cast-local-type
+	flask = nil --- @diagnostic disable-line: cast-local-type
 
 	-- Reverting globals to its formal state
 	sandbox:end_sandbox()

@@ -3,8 +3,8 @@
 local kys = {
 	kys = {
 		show = false,
-		hide_after = true
-	}
+		hide_after = true,
+	},
 }
 
 --- Draws kys window

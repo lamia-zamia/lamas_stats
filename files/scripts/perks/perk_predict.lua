@@ -11,7 +11,7 @@ local predict = {
 	perk_index = 1,
 	reroll_index = 1,
 	mountain_index = 1,
-	mountain_visits = 0
+	mountain_visits = 0,
 }
 
 local globals_get_value
@@ -52,15 +52,9 @@ end
 function predict:Init()
 	globals_get_value = GlobalsGetValue
 	function GlobalsGetValue(key, default_value)
-		if key == "TEMPLE_NEXT_PERK_INDEX" then
-			return predict.perk_index
-		end
-		if key == "HOLY_MOUNTAIN_VISITS" then
-			return predict.mountain_visits
-		end
-		if key == "TEMPLE_REROLL_PERK_INDEX" then
-			return predict.reroll_index
-		end
+		if key == "TEMPLE_NEXT_PERK_INDEX" then return predict.perk_index end
+		if key == "HOLY_MOUNTAIN_VISITS" then return predict.mountain_visits end
+		if key == "TEMPLE_REROLL_PERK_INDEX" then return predict.reroll_index end
 		return globals_get_value(key, default_value)
 	end
 
@@ -82,9 +76,7 @@ function predict:Init()
 	--- @return entity_id[]
 	function EntityGetWithTag(tag)
 		local entities = ENTITY_GET_WITH_TAG(tag)
-		if tag == "perk" then
-			return #entities > 0 and entities or predict.future_perks[1]
-		end
+		if tag == "perk" then return #entities > 0 and entities or predict.future_perks[1] end
 		return entities
 	end
 

@@ -39,15 +39,18 @@ end
 --- @param fn function
 function pg:PerksAddButton(text, fn)
 	if self.perk.current_window == fn then
-		self:DrawButton(self.perk.x, self.perk.y, self.z - 1, text, false,
-			"mods/lamas_stats/files/gfx/ui_9piece_button_alt.png")
-		if self:IsHovered() and self:IsLeftClicked() then
-			self.perk.current_window = nil
-		end
+		self:DrawButton(self.perk.x, self.perk.y, self.z - 1, text, false, "mods/lamas_stats/files/gfx/ui_9piece_button_alt.png")
+		if self:IsHovered() and self:IsLeftClicked() then self.perk.current_window = nil end
 	else
-		self:DrawButton(self.perk.x, self.perk.y, self.z - 1, text, true,
+		self:DrawButton(
+			self.perk.x,
+			self.perk.y,
+			self.z - 1,
+			text,
+			true,
 			"mods/lamas_stats/files/gfx/ui_9piece_button_alt.png",
-			"mods/lamas_stats/files/gfx/ui_9piece_button_alt_highlight.png")
+			"mods/lamas_stats/files/gfx/ui_9piece_button_alt_highlight.png"
+		)
 		if self:IsHovered() and self:IsLeftClicked() then
 			self:ScrollBoxReset()
 			self.scroll.height_max = 200

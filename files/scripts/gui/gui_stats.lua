@@ -28,7 +28,7 @@ local stats = {
 		x = 0,
 		y = 0,
 		enabled = false,
-	}
+	},
 }
 
 --- Shows tooltip and colors text to gray
@@ -36,9 +36,7 @@ local stats = {
 --- @param width number
 --- @param tooltip fun(self:table)
 function stats:IfStatEntryHovered(width, tooltip)
-	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, width, 11, true) then
-		self:ShowTooltipCenteredX(0, 20, tooltip)
-	end
+	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, width, 11, true) then self:ShowTooltipCenteredX(0, 20, tooltip) end
 end
 
 --- Draws fungal cooldown if in cooldown
@@ -92,10 +90,8 @@ function stats:StatsPositionTooltip()
 	self:Text(0, 0, world_string .. " - " .. position_string)
 
 	if self.stats.position_pw_east < 0 or self.stats.position_pw_west > 0 then
-		self:Text(0, 0,
-			T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. self.stats.position_pw_west)
-		self:Text(0, 0,
-			T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. -self.stats.position_pw_east)
+		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. self.stats.position_pw_west)
+		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. -self.stats.position_pw_east)
 	end
 end
 
@@ -164,7 +160,7 @@ function stats:StatsTimeTooltip()
 		T.lamas_stats_hearts_find .. " " .. StatsGetValue("heart_containers"),
 		T.lamas_stats_projectiles_shot .. " " .. StatsGetValue("projectiles_shot"),
 		T.lamas_stats_kicks .. " " .. StatsGetValue("kicks"),
-		T.lamas_stats_damage_taken .. " " .. math.ceil(StatsGetValue("damage_taken") * 25)
+		T.lamas_stats_damage_taken .. " " .. math.ceil(StatsGetValue("damage_taken") * 25),
 	}
 	local longest = self:GetLongestText(stats_list, "stats_list")
 	self:TextCentered(0, 0, stats_list[1], longest)
@@ -199,7 +195,7 @@ function stats:StatsDraw()
 		self.StatsTime,
 		self.StatsKills,
 		self.StatsPosition,
-		self.StatsBiome
+		self.StatsBiome,
 	}
 
 	local count = #stat_fns

@@ -42,7 +42,7 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_kys.lua",
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks.lua",
-	"mods/lamas_stats/files/scripts/gui/gui_config.lua"
+	"mods/lamas_stats/files/scripts/gui/gui_config.lua",
 }
 
 for i = 1, #modules do
@@ -57,9 +57,7 @@ end
 --- @private
 function gui:FetchData()
 	self.player_x, self.player_y = ENTITY_GET_TRANSFORM(self.player)
-	if GameGetFrameNum() % 60 == 0 then
-		self:ScanPWPosition()
-	end
+	if GameGetFrameNum() % 60 == 0 then self:ScanPWPosition() end
 	local shift_num = self.mod:GetGlobalNumber("fungal_shift_iteration", 0) + 1
 	if self.fs.current_shift ~= shift_num then
 		self.fs.current_shift = shift_num
@@ -118,9 +116,7 @@ end
 --- Main function to draw gui
 function gui:Loop()
 	self:StartFrame()
-	if InputIsKeyJustDown(self.hotkey) then
-		self.show = not self.show
-	end
+	if InputIsKeyJustDown(self.hotkey) then self.show = not self.show end
 	self.player = ENTITY_GET_WITH_TAG("player_unit")[1]
 
 	if not self.show or not self.player or GameIsInventoryOpen() then return end

@@ -28,7 +28,10 @@ end
 --- @return boolean
 --- @nodiscard
 function helper:FungalIsHoverBoxHovered(x, y, height)
-	if y + height / 2 > 0 and y + height / 2 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, height, true)
+	if
+		y + height / 2 > 0
+		and y + height / 2 < self.scroll.height_max
+		and self:IsHoverBoxHovered(self.menu.start_x + x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, height, true)
 	then
 		return true
 	end
@@ -67,9 +70,7 @@ end
 --- @param material_type integer
 function helper:FungalDrawIcon(x, y, material_type)
 	local data = self.mat:GetData(material_type)
-	if data.color then
-		self:FungalPotionColor(data.color)
-	end
+	if data.color then self:FungalPotionColor(data.color) end
 	self:Image(x, y + 1, data.icon)
 end
 
@@ -130,9 +131,7 @@ function helper:FungalSanitizeFromShifts(from)
 	local arr = {}
 	for i = 1, #from do
 		local data = self.mat:GetData(from[i])
-		if not data.static then
-			arr[#arr + 1] = from[i]
-		end
+		if not data.static then arr[#arr + 1] = from[i] end
 	end
 	if #arr < 1 then return from end
 	return arr
@@ -180,12 +179,8 @@ function helper:FungalGetLongestTextInShift(shift, max_from, max_to, ignore_flas
 			max_from = math.max(self.fungal.offset.held + 9, max_from)
 		end
 	end
-	if shift.to then
-		max_to = math.max(max_to, self:FungalGetMaterialNameLength(shift.to, draw_id))
-	end
-	if shift.from then
-		max_from = self:FungalGetLongestMaterialName(shift.from, max_from, draw_id)
-	end
+	if shift.to then max_to = math.max(max_to, self:FungalGetMaterialNameLength(shift.to, draw_id)) end
+	if shift.from then max_from = self:FungalGetLongestMaterialName(shift.from, max_from, draw_id) end
 	return max_from, max_to
 end
 
@@ -223,8 +218,10 @@ end
 function helper:FungalShiftListChanged()
 	self.fs:AnalysePastShifts()
 	self:FungalSetFungalListOffset()
-	self.fungal.width = math.max(self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3,
-		self.fungal.offset.past + self.fungal.offset.future)
+	self.fungal.width = math.max(
+		self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3,
+		self.fungal.offset.past + self.fungal.offset.future
+	)
 end
 
 --- Gets longest material name and sets it's width
@@ -237,8 +234,10 @@ function helper:FungalUpdateWindowDims()
 
 	self:FungalSetFungalListOffset()
 
-	self.fungal.width = math.max(self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3,
-		self.fungal.offset.past + self.fungal.offset.future)
+	self.fungal.width = math.max(
+		self.fungal.offset.shift + self.fungal.offset.from + 30 + self.fungal.offset.to + 3,
+		self.fungal.offset.past + self.fungal.offset.future
+	)
 end
 
 --- Fetches settings

@@ -30,8 +30,7 @@ function pg:PerksDrawRerollPerks()
 end
 
 function pg:PerksDrawRerollPerkScrollBox()
-	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3,
-		self.PerksDrawRerollPerks)
+	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3, self.PerksDrawRerollPerks)
 end
 
 return pg

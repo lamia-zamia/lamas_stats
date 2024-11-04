@@ -1,6 +1,6 @@
 --- @class mod_util
 local util = {
-	mod_prfx = "lamas_stats."
+	mod_prfx = "lamas_stats.",
 }
 
 --- Returns string setting

@@ -7,7 +7,7 @@
 --- @field indexed integer
 local reader = {
 	materials = {},
-	indexed = 1
+	indexed = 1,
 }
 
 function reader:GetShiftedMaterials()
@@ -20,7 +20,7 @@ function reader:GetShiftedMaterials()
 	for i = already_readed + 1, #past_materials, 2 do
 		self.materials[#self.materials + 1] = {
 			from = CellFactory_GetType(past_materials[i]),
-			to = CellFactory_GetType(past_materials[i + 1])
+			to = CellFactory_GetType(past_materials[i + 1]),
 		}
 	end
 end

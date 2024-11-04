@@ -1,5 +1,4 @@
-local translations =
-{
+local translations = {
 	["English"] = {
 		lamas_stat_current = "Current",
 		lamas_stats_progress_kills = "Kills:",
@@ -117,7 +116,7 @@ local translations =
 		enable_nearby_perks = "Показывать перки рядом",
 		enable_nearby_lottery = "Показывать лотерею",
 		enable_nearby_always_cast = "Предсказать постоянное заклинание",
-		config = "Настройки"
+		config = "Настройки",
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -176,33 +175,28 @@ local translations =
 		enable_nearby_perks = "近くのパークを表示",
 		enable_nearby_lottery = "宝くじアイコンを表示",
 		enable_nearby_always_cast = "常時キャストを予測",
-		config = "構成"
+		config = "構成",
 	},
 }
 
-local t = setmetatable({},
-	{
-		__index = function(t, k)
-			local current_lang = GameTextGetTranslatedOrNot("$current_language")
-			if current_lang == "русский(Neonomi)" or current_lang == "русский(Сообщество)" then --compatibility with custom langs
-				current_lang = "русский"
-			end
-			if current_lang == "自然な日本語" then
-				current_lang = "日本語"
-			end
-			if not translations[current_lang] then
-				current_lang = "English"
-			end
-			if not translations[current_lang][k] then
-				print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, current_lang))
-				current_lang = "English"
-			end
-			if translations[current_lang][k] then
-				return translations[current_lang][k]
-			else
-				return "ERROR"
-			end
+local t = setmetatable({}, {
+	__index = function(t, k)
+		local current_lang = GameTextGetTranslatedOrNot("$current_language")
+		if current_lang == "русский(Neonomi)" or current_lang == "русский(Сообщество)" then --compatibility with custom langs
+			current_lang = "русский"
 		end
-	})
+		if current_lang == "自然な日本語" then current_lang = "日本語" end
+		if not translations[current_lang] then current_lang = "English" end
+		if not translations[current_lang][k] then
+			print(("ERROR: No translation found for key '%s' in language '%s'"):format(k, current_lang))
+			current_lang = "English"
+		end
+		if translations[current_lang][k] then
+			return translations[current_lang][k]
+		else
+			return "ERROR"
+		end
+	end,
+})
 
 return t

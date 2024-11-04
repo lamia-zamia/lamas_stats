@@ -79,9 +79,7 @@ do -- helpers
 	--- @param all boolean reset all
 	function U.set_default(all)
 		for setting, value in pairs(D) do
-			if U.get_setting(setting) == nil or all then
-				U.set_setting(setting, value)
-			end
+			if U.get_setting(setting) == nil or all then U.set_setting(setting, value) end
 		end
 	end
 
@@ -98,9 +96,7 @@ do -- helpers
 
 	function U.pending_input()
 		for code, _ in pairs(U.keycodes) do
-			if InputIsKeyJustDown(code) then
-				return code
-			end
+			if InputIsKeyJustDown(code) then return code end
 		end
 	end
 
@@ -110,9 +106,7 @@ do -- helpers
 		local setting_list = {}
 		for i = 0, count do
 			local setting_id = ModSettingGetAtIndex(i)
-			if setting_id and setting_id:find("^lamas_stats%.") then
-				setting_list[#setting_list + 1] = setting_id
-			end
+			if setting_id and setting_id:find("^lamas_stats%.") then setting_list[#setting_list + 1] = setting_id end
 		end
 		for i = 1, #setting_list do
 			ModSettingRemove(setting_list[i])
@@ -126,9 +120,7 @@ end
 -- ##########		GUI Helpers		##########
 -- ###########################################
 
-local G = {
-
-}
+local G = {}
 do -- gui helpers
 	function G.button_options(gui)
 		GuiOptionsAddForNextWidget(gui, GUI_OPTION.ClickCancelsDoubleClick)
@@ -170,9 +162,7 @@ do -- gui helpers
 	--- @param value setting_value
 	--- @param default setting_value
 	function G.on_clicks(setting_name, value, default)
-		if InputIsMouseButtonJustDown(1) then
-			U.set_setting(setting_name, value)
-		end
+		if InputIsMouseButtonJustDown(1) then U.set_setting(setting_name, value) end
 		if InputIsMouseButtonJustDown(2) then
 			GamePlaySound("ui", "ui/button_click", 0, 0)
 			U.set_setting(setting_name, default)
@@ -193,7 +183,7 @@ do -- gui helpers
 		GuiImageNinePiece(gui, id(), x + 2, y, offset_w, 10, 10, U.empty, U.empty) -- hover box
 		local _, _, hovered = GuiGetPreviousWidgetInfo(gui)
 		G.tooltip(gui, setting_name)
-		
+
 		GuiZSetForNextWidget(gui, 1)
 		GuiImageNinePiece(gui, id(), x + 2, y + 2, 6, 6) -- check box
 
@@ -210,9 +200,7 @@ do -- gui helpers
 			G.yellow_if_hovered(gui, hovered)
 		end
 		GuiText(gui, 0, 0, text)
-		if hovered then
-			G.on_clicks(setting_name, not value, D[setting_name])
-		end
+		if hovered then G.on_clicks(setting_name, not value, D[setting_name]) end
 	end
 
 	--- @param gui gui
@@ -225,9 +213,8 @@ do -- gui helpers
 		local w = GuiGetTextDimensions(gui, setting.ui_name)
 		local value = tonumber(U.get_setting_next(setting.id)) or setting.value_default
 		local multiplier = setting.value_display_multiplier or 1
-		local value_new = GuiSlider(gui, id(), U.offset - w + 6, 0, "", value, setting
-			.value_min,
-			setting.value_max, setting.value_default, multiplier, " ", 64)
+		local value_new =
+			GuiSlider(gui, id(), U.offset - w + 6, 0, "", value, setting.value_min, setting.value_max, setting.value_default, multiplier, " ", 64)
 		GuiColorSetForNextWidget(gui, 0.81, 0.81, 0.81, 1)
 		local format = setting.format or ""
 		GuiText(gui, 3, 0, tostring(math.floor(value * multiplier)) .. format)
@@ -264,27 +251,21 @@ do -- gui helpers
 			end
 		end
 
-		if description then
-			GuiTooltip(gui, description, "")
-		end
+		if description then GuiTooltip(gui, description, "") end
 	end
 end
 -- ###########################################
 -- ########		Settings GUI		##########
 -- ###########################################
 
-local S = {
-
-}
+local S = {}
 do -- Settings GUI
 	--- @param setting mod_setting_number
 	--- @param gui gui
 	function S.mod_setting_number_integer(_, gui, _, _, setting)
 		local value, value_new = G.mod_setting_number(gui, setting)
 		value_new = math.floor(value_new + 0.5)
-		if value ~= value_new then
-			U.set_setting(setting.id, value_new)
-		end
+		if value ~= value_new then U.set_setting(setting.id, value_new) end
 	end
 
 	function S.mod_setting_better_boolean(_, gui, _, _, setting)
@@ -323,9 +304,7 @@ do -- Settings GUI
 		if hovered then
 			GuiColorSetForNextWidget(gui, 1, 1, 0.7, 1)
 			GuiTooltip(gui, T.Hotkey_d, GameTextGetTranslatedOrNot("$menuoptions_reset_keyboard"))
-			if InputIsMouseButtonJustDown(1) then
-				U.waiting_for_input = true
-			end
+			if InputIsMouseButtonJustDown(1) then U.waiting_for_input = true end
 			if InputIsMouseButtonJustDown(2) then
 				GamePlaySound("ui", "ui/button_click", 0, 0)
 				U.set_setting("input_key", D.input_key)
@@ -343,9 +322,7 @@ do -- Settings GUI
 			GuiText(gui, mod_setting_group_x_offset, 0, "ERR")
 			return
 		end
-		if G.button(gui, mod_setting_group_x_offset, T.reset, { 1, 0.4, 0.4 }) then
-			fn()
-		end
+		if G.button(gui, mod_setting_group_x_offset, T.reset, { 1, 0.4, 0.4 }) then fn() end
 	end
 end
 
@@ -353,8 +330,7 @@ end
 -- ########		Translations		##########
 -- ###########################################
 
-local translations =
-{
+local translations = {
 	["English"] = {
 		Hotkey = "Hotkey",
 		Hotkey_d = "Hotkey to enable overlay",
@@ -381,7 +357,7 @@ local translations =
 		overlay_y = "Позиция Y оверлея",
 		max_height = "Макс высота",
 		reset_settings = "Сбросить настройки",
-		reset = "Сбросить"
+		reset = "Сбросить",
 	},
 	["日本語"] = {
 		Hotkey = "ホットキー",
@@ -395,7 +371,7 @@ local translations =
 		overlay_y = "オーバーレイのY位置",
 		max_height = "最高高さ",
 		reset_settings = "設定をリセット",
-		reset = "リセット"
+		reset = "リセット",
 	},
 }
 
@@ -405,14 +381,10 @@ local mt = {
 		if currentLang == "русский(Neonomi)" or currentLang == "русский(Сообщество)" then -- compatibility with custom langs
 			currentLang = "русский"
 		end
-		if currentLang == "自然な日本語" then
-			currentLang = "日本語"
-		end
-		if not translations[currentLang] then
-			currentLang = "English"
-		end
+		if currentLang == "自然な日本語" then currentLang = "日本語" end
+		if not translations[currentLang] then currentLang = "English" end
 		return translations[currentLang][k]
-	end
+	end,
 }
 setmetatable(T, mt)
 
@@ -441,7 +413,7 @@ D = {
 	stats_show_fungal_cooldown = true,
 	enable_nearby_perks = true,
 	enable_nearby_lottery = true,
-	enable_nearby_always_cast = true
+	enable_nearby_always_cast = true,
 }
 
 local function build_settings()
@@ -459,7 +431,7 @@ local function build_settings()
 			id = "enable_at_start",
 			ui_fn = S.mod_setting_better_boolean,
 			ui_name = T.StartEnabled,
-			checkboxes = { "overlay_enabled", "menu_enabled" }
+			checkboxes = { "overlay_enabled", "menu_enabled" },
 		},
 		{
 			id = "overlay_x",
@@ -484,7 +456,7 @@ local function build_settings()
 			value_default = D.max_height,
 			value_min = 50,
 			value_max = 250,
-			ui_fn = S.mod_setting_number_integer
+			ui_fn = S.mod_setting_number_integer,
 		},
 		{
 			category_id = "reset_settings_cat",
@@ -492,13 +464,12 @@ local function build_settings()
 			foldable = true,
 			_folded = true,
 
-			settings =
-			{
+			settings = {
 				{
 					id = "reset_settings",
 					not_setting = true,
 					ui_name = T.ResetSettings,
-					ui_fn = S.reset_stuff
+					ui_fn = S.reset_stuff,
 				},
 			},
 		},
@@ -513,15 +484,11 @@ end
 
 --- @param init_scope number
 function ModSettingsUpdate(init_scope)
-	if U.get_setting("overlay_enabled") == nil then
-		U.reset_settings()
-	end
+	if U.get_setting("overlay_enabled") == nil then U.reset_settings() end
 	U.set_default(false)
 	U.waiting_for_input = false
 	local current_language = GameTextGetTranslatedOrNot("$current_language")
-	if current_language ~= current_language_last_frame then
-		mod_settings = build_settings()
-	end
+	if current_language ~= current_language_last_frame then mod_settings = build_settings() end
 	current_language_last_frame = current_language
 end
 

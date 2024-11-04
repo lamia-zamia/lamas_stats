@@ -19,8 +19,8 @@ local pg = {
 		width = 0,
 		scrollbox_start = 0,
 		current_children_entities = 0,
-		reroll_count = 0
-	}
+		reroll_count = 0,
+	},
 }
 
 local modules = {
@@ -28,7 +28,7 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_current.lua",
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_nearby.lua",
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_future.lua",
-	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_reroll.lua"
+	"mods/lamas_stats/files/scripts/gui/perks/gui_perks_reroll.lua",
 }
 
 for i = 1, #modules do
@@ -47,8 +47,7 @@ pg.perk.current_window = pg.PerksDrawCurrentPerkScrollBox
 --- @return boolean
 --- @nodiscard
 function pg:PerksIsHoverBoxHovered(x, y)
-	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start + y, 16, 16)
-	then
+	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start + y, 16, 16) then
 		return true
 	end
 	return false
@@ -66,9 +65,7 @@ function pg:PerksDrawPerk(x, y, hovered, perk, fn, ...)
 	local off = hovered and 1.2 or 0
 	self:Image(x - off, y - off, perk.perk_icon, 1, hovered and 1.15 or 1)
 	self.tooltip_reset = false
-	if hovered then
-		self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", fn, ...)
-	end
+	if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", fn, ...) end
 end
 
 --- Draws stats and perks window
@@ -118,7 +115,11 @@ function pg:CheckForUpdates(current_nearby_perks)
 	self.perks.nearby:Scan()
 	local current_children_entities = EntityGetAllChildren(self.player) or {}
 	local current_children_count = #current_children_entities
-	if current_nearby_perks ~= #self.perks.nearby.entities or current_children_count ~= self.perk.current_children_entities or reroll_count ~= self.perk.reroll_count then
+	if
+		current_nearby_perks ~= #self.perks.nearby.entities
+		or current_children_count ~= self.perk.current_children_entities
+		or reroll_count ~= self.perk.reroll_count
+	then
 		self:PerksUpdate()
 	end
 	self:PerksSetWidth(current_nearby_perks)

@@ -15,7 +15,6 @@ end
 --- ?
 function OnPlayerSpawned()
 	gui:PostWorldInit()
-	-- dofile_once("mods/lamas_stats/files/perks_vanilla_icons.lua")
 end
 
 --- Fetch settings

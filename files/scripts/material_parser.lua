@@ -1,4 +1,4 @@
-local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua")                   --- @type nxml
+local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua") --- @type nxml
 local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") --- @type error_reporter
 nxml.error_handler = function() end
 
@@ -39,12 +39,7 @@ end
 --- @param a number
 --- @return integer color
 local function color_abgr_merge(r, g, b, a)
-	return bit.bor(
-		bit.band(r, 0xFF),
-		bit.lshift(bit.band(g, 0xFF), 8),
-		bit.lshift(bit.band(b, 0xFF), 16),
-		bit.lshift(bit.band(a, 0xFF), 24)
-	)
+	return bit.bor(bit.band(r, 0xFF), bit.lshift(bit.band(g, 0xFF), 8), bit.lshift(bit.band(b, 0xFF), 16), bit.lshift(bit.band(a, 0xFF), 24))
 end
 
 --- Normalize colors
@@ -71,7 +66,7 @@ local function create_virtual_icon(name, material, png)
 		local text_y = y
 		if y >= material_img_h then text_y = y - material_img_h end -- if texture is too small
 		for x = 0, png_img_w do
-			local text_x = x                                  -- if texture is too small
+			local text_x = x -- if texture is too small
 			if x >= material_img_w then text_x = x - material_img_w end
 			local color1 = ModImageGetPixel(png_img_id, x, y)
 			local color2 = ModImageGetPixel(material_img_id, text_x, text_y)
@@ -91,19 +86,16 @@ local function abgr_to_rgb(color)
 	return { r = r / 255, g = g / 255, b = b / 255, a = a / 255 }
 end
 
-
 --- @param element element
 --- @return string
 local function get_icon(element)
 	local graphics = element:first_of("Graphics")
 	if graphics and graphics.attr.texture_file and graphics.attr.texture_file ~= "" then
 		if element.attr.tags and element.attr.tags:find("static") then
-			return create_virtual_icon(element.attr.name, graphics.attr.texture_file,
-				"mods/lamas_stats/files/gfx/solid_static.png")
+			return create_virtual_icon(element.attr.name, graphics.attr.texture_file, "mods/lamas_stats/files/gfx/solid_static.png")
 		end
 		if element.attr.liquid_sand == "1" then
-			return create_virtual_icon(element.attr.name, graphics.attr.texture_file,
-				"mods/lamas_stats/files/gfx/pile.png")
+			return create_virtual_icon(element.attr.name, graphics.attr.texture_file, "mods/lamas_stats/files/gfx/pile.png")
 		end
 	end
 	return "data/items_gfx/potion.png"
@@ -114,9 +106,7 @@ end
 --- @return string
 local function get_color(element)
 	local graphics = element:first_of("Graphics")
-	if graphics and graphics.attr.color then
-		return graphics.attr.color
-	end
+	if graphics and graphics.attr.color then return graphics.attr.color end
 	return element.attr.wang_color
 end
 
@@ -131,7 +121,7 @@ local function parse_element(element)
 		ui_name = element.attr.ui_name,
 		icon = material_icon,
 		color = material_color,
-		static = not not element.attr.name:find("_static$")
+		static = not not element.attr.name:find("_static$"),
 	}
 end
 
@@ -145,7 +135,7 @@ local function parse_file(file)
 	end
 	local xml = result
 
-	for _, element_name in ipairs { "CellData", "CellDataChild" } do
+	for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
 		for elem in xml:each_of(element_name) do
 			parse_element(elem)
 		end
@@ -164,7 +154,7 @@ function mat:Parse()
 		ui_name = "???",
 		icon = "data/items_gfx/potion_normals.png",
 		color = false,
-		static = false
+		static = false,
 	}
 
 	nxml = nil --- @diagnostic disable-line: cast-local-type

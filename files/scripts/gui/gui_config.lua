@@ -24,20 +24,20 @@ local config = {
 				"stats_showkills",
 				"stats_show_player_pos",
 				"stats_position_expanded",
-				"stats_show_player_biome"
+				"stats_show_player_biome",
 			},
 			Perks = {
 				"enable_nearby_perks",
 				"enable_nearby_lottery",
 				"enable_nearby_always_cast",
-			}
+			},
 		},
 		unfolded = {
 			Menu = true,
 			Stats = true,
-			Perks = true
-		}
-	}
+			Perks = true,
+		},
+	},
 }
 
 function config:ConfigIsHovered()
@@ -54,9 +54,7 @@ function config:ConfigDrawCategory(category)
 	self:Text(0, self.config.y, category_text)
 	if hovered then self:Color(1, 1, 0.7) end
 	self:Image(dim, self.config.y, img)
-	if hovered and self:IsLeftClicked() then
-		self.config.unfolded[category] = not self.config.unfolded[category]
-	end
+	if hovered and self:IsLeftClicked() then self.config.unfolded[category] = not self.config.unfolded[category] end
 end
 
 function config:ConfigDrawConfig(entry)
@@ -66,8 +64,14 @@ function config:ConfigDrawConfig(entry)
 	local hovered = self:ConfigIsHovered()
 	if hovered then self:ColorYellow() end
 	self:Text(8, self.config.y, text)
-	self:Draw9Piece(self.menu.start_x + text_dim + 9, self.menu.pos_y + self.config.y + 9, self.z, 6, 6,
-		hovered and self.buttons.img_hl or self.buttons.img)
+	self:Draw9Piece(
+		self.menu.start_x + text_dim + 9,
+		self.menu.pos_y + self.config.y + 9,
+		self.z,
+		6,
+		6,
+		hovered and self.buttons.img_hl or self.buttons.img
+	)
 	if value then
 		self:Color(0, 0.8, 0)
 		self:Text(text_dim + 13, self.config.y, "V")
@@ -94,9 +98,7 @@ function config:ConfigDraw()
 	for category, _ in pairs(self.config.config_list) do
 		self:ConfigDrawCategory(category)
 		self.config.y = self.config.y + 10
-		if self.config.unfolded[category] then
-			self:ConfigDrawConfigs(category)
-		end
+		if self.config.unfolded[category] then self:ConfigDrawConfigs(category) end
 	end
 	self.scroll.width = math.max(self.menu.width + 6, self.config.width)
 	self:Text(0, self.config.y + self.scroll.y + 10, "")

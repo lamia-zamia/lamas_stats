@@ -6,7 +6,7 @@
 --- @class action_parser
 --- @field data {[string]:action_data}
 local actions_data = {
-	data = {}
+	data = {},
 }
 
 --- Add perks to the list
@@ -14,7 +14,7 @@ local function add_action(action_data)
 	actions_data.data[action_data.id] = {
 		name = action_data.name or "",
 		description = action_data.description or "",
-		sprite = action_data.sprite
+		sprite = action_data.sprite,
 	}
 end
 
@@ -37,7 +37,7 @@ function actions_data:Parse()
 	actions_data.data["lamas_stats_unknown"] = {
 		name = "???",
 		description = "???",
-		sprite = "data/items_gfx/perk.png"
+		sprite = "data/items_gfx/perk.png",
 	}
 
 	-- Reverting globals to its formal state

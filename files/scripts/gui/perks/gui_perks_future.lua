@@ -30,8 +30,7 @@ function pg:PerksDrawFuturePerks()
 end
 
 function pg:PerksDrawFuturePerkScrollBox()
-	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3,
-		self.PerksDrawFuturePerks)
+	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3, self.PerksDrawFuturePerks)
 end
 
 return pg

@@ -36,7 +36,9 @@ function scanner:ParseEntities()
 			spawn_order = i,
 		}
 	end
-	if #parsed > 1 then table.sort(parsed, function(a, b) return a.x < b.x end) end
+	if #parsed > 1 then table.sort(parsed, function(a, b)
+		return a.x < b.x
+	end) end
 	self.data = parsed
 end
 

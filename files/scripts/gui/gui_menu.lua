@@ -25,8 +25,8 @@ local menu = {
 		perks = false,
 		kys = false,
 		current_window = nil,
-		previous_window = nil
-	}
+		previous_window = nil,
+	},
 }
 
 --- Draws tooltip near menu
@@ -53,9 +53,7 @@ end
 function menu:MenuAddButton(text, fn, run)
 	if self.menu.current_window == fn then
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, false)
-		if self:IsHovered() and self:IsLeftClicked() then
-			self.menu.current_window = nil
-		end
+		if self:IsHovered() and self:IsLeftClicked() then self.menu.current_window = nil end
 	else
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, true)
 		if self:IsHovered() and self:IsLeftClicked() then

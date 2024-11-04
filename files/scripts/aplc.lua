@@ -14,19 +14,59 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 --- @class APLC
 --- @field failed boolean
 local aplc = {
-	liquid_list = { "acid", "alcohol", "blood", "blood_fungi", "blood_worm", "cement", "lava", "magic_liquid_berserk",
-		"magic_liquid_charm", "magic_liquid_faster_levitation", "magic_liquid_faster_levitation_and_movement",
-		"magic_liquid_invisibility", "magic_liquid_mana_regeneration", "magic_liquid_movement_faster",
-		"magic_liquid_protection_all", "magic_liquid_teleportation", "magic_liquid_unstable_polymorph",
-		"magic_liquid_unstable_teleportation", "magic_liquid_worm_attractor", "material_confusion",
-		"mud", "oil", "poison", "radioactive_liquid", "swamp", "urine", "water", "water_ice", "water_swamp",
+	liquid_list = {
+		"acid",
+		"alcohol",
+		"blood",
+		"blood_fungi",
+		"blood_worm",
+		"cement",
+		"lava",
+		"magic_liquid_berserk",
+		"magic_liquid_charm",
+		"magic_liquid_faster_levitation",
+		"magic_liquid_faster_levitation_and_movement",
+		"magic_liquid_invisibility",
+		"magic_liquid_mana_regeneration",
+		"magic_liquid_movement_faster",
+		"magic_liquid_protection_all",
+		"magic_liquid_teleportation",
+		"magic_liquid_unstable_polymorph",
+		"magic_liquid_unstable_teleportation",
+		"magic_liquid_worm_attractor",
+		"material_confusion",
+		"mud",
+		"oil",
+		"poison",
+		"radioactive_liquid",
+		"swamp",
+		"urine",
+		"water",
+		"water_ice",
+		"water_swamp",
 		"magic_liquid_random_polymorph",
 	},
 	organic_list = {
-		"bone", "brass", "coal", "copper", "diamond", "fungi", "gold", "grass", "gunpowder", "gunpowder_explosive",
-		"rotten_meat", "sand", "silver", "slime", "snow", "soil", "wax", "honey",
+		"bone",
+		"brass",
+		"coal",
+		"copper",
+		"diamond",
+		"fungi",
+		"gold",
+		"grass",
+		"gunpowder",
+		"gunpowder_explosive",
+		"rotten_meat",
+		"sand",
+		"silver",
+		"slime",
+		"snow",
+		"soil",
+		"wax",
+		"honey",
 	},
-	failed = false
+	failed = false,
 }
 
 --- Advance random
@@ -37,9 +77,7 @@ function aplc:rng_next(value)
 	local high = math.floor(value / 0x1F31D)
 	local low = value % 127773
 	value = 16807 * low - 2836 * high
-	if value <= 0 then
-		value = value + 2147483647
-	end
+	if value <= 0 then value = value + 2147483647 end
 	return value
 end
 
@@ -53,7 +91,7 @@ function aplc:shuffle(t, seed)
 	value = self:rng_next(value)
 	for i = #t, 1, -1 do
 		value = self:rng_next(value)
-		local fid_x = value / 2^31
+		local fid_x = value / 2 ^ 31
 		local target = math.floor(fid_x * i) + 1
 		t[i], t[target] = t[target], t[i]
 	end
@@ -79,7 +117,7 @@ end
 function aplc:random_material(value, materials)
 	for _ = 1, 1000 do
 		value = self:rng_next(value)
-		local r_value = value / 2^31
+		local r_value = value / 2 ^ 31
 		local sel_idx = math.floor(#materials * r_value) + 1
 		local selection = materials[sel_idx]
 		if selection then
@@ -111,7 +149,7 @@ function aplc:random_recipe(rand_state, seed)
 	materials[#materials + 1] = CellFactory_GetType(mat)
 
 	rand_state = self:rng_next(rand_state)
-	local prob = 10 + math.floor((rand_state / 2^31) * 91)
+	local prob = 10 + math.floor((rand_state / 2 ^ 31) * 91)
 	rand_state = self:rng_next(rand_state)
 
 	self:shuffle(materials, seed)
@@ -148,13 +186,13 @@ function aplc:get()
 		lc = {
 			mats = lc_mats,
 			prob = lc_prob,
-			result = CellFactory_GetType("magic_liquid_hp_regeneration_unstable")
+			result = CellFactory_GetType("magic_liquid_hp_regeneration_unstable"),
 		},
 		ap = {
 			mats = ap_mats,
 			prob = ap_prob,
-			result = CellFactory_GetType("midas_precursor")
-		}
+			result = CellFactory_GetType("midas_precursor"),
+		},
 	}
 end
 

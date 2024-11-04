@@ -27,7 +27,7 @@ local fs = {
 	shifted = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_past_getter.lua"),
 	max_shifts = 20,
 	past_shifts = {},
-	current_shift = 0
+	current_shift = 0,
 }
 
 --- Checks is shift is identical to failed shift
@@ -39,9 +39,7 @@ function fs:IsShiftIdenticalToFailed(shift)
 	for i = 1, #shift.from do
 		local material_from = shift.from[i]
 		local index = self.shifted.indexed + i - 1
-		if material_from ~= self.shifted.materials[index].from or shift.to ~= self.shifted.materials[index].to then
-			return false
-		end
+		if material_from ~= self.shifted.materials[index].from or shift.to ~= self.shifted.materials[index].to then return false end
 	end
 	return true
 end
@@ -58,9 +56,7 @@ function fs:SanitizeFromMaterials(from, to)
 		local unique_from = {}
 		for i = 1, seed_shift_from_count do
 			local material_from = from[i]
-			if material_from ~= to then
-				unique_from[#unique_from + 1] = material_from
-			end
+			if material_from ~= to then unique_from[#unique_from + 1] = material_from end
 		end
 		return unique_from
 	end
@@ -131,9 +127,7 @@ function fs:AnalysePastShift(shift_number)
 			if seed_shift.flask == "from" then
 				past_shift.flask = "from"
 				-- Apotheosis compatibility
-				if ModIsEnabled("Apotheosis") and self:ApotheosisCheckFrom(past_shift) then
-					return
-				end
+				if ModIsEnabled("Apotheosis") and self:ApotheosisCheckFrom(past_shift) then return end
 
 				if j == 1 then -- foolproofing cases where first material matching shifted material
 					past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from

@@ -23,7 +23,7 @@ local function add_perk(perk_data)
 		ui_description = perk_data.ui_description,
 		perk_icon = perk_data.perk_icon,
 		picked_count = 0,
-		max = perk_data.stackable_maximum or perk_data.stackable and 128 or 1
+		max = perk_data.stackable_maximum or perk_data.stackable and 128 or 1,
 	}
 end
 
@@ -49,7 +49,7 @@ function perks:Parse()
 		perk_icon = "data/items_gfx/perk.png",
 		picked_count = 0,
 		id = "???",
-		max = 0
+		max = 0,
 	}
 
 	table.sort(perks.list)

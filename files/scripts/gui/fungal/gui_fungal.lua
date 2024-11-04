@@ -13,14 +13,14 @@ local fungal = {
 	fungal = { --- @diagnostic disable-line: missing-fields
 		current_shift = 1,
 		offset = {}, --- @diagnostic disable-line: missing-fields
-	}
+	},
 }
 
 local modules = {
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_helper.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_future.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_past.lua",
-	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_aplc.lua"
+	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_aplc.lua",
 }
 
 for i = 1, #modules do

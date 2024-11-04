@@ -71,9 +71,7 @@ function past:FungalDrawPast()
 		self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, false)
 		self.fungal.x = self.fungal.x + self.fungal.offset.to
 
-		if hovered then
-			self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawPastTooltip, shift, i, self.alt)
-		end
+		if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawPastTooltip, shift, i, self.alt) end
 
 		self.fungal.y = self.fungal.y + height + 1
 		self.fungal.x = 3

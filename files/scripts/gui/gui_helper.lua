@@ -15,7 +15,7 @@ function helper:ColorYellow()
 	self:Color(1, 1, 0.7)
 end
 
---- Splits string and returns lines 
+--- Splits string and returns lines
 --- @private
 --- @param text string
 --- @param length number
@@ -36,9 +36,7 @@ function helper:SplitString(text, length)
 	end
 
 	-- Add the last line if it's not empty
-	if current_line ~= "" then
-		lines[#lines + 1] = current_line
-	end
+	if current_line ~= "" then lines[#lines + 1] = current_line end
 
 	return lines
 end

@@ -62,8 +62,7 @@ function pg:PerksDrawCurrentPerks()
 end
 
 function pg:PerksDrawCurrentPerkScrollBox()
-	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3,
-		self.PerksDrawCurrentPerks)
+	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3, self.PerksDrawCurrentPerks)
 end
 
 return pg

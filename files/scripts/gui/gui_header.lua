@@ -3,8 +3,8 @@
 local header = {
 	header = {
 		pos_x = 13,
-		pos_y = 60
-	}
+		pos_y = 60,
+	},
 }
 
 --- Draws a header
