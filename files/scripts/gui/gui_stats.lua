@@ -11,6 +11,9 @@
 --- @field x number
 --- @field y number
 --- @field enabled boolean
+--- @field fps number
+--- @field fps_last_update_time number
+--- @field fps_last_frame number
 
 --- @class (exact) LS_Gui
 --- @field private stats LS_Gui_stats
@@ -28,6 +31,10 @@ local stats = {
 		x = 0,
 		y = 0,
 		enabled = false,
+		fps = 0,
+		fps_last_update_time = 0,
+		fps_last_frame = 0,
+		fps_delta = 0,
 	},
 }
 
@@ -184,6 +191,24 @@ function stats:StatsTime()
 	return true
 end
 
+--- Draws FPS
+--- @private
+--- @return boolean+
+function stats:FPS()
+	if not self.config.stats_fps then return false end
+	local current_frame = GameGetFrameNum()
+	if current_frame % 30 == 0 then
+		local current_time = GameGetRealWorldTimeSinceStarted()
+		local fps = (current_frame - self.stats.fps_last_frame) / (current_time - self.stats.fps_last_update_time)
+		self.stats.fps = math.min(60, math.floor(fps + 0.5))
+		self.stats.fps_last_frame = current_frame
+		self.stats.fps_last_update_time = current_time
+	end
+	self:Text(self.stats.x, self.stats.y, "FPS: " .. self.stats.fps)
+	self.stats.x = self.stats.x + 30
+	return true
+end
+
 --- Draws stats
 --- @private
 function stats:StatsDraw()
@@ -191,6 +216,7 @@ function stats:StatsDraw()
 	self.stats.y = self.header.pos_y
 
 	local stat_fns = {
+		self.FPS,
 		self.StatsFungal,
 		self.StatsTime,
 		self.StatsKills,

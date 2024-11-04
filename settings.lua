@@ -411,6 +411,7 @@ D = {
 	stats_position_expanded = true,
 	stats_show_player_biome = false,
 	stats_show_fungal_cooldown = true,
+	stats_fps = false,
 	enable_nearby_perks = true,
 	enable_nearby_lottery = true,
 	enable_nearby_always_cast = true,

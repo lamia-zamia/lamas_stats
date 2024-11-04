@@ -57,6 +57,7 @@ local translations = {
 		enable_nearby_lottery = "Show lottery icon",
 		enable_nearby_always_cast = "Predict always cast",
 		config = "Config",
+		stats_fps = "Show FPS",
 	},
 	["русский"] = {
 		lamas_stat_current = "Текущие",
@@ -117,6 +118,7 @@ local translations = {
 		enable_nearby_lottery = "Показывать лотерею",
 		enable_nearby_always_cast = "Предсказать постоянное заклинание",
 		config = "Настройки",
+		stats_fps = "Показывать FPS",
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -176,6 +178,7 @@ local translations = {
 		enable_nearby_lottery = "宝くじアイコンを表示",
 		enable_nearby_always_cast = "常時キャストを予測",
 		config = "構成",
+		stats_fps = "FPSを表示",
 	},
 }
 

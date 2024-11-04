@@ -19,6 +19,7 @@ local config = {
 			},
 			Stats = {
 				"stats_enable",
+				"stats_fps",
 				"stats_show_fungal_cooldown",
 				"stats_showtime",
 				"stats_showkills",
