@@ -2,8 +2,16 @@
 Because I'm tired of inconsistencies between different mods.  
 Almost everything is togglable and can be disabled.  
 By default this mod only serves as a QOL mod, but can be further expanded into an in-game noitool.  
-  
+
 ![overlay](showcase/overlay.png)
+### Installation
+
+- Press the [Download](https://github.com/lamia-zamia/lamas_stats/archive/refs/heads/main.zip) button
+- Extract the contents into your Noita `mods` folder.
+- Rename the folder from `lamas_stats-main` to `lamas_stats`.
+
+Alternatively, subscribe to the mod on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3273702268)
+
 ## Basic functions
 * Show various stats on overlay, togglable by hotkey
 * Show previous fungal shifts including results with flask
