@@ -159,6 +159,7 @@ local function check_for_failed_shift_with_flask_from(last_shift_without_flask)
 		-- Shift was failed
 	else
 		local correct_shift = last_shift_result
+		correct_shift.flask = "from"
 
 		-- "from" is empty because it's the same material as "to"
 		correct_shift.from = nil

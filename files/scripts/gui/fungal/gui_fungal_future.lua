@@ -48,6 +48,7 @@ function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	self:FungalDrawHeldMaterial(x, y, { 0.7, 0.7, 0.7 })
 	x = x + self.fungal.offset.held + 12
 	x = x + self:FungalText(x, y, T.Is) + 3
+
 	local material = shift.flask == "from" and shift.to or shift.from[1]
 	self:FungalDrawSingleMaterial(x, y, material)
 

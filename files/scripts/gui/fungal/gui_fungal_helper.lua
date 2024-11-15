@@ -192,8 +192,11 @@ end
 --- @return integer
 function helper:FungalCalculateRowCount(from, to, flask)
 	local rows = from and #from or 1
-	if flask == "from" and from[1] then rows = rows + 1 end
-	if rows == 1 and flask == "to" and to then rows = 2 end
+	if from and flask == "from" then
+		rows = rows + 1
+	elseif rows == 1 and flask == "to" and to then
+		rows = 2
+	end
 	return rows
 end
 
