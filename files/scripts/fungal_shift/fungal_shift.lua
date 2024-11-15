@@ -171,9 +171,14 @@ function fs:GetApLcRecipe()
 	end
 end
 
+function fs:GetApoElixirRecipe()
+	self.apo_elixir = dofile_once("mods/lamas_stats/files/scripts/apo_elixir.lua")
+end
+
 --- Init fungal shifts
 function fs:Init()
 	self:GetApLcRecipe()
+	if ModIsEnabled("Apotheosis") then self:GetApoElixirRecipe() end
 	self.predictor:Parse()
 	self.max_shifts = self.predictor.max_shifts
 	self.cooldown = self.predictor.cooldown

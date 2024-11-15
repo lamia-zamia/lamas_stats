@@ -21,6 +21,7 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_future.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_past.lua",
 	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_aplc.lua",
+	"mods/lamas_stats/files/scripts/gui/fungal/gui_fungal_apo_elixir.lua",
 }
 
 for i = 1, #modules do
@@ -94,6 +95,22 @@ function fungal:FungalDraw()
 	self:Text(0, self.fungal.y + self.scroll.y, "")
 end
 
+--- Draws recipes
+--- @private
+function fungal:FungalDrawRecipes()
+	local recipe_pos = self.menu.start_x + self.fungal.width - 3
+	if self.fs.aplc then
+		recipe_pos = recipe_pos - 18
+		self:FungalApLcDraw(recipe_pos, self.menu.start_y + 3)
+		recipe_pos = recipe_pos - 6
+	end
+	if self.fs.apo_elixir then
+		recipe_pos = recipe_pos - 9
+		self:FungalApoElixirDraw(recipe_pos, self.menu.start_y + 3)
+		recipe_pos = recipe_pos - 6
+	end
+end
+
 --- Draws checkboxes and shifts
 function fungal:FungalDrawWindow()
 	if self:IsDrawCheckbox(self.menu.pos_x, self.menu.pos_y - 1, T.EnableFungalPast, self.fungal.past) then
@@ -108,7 +125,7 @@ function fungal:FungalDrawWindow()
 			self.mod:SetModSetting("enable_fungal_future", self.fungal.future)
 		end
 	end
-	if self.fs.aplc then self:FungalApLcDraw(self.menu.start_x + self.fungal.width - 21, self.menu.start_y + 3) end
+	self:FungalDrawRecipes()
 
 	self.menu.pos_y = self.menu.pos_y + 12
 	self:ScrollBox(self.menu.start_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self.FungalDraw)
