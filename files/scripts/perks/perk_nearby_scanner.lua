@@ -29,7 +29,7 @@ function scanner:ParseEntities()
 		local x, y = ENTITY_GET_TRANSFORM(entity_id)
 		local id = self:GetPerkId(entity_id)
 		parsed[#parsed + 1] = {
-			x = x,
+			x = x or i,
 			id = id,
 			lottery = self:IsLotteryWon(x, y, id),
 			cast = id == "ALWAYS_CAST" and self:PredictAlwaysCast(x, y) or nil,
