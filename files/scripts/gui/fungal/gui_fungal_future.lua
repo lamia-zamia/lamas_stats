@@ -167,6 +167,7 @@ end
 function future:FungalDrawFuture()
 	for i = self.fs.current_shift, self.fs.max_shifts do
 		local shift = self.fs.predictor.shifts[i]
+		if not shift then return end
 		local from = self:FungalSanitizeFromShifts(shift.from)
 		self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
 		local height = self.fungal.row_count * 10

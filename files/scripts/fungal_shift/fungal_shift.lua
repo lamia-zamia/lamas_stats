@@ -150,6 +150,10 @@ end
 
 --- Analize past shifts
 function fs:AnalysePastShifts()
+	if #self.predictor.shifts < self.current_shift then
+		reporter:Report("There was an error reading world shifts")
+		return
+	end
 	self.shifted:GetShiftedMaterials()
 	for i = #self.past_shifts + 1, self.current_shift - 1 do
 		if not self.shifted.materials[self.shifted.indexed] then
@@ -179,6 +183,13 @@ end
 function fs:Init()
 	self:GetApLcRecipe()
 	if ModIsEnabled("Apotheosis") then self:GetApoElixirRecipe() end
+
+	local comp_worldstate = EntityGetFirstComponent(GameGetWorldStateEntity(), "WorldStateComponent")
+	if comp_worldstate and ComponentGetValue2(comp_worldstate, "EVERYTHING_TO_GOLD") then
+		self.max_shifts = 20
+		self.cooldown = 18000
+		return -- do nothing in case everything is gold
+	end
 	self.predictor:Parse()
 	self.max_shifts = self.predictor.max_shifts
 	self.cooldown = self.predictor.cooldown
