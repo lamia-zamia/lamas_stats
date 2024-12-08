@@ -12,6 +12,10 @@ local header = {
 function header:HeaderDraw()
 	if self:IsTextButtonClicked(self.header.pos_x, self.header.pos_y, self.menu.opened and "*" or "L") then
 		self.menu.opened = not self.menu.opened
+		if self.menu.opened then
+			self:CheckForUpdates(-1)
+			self:FungalShiftListChanged()
+		end
 	end
 end
 

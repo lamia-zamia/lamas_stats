@@ -75,9 +75,14 @@ function predict:Init()
 	--- @param tag string
 	--- @return entity_id[]
 	function EntityGetWithTag(tag)
-		local entities = ENTITY_GET_WITH_TAG(tag)
-		if tag == "perk" then return #entities > 0 and entities or predict.future_perks[1] end
-		return entities
+		if tag == "perk" then
+			local player = ENTITY_GET_WITH_TAG("player_unit")[1]
+			if not player then return predict.future_perks[1] end
+			local x, y = ENTITY_GET_TRANSFORM(player)
+			local entities = EntityGetInRadiusWithTag(x, y, 250, "item_perk")
+			return #entities > 0 and entities or predict.future_perks[1]
+		end
+		return ENTITY_GET_WITH_TAG(tag)
 	end
 
 	function EntityGetTransform()

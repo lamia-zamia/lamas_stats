@@ -53,6 +53,7 @@ function pg:PerksAddButton(text, fn)
 		)
 		if self:IsHovered() and self:IsLeftClicked() then
 			self:ScrollBoxReset()
+			self:CheckForUpdates(-1)
 			self.scroll.height_max = 200
 			self.perk.current_window = fn
 		end
