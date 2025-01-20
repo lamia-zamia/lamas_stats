@@ -1,6 +1,6 @@
 local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") --- @type error_reporter
 
---- @alias APLC_materials {[number]:string|nil}
+--- @alias APLC_materials {[number]:string|false|nil}
 
 --- @class APLC_recipe
 --- @field mats integer[]
@@ -103,7 +103,7 @@ end
 --- @return APLC_materials
 function aplc:copy_arr(key)
 	local t = {}
-	for k, v in pairs(self[key]) do
+	for k, v in ipairs(self[key]) do
 		t[k] = v
 	end
 	return t
@@ -121,7 +121,7 @@ function aplc:random_material(value, materials)
 		local sel_idx = math.floor(#materials * r_value) + 1
 		local selection = materials[sel_idx]
 		if selection then
-			materials[sel_idx] = nil
+			materials[sel_idx] = false
 			return value, selection
 		end
 	end
