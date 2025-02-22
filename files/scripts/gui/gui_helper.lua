@@ -101,13 +101,13 @@ end
 --- @private
 function helper:ScanPWPosition()
 	local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
-	if player_par_x < self.stats.position_pw_east then
-		self.stats.position_pw_east = player_par_x
-		GLOBALS_SET_VALUE("lamas_stats_farthest_east", tostring(player_par_x))
-	end
-	if player_par_x > self.stats.position_pw_west then
+	if player_par_x < self.stats.position_pw_west then
 		self.stats.position_pw_west = player_par_x
 		GLOBALS_SET_VALUE("lamas_stats_farthest_west", tostring(player_par_x))
+	end
+	if player_par_x > self.stats.position_pw_east then
+		self.stats.position_pw_east = player_par_x
+		GLOBALS_SET_VALUE("lamas_stats_farthest_east", tostring(player_par_x))
 	end
 end
 

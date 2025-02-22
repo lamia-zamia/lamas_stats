@@ -96,9 +96,9 @@ function stats:StatsPositionTooltip()
 
 	self:Text(0, 0, world_string .. " - " .. position_string)
 
-	if self.stats.position_pw_east < 0 or self.stats.position_pw_west > 0 then
-		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. self.stats.position_pw_west)
-		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. -self.stats.position_pw_east)
+	if self.stats.position_pw_east > 0 or self.stats.position_pw_west < 0 then
+		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. -self.stats.position_pw_west)
+		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. self.stats.position_pw_east)
 	end
 end
 
