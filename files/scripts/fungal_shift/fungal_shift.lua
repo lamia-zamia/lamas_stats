@@ -37,8 +37,9 @@ local fs = {
 --- @nodiscard
 function fs:IsShiftIdenticalToFailed(shift)
 	for i = 1, #shift.from do
-		local material_from = shift.from[i]
 		local index = self.shifted.indexed + i - 1
+		if not self.shifted.materials[index] then return false end
+		local material_from = shift.from[i]
 		if material_from ~= self.shifted.materials[index].from or shift.to ~= self.shifted.materials[index].to then return false end
 	end
 	return true
