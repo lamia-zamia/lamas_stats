@@ -26,6 +26,7 @@ function actions_data:Parse()
 
 	-- Redefining some functions so fungal shift would do nothing
 	dofile_once = dofile
+	
 	actions = {}
 	dofile("data/scripts/gun/gun_actions.lua")
 
