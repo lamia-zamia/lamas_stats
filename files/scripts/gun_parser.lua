@@ -24,9 +24,6 @@ function actions_data:Parse()
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") --- @type ML_sandbox
 	sandbox:start_sandbox()
 
-	-- Redefining some functions so fungal shift would do nothing
-	dofile_once = dofile
-	
 	actions = {}
 	dofile("data/scripts/gun/gun_actions.lua")
 
