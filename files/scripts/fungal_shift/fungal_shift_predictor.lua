@@ -47,6 +47,7 @@ local function redefine_functions()
 		"print",
 		"GameTextGet",
 		"CrossCall",
+		"GameHasFlagRun",
 	}
 
 	for i = 1, #fn_to_nil do
