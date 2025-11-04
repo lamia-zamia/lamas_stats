@@ -14,6 +14,9 @@
 --- @field fps number
 --- @field fps_last_update_time number
 --- @field fps_last_frame number
+--- @field speed number
+--- @field speed_last_x number
+--- @field speed_last_y number
 
 --- @class (exact) LS_Gui
 --- @field private stats LS_Gui_stats
@@ -35,6 +38,9 @@ local stats = {
 		fps_last_update_time = 0,
 		fps_last_frame = 0,
 		fps_delta = 0,
+		speed = 0,
+		speed_last_x = 0,
+		speed_last_y = 0,
 	},
 }
 
@@ -147,9 +153,11 @@ function stats:StatsKills()
 	if not self.config.stats_showkills then return false end
 	local kill_string = T.lamas_stats_progress_kills
 	local kill_string_width = self:GetTextDimension(kill_string)
-	local offset = kill_string_width + 30
+	local kills = StatsGetValue("enemies_killed") or "0"
+	local kills_width = self:GetTextDimension(kills)
+	local offset = kill_string_width + math.min(kills_width, 18) + 6
 	self:IfStatEntryHovered(offset, self.StatsKillTooltip)
-	self:Text(self.stats.x, self.stats.y, kill_string .. " " .. StatsGetValue("enemies_killed"))
+	self:Text(self.stats.x, self.stats.y, kill_string .. " " .. kills)
 
 	self.stats.x = self.stats.x + offset
 	return true
@@ -195,7 +203,6 @@ end
 --- @private
 --- @return boolean+
 function stats:FPS()
-	if not self.config.stats_fps then return false end
 	local current_frame = GameGetFrameNum()
 	if current_frame % 30 == 0 then
 		local current_time = GameGetRealWorldTimeSinceStarted()
@@ -204,8 +211,41 @@ function stats:FPS()
 		self.stats.fps_last_frame = current_frame
 		self.stats.fps_last_update_time = current_time
 	end
+	if not self.config.stats_fps then return false end
 	self:Text(self.stats.x, self.stats.y, "FPS: " .. self.stats.fps)
 	self.stats.x = self.stats.x + 30
+	return true
+end
+
+local display_speed = "0"
+
+---Draws player speed
+---@private
+---@return boolean
+function stats:StatsSpeed()
+	if not self.config.stats_show_speed then return false end
+	local px, py = self.player_x, self.player_y
+	local dx = px - self.stats.speed_last_x
+	local dy = py - self.stats.speed_last_y
+	local speed = math.sqrt(dx * dx + dy * dy)
+
+	self.stats.speed = (self.stats.speed * 0.9) + (speed * 0.1)
+
+	self.stats.speed_last_x = px
+	self.stats.speed_last_y = py
+
+	local speed_string = self:Locale("$inventory_speed: ")
+	local speed_string_width = self:GetTextDimension(speed_string)
+
+	local speed_px_per_sec = self.stats.speed * self.stats.fps
+	local interval = math.max(1, math.min(60, math.floor(math.sqrt(speed_px_per_sec) / 8)))
+	-- slower update at high velocity to remove flickering
+	if GameGetFrameNum() % interval == 0 then display_speed = string.format("%.0f", speed_px_per_sec) end
+
+	local display_speed_width = math.min(18, self:GetTextDimension(display_speed)) + 6
+
+	self:Text(self.stats.x, self.stats.y, speed_string .. display_speed)
+	self.stats.x = self.stats.x + speed_string_width + display_speed_width
 	return true
 end
 
@@ -221,6 +261,7 @@ function stats:StatsDraw()
 		self.StatsTime,
 		self.StatsKills,
 		self.StatsPosition,
+		self.StatsSpeed,
 		self.StatsBiome,
 	}
 

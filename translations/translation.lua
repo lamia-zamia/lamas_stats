@@ -58,6 +58,7 @@ local translations = {
 		enable_nearby_always_cast = "Predict always cast",
 		config = "Config",
 		stats_fps = "Show FPS",
+		stats_show_speed = "Show speed",
 	},
 	["русский"] = {
 		lamas_stat_current = "Текущие",
@@ -119,6 +120,7 @@ local translations = {
 		enable_nearby_always_cast = "Предсказать постоянное заклинание",
 		config = "Настройки",
 		stats_fps = "Показывать FPS",
+		stats_show_speed = "Показывать скорость",
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -179,6 +181,7 @@ local translations = {
 		enable_nearby_always_cast = "常時キャストを予測",
 		config = "構成",
 		stats_fps = "FPSを表示",
+		stats_show_speed = "速度表示",
 	},
 }
 

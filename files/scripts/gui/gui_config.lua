@@ -25,6 +25,7 @@ local config = {
 				"stats_showkills",
 				"stats_show_player_pos",
 				"stats_position_expanded",
+				"stats_show_speed",
 				"stats_show_player_biome",
 			},
 			Perks = {
