@@ -1,10 +1,10 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local past = {}
 
---- Draws tooltip for past shift
---- @private
---- @param shift shift
---- @param i number
+---Draws tooltip for past shift
+---@private
+---@param shift shift
+---@param i number
 function past:FungalDrawPastTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0

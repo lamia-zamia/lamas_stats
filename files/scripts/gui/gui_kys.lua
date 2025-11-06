@@ -1,5 +1,5 @@
---- @class (exact) LS_Gui
---- @field kys {show: boolean, hide_after: boolean}
+---@class (exact) LS_Gui
+---@field kys {show: boolean, hide_after: boolean}
 local kys = {
 	kys = {
 		show = false,
@@ -7,8 +7,8 @@ local kys = {
 	},
 }
 
---- Draws kys window
---- @private
+---Draws kys window
+---@private
 function kys:KysDraw()
 	local kys_button_string = T.KYS_Button
 	local kys_button_string_width = self:GetTextDimension(kys_button_string)

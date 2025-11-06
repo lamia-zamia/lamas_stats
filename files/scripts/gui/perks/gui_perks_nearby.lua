@@ -1,9 +1,9 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local pg = {}
 
---- Perks tooltip
---- @private
---- @param nearby_perk nearby_perks_data
+---Perks tooltip
+---@private
+---@param nearby_perk nearby_perks_data
 function pg:PerksNearbyTooltip(nearby_perk)
 	local perk = self.perks.data:GetData(nearby_perk.id)
 	local ui_name = self:Locale(perk.ui_name)
@@ -62,8 +62,8 @@ function pg:PerksNearbyTooltip(nearby_perk)
 	end
 end
 
---- Draws nearby perks
---- @private
+---Draws nearby perks
+---@private
 function pg:PerksDrawNearby()
 	local x = self.menu.start_x - 3
 	for i = 1, #self.perks.nearby.data do
@@ -71,7 +71,7 @@ function pg:PerksDrawNearby()
 			x = self.menu.start_x - 3
 			self.perk.y = self.perk.y + 17
 		end
-		local nearby_perk = self.perks.nearby.data[i] --- @type nearby_perks_data
+		local nearby_perk = self.perks.nearby.data[i] ---@type nearby_perks_data
 		local perk_data = self.perks.data:GetData(nearby_perk.id)
 		local hovered = self:IsHoverBoxHovered(x, self.perk.y, 16, 16)
 		self:PerksDrawPerk(x, self.perk.y, hovered, perk_data, self.PerksNearbyTooltip, nearby_perk, self.alt)

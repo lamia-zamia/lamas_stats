@@ -1,11 +1,11 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local aplc = {}
 
---- Draws an ap or lc recipe
---- @private
---- @param x number
---- @param y number
---- @param recipe APLC_recipe
+---Draws an ap or lc recipe
+---@private
+---@param x number
+---@param y number
+---@param recipe APLC_recipe
 function aplc:FungalApLcTooltipDrawRecipe(x, y, recipe)
 	self:FungalDrawSingleMaterial(x, y, recipe.result)
 	y = y + 11
@@ -22,8 +22,8 @@ function aplc:FungalApLcTooltipDrawRecipe(x, y, recipe)
 	self:FungalDrawSingleMaterial(x, y, recipe.mats[3], self.alt)
 end
 
---- Tooltip for aplc
---- @private
+---Tooltip for aplc
+---@private
 function aplc:FungalApLcTooltip()
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	self:FungalApLcTooltipDrawRecipe(0, 0, self.fs.aplc.ap)
@@ -35,10 +35,10 @@ function aplc:FungalApLcTooltip()
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
---- Draws aplc flasks
---- @private
---- @param x number
---- @param y number
+---Draws aplc flasks
+---@private
+---@param x number
+---@param y number
 function aplc:FungalApLcDraw(x, y)
 	self:FungalDrawIcon(x, y, self.fs.aplc.ap.result)
 	self:FungalDrawIcon(x + 9, y, self.fs.aplc.lc.result)

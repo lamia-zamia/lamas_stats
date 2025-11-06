@@ -1,4 +1,4 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local pg = {}
 
 function pg:PerksDrawFuturePerks()

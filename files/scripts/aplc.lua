@@ -1,18 +1,18 @@
-local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") --- @type error_reporter
+local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") ---@type error_reporter
 
---- @alias APLC_materials {[number]:string|false|nil}
+---@alias APLC_materials {[number]:string|false|nil}
 
---- @class APLC_recipe
---- @field mats integer[]
---- @field prob number
---- @field result integer
+---@class APLC_recipe
+---@field mats integer[]
+---@field prob number
+---@field result integer
 
---- @class APLC_recipes
---- @field lc APLC_recipe
---- @field ap APLC_recipe
+---@class APLC_recipes
+---@field lc APLC_recipe
+---@field ap APLC_recipe
 
---- @class APLC
---- @field failed boolean
+---@class APLC
+---@field failed boolean
 local aplc = {
 	liquid_list = {
 		"acid",
@@ -69,10 +69,10 @@ local aplc = {
 	failed = false,
 }
 
---- Advance random
---- @private
---- @param value number
---- @return number
+---Advance random
+---@private
+---@param value number
+---@return number
 function aplc:rng_next(value)
 	local high = math.floor(value / 0x1F31D)
 	local low = value % 127773
@@ -81,11 +81,11 @@ function aplc:rng_next(value)
 	return value
 end
 
---- Shuffle bullshit
---- @private
---- @param t APLC_materials
---- @param seed number
---- @private
+---Shuffle bullshit
+---@private
+---@param t APLC_materials
+---@param seed number
+---@private
 function aplc:shuffle(t, seed)
 	local value = math.floor(seed / 2) + 0x30F6
 	value = self:rng_next(value)
@@ -97,10 +97,10 @@ function aplc:shuffle(t, seed)
 	end
 end
 
---- Return a copy of material table
---- @private
---- @param key string
---- @return APLC_materials
+---Return a copy of material table
+---@private
+---@param key string
+---@return APLC_materials
 function aplc:copy_arr(key)
 	local t = {}
 	for k, v in ipairs(self[key]) do
@@ -109,11 +109,11 @@ function aplc:copy_arr(key)
 	return t
 end
 
---- Picks a material using some bullshit
---- @private
---- @param value number
---- @param materials APLC_materials
---- @return number?, string?
+---Picks a material using some bullshit
+---@private
+---@param value number
+---@param materials APLC_materials
+---@return number?, string?
 function aplc:random_material(value, materials)
 	for _ = 1, 1000 do
 		value = self:rng_next(value)
@@ -127,11 +127,11 @@ function aplc:random_material(value, materials)
 	end
 end
 
---- Recipe function, wtf is this
---- @private
---- @param rand_state number
---- @param seed number
---- @return boolean, any, any, any
+---Recipe function, wtf is this
+---@private
+---@param rand_state number
+---@param seed number
+---@return boolean, any, any, any
 function aplc:random_recipe(rand_state, seed)
 	local liquids = self:copy_arr("liquid_list")
 	local organics = self:copy_arr("organic_list")
@@ -156,16 +156,16 @@ function aplc:random_recipe(rand_state, seed)
 	return true, rand_state, { materials[1], materials[2], materials[3] }, prob
 end
 
---- Writes an error and disables a module
---- @private
+---Writes an error and disables a module
+---@private
 function aplc:fail()
 	reporter:Report("Couldn't parse LC recipe")
 	self.failed = true
 end
 
---- Returns APLC recipe
---- @return APLC_recipes
---- @nodiscard
+---Returns APLC recipe
+---@return APLC_recipes
+---@nodiscard
 function aplc:get()
 	local seed = tonumber(StatsGetValue("world_seed")) or 1
 	local rand_state = math.floor(seed * 0.17127000 + 1323.59030000)

@@ -1,25 +1,25 @@
---- @class (exact) LS_Gui_stats
---- @field time boolean
---- @field kills boolean
---- @field position boolean
---- @field position_toggle boolean
---- @field position_pw boolean
---- @field position_pw_west number
---- @field position_pw_east number
---- @field biome boolean
---- @field shift_cd boolean
---- @field x number
---- @field y number
---- @field enabled boolean
---- @field fps number
---- @field fps_last_update_time number
---- @field fps_last_frame number
---- @field speed number
---- @field speed_last_x number
---- @field speed_last_y number
+---@class (exact) LS_Gui_stats
+---@field time boolean
+---@field kills boolean
+---@field position boolean
+---@field position_toggle boolean
+---@field position_pw boolean
+---@field position_pw_west number
+---@field position_pw_east number
+---@field biome boolean
+---@field shift_cd boolean
+---@field x number
+---@field y number
+---@field enabled boolean
+---@field fps number
+---@field fps_last_update_time number
+---@field fps_last_frame number
+---@field speed number
+---@field speed_last_x number
+---@field speed_last_y number
 
---- @class (exact) LS_Gui
---- @field private stats LS_Gui_stats
+---@class (exact) LS_Gui
+---@field private stats LS_Gui_stats
 local stats = {
 	stats = {
 		time = false,
@@ -44,17 +44,17 @@ local stats = {
 	},
 }
 
---- Shows tooltip and colors text to gray
---- @private
---- @param width number
---- @param tooltip fun(self:table)
+---Shows tooltip and colors text to gray
+---@private
+---@param width number
+---@param tooltip fun(self:table)
 function stats:IfStatEntryHovered(width, tooltip)
 	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, width, 11, true) then self:ShowTooltipCenteredX(0, 20, tooltip) end
 end
 
---- Draws fungal cooldown if in cooldown
---- @private
---- @return boolean
+---Draws fungal cooldown if in cooldown
+---@private
+---@return boolean
 function stats:StatsFungal()
 	if not self.config.stats_show_fungal_cooldown or self.fungal_cd <= 0 then return false end
 	self:AddOptionForNext(self.c.options.NonInteractive)
@@ -67,9 +67,9 @@ function stats:StatsFungal()
 	return true
 end
 
---- Draws biome stat
---- @private
---- @return boolean
+---Draws biome stat
+---@private
+---@return boolean
 function stats:StatsBiome()
 	if not self.config.stats_show_player_biome then return false end
 	local biome = BiomeMapGetName(self.player_x, self.player_y)
@@ -81,8 +81,8 @@ function stats:StatsBiome()
 	return true
 end
 
---- Draws position stat tooltip
---- @private
+---Draws position stat tooltip
+---@private
 function stats:StatsPositionTooltip()
 	local world_string = T.lamas_stats_stats_pw
 	local position_string = T.lamas_stats_stats_pw_main
@@ -108,9 +108,9 @@ function stats:StatsPositionTooltip()
 	end
 end
 
---- Draws position stat
---- @private
---- @return boolean
+---Draws position stat
+---@private
+---@return boolean
 function stats:StatsPosition()
 	if not self.config.stats_show_player_pos then return false end
 	local position_string = T.lamas_stats_position
@@ -139,16 +139,16 @@ function stats:StatsPosition()
 	return true
 end
 
---- Draws kills stat tooltip
---- @private
+---Draws kills stat tooltip
+---@private
 function stats:StatsKillTooltip()
 	self:Text(0, 0, T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
 	self:Text(0, 0, T.lamas_stats_progress_kills_innocent .. " " .. GLOBALS_GET_VALUE("HELPLESS_KILLS", "0"))
 end
 
---- Draws kills stat
---- @private
---- @return boolean
+---Draws kills stat
+---@private
+---@return boolean
 function stats:StatsKills()
 	if not self.config.stats_showkills then return false end
 	local kill_string = T.lamas_stats_progress_kills
@@ -163,8 +163,8 @@ function stats:StatsKills()
 	return true
 end
 
---- Draws time stat tooltip
---- @private
+---Draws time stat tooltip
+---@private
 function stats:StatsTimeTooltip()
 	local stats_list = {
 		self:Locale("$menu_stats"),
@@ -184,9 +184,9 @@ function stats:StatsTimeTooltip()
 	end
 end
 
---- Draws time stat
---- @private
---- @return boolean
+---Draws time stat
+---@private
+---@return boolean
 function stats:StatsTime()
 	if not self.config.stats_showtime then return false end
 	local time_string = self:Locale("$stat_time ")
@@ -199,9 +199,9 @@ function stats:StatsTime()
 	return true
 end
 
---- Draws FPS
---- @private
---- @return boolean+
+---Draws FPS
+---@private
+---@return boolean+
 function stats:FPS()
 	local current_frame = GameGetFrameNum()
 	if current_frame % 30 == 0 then
@@ -249,8 +249,8 @@ function stats:StatsSpeed()
 	return true
 end
 
---- Draws stats
---- @private
+---Draws stats
+---@private
 function stats:StatsDraw()
 	self.stats.x = self.header.pos_x + 20
 	self.stats.y = self.header.pos_y

@@ -1,8 +1,8 @@
---- @class perk_helpers
---- @field data perks_parser
---- @field nearby perk_scanner
---- @field total_amount number
---- @field predict perk_predict
+---@class perk_helpers
+---@field data perks_parser
+---@field nearby perk_scanner
+---@field total_amount number
+---@field predict perk_predict
 local perk = {
 	data = dofile_once("mods/lamas_stats/files/scripts/perks/perk_data_parser.lua"),
 	nearby = dofile_once("mods/lamas_stats/files/scripts/perks/perk_nearby_scanner.lua"),
@@ -10,7 +10,7 @@ local perk = {
 	total_amount = 0,
 }
 
---- Updates currently owned perks
+---Updates currently owned perks
 function perk:GetCurrentList()
 	self.total_amount = 0
 	for i = 1, #self.data.list do

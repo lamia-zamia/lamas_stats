@@ -1,8 +1,8 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local pg = {}
 
---- Draws stats for perks
---- @private
+---Draws stats for perks
+---@private
 function pg:PerksDrawStats()
 	local perks_lottery = self.perks.data:GetData("PERKS_LOTTERY")
 
@@ -33,10 +33,10 @@ function pg:PerksDrawStats()
 	end
 end
 
---- Adds clickable button
---- @private
---- @param text string
---- @param fn function
+---Adds clickable button
+---@private
+---@param text string
+---@param fn function
 function pg:PerksAddButton(text, fn)
 	if self.perk.current_window == fn then
 		self:DrawButton(self.perk.x, self.perk.y, self.z - 1, text, false, "mods/lamas_stats/files/gfx/ui_9piece_button_alt.png")

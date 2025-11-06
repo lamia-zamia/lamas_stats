@@ -1,9 +1,9 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local pg = {}
 
---- Perks tooltip
---- @private
---- @param perk perk_data
+---Perks tooltip
+---@private
+---@param perk perk_data
 function pg:PerksCurrentPerkTooltip(perk)
 	local ui_name = self:Locale(perk.ui_name)
 	local description_lines = self:SplitString(self:Locale(perk.ui_description), 200)
@@ -35,9 +35,9 @@ function pg:PerksCurrentPerkTooltip(perk)
 	end
 end
 
---- Draws perk icon
---- @private
---- @param perk_id string
+---Draws perk icon
+---@private
+---@param perk_id string
 function pg:PerksDrawCurrentPerk(perk_id)
 	local perk = self.perks.data:GetData(perk_id)
 	if perk.picked_count < 1 then return end
@@ -50,8 +50,8 @@ function pg:PerksDrawCurrentPerk(perk_id)
 	self.perk.x = self.perk.x + 17
 end
 
---- Draws current perks
---- @private
+---Draws current perks
+---@private
 function pg:PerksDrawCurrentPerks()
 	self.perk.x = 0
 	self.perk.y = 0

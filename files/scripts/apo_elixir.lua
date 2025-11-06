@@ -1,16 +1,16 @@
-local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") --- @type error_reporter
-local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua") --- @type nxml
+local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") ---@type error_reporter
+local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua") ---@type nxml
 
---- @class apo_elixir_recipe
---- @field mats integer[]
---- @field prob number
---- @field result integer
+---@class apo_elixir_recipe
+---@field mats integer[]
+---@field prob number
+---@field result integer
 
 local elixir = {}
 
---- Get materials
---- @param data element
---- @return apo_elixir_recipe?
+---Get materials
+---@param data element
+---@return apo_elixir_recipe?
 function elixir:get_recipe(data)
 	for reaction in data:each_of("Reaction") do
 		if reaction:get("output_cell1") == "apotheosis_hidden_liquid_magic_catalyst" then
@@ -33,8 +33,8 @@ function elixir:get_recipe(data)
 	return nil
 end
 
---- Parse material file
---- @return apo_elixir_recipe?
+---Parse material file
+---@return apo_elixir_recipe?
 function elixir:parse()
 	local success, data = pcall(nxml.parse, ModTextFileGetContent("mods/Apotheosis/files/scripts/materials/secret_materials.xml"))
 	if success then

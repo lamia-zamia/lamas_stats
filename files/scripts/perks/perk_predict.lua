@@ -1,9 +1,9 @@
---- @diagnostic disable: lowercase-global, unused-local, missing-global-doc
+---@diagnostic disable: lowercase-global, unused-local, missing-global-doc
 
---- @class perk_predict
---- @field future_perks string[][]
---- @field reroll_perks string[][]
---- @field max_perks number
+---@class perk_predict
+---@field future_perks string[][]
+---@field reroll_perks string[][]
+---@field max_perks number
 local predict = {
 	future_perks = {},
 	max_perks = 0,
@@ -67,13 +67,13 @@ function predict:Init()
 		end
 	end
 
-	--- Redefined to nil
+	---Redefined to nil
 	function GameAddFlagRun() end
 
 	function EntityKill() end
 
-	--- @param tag string
-	--- @return entity_id[]
+	---@param tag string
+	---@return entity_id[]
 	function EntityGetWithTag(tag)
 		if tag == "perk" then
 			local player = ENTITY_GET_WITH_TAG("player_unit")[1]

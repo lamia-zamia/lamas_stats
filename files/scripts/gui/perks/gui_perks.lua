@@ -1,15 +1,15 @@
---- @class LS_Gui_perks
---- @field x number
---- @field y number
---- @field current_window function|nil
---- @field previous_window function|nil
---- @field width number
---- @field scrollbox_start number
---- @field current_children_entities number
---- @field reroll_count number
+---@class LS_Gui_perks
+---@field x number
+---@field y number
+---@field current_window function|nil
+---@field previous_window function|nil
+---@field width number
+---@field scrollbox_start number
+---@field current_children_entities number
+---@field reroll_count number
 
---- @class (exact) LS_Gui
---- @field perk LS_Gui_perks
+---@class (exact) LS_Gui
+---@field perk LS_Gui_perks
 local pg = {
 	perk = {
 		x = 0,
@@ -40,12 +40,12 @@ for i = 1, #modules do
 end
 pg.perk.current_window = pg.PerksDrawCurrentPerkScrollBox
 
---- Returns true if perk is hovered
---- @private
---- @param x number
---- @param y number
---- @return boolean
---- @nodiscard
+---Returns true if perk is hovered
+---@private
+---@param x number
+---@param y number
+---@return boolean
+---@nodiscard
 function pg:PerksIsHoverBoxHovered(x, y)
 	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start + y, 16, 16) then
 		return true
@@ -53,14 +53,14 @@ function pg:PerksIsHoverBoxHovered(x, y)
 	return false
 end
 
---- Draws a perk icon
---- @private
---- @param x number
---- @param y number
---- @param hovered boolean
---- @param perk perk_data perk data
---- @param fn function tooltip
---- @param ... any variables to pass to tooltip
+---Draws a perk icon
+---@private
+---@param x number
+---@param y number
+---@param hovered boolean
+---@param perk perk_data perk data
+---@param fn function tooltip
+---@param ... any variables to pass to tooltip
 function pg:PerksDrawPerk(x, y, hovered, perk, fn, ...)
 	local off = hovered and 1.2 or 0
 	self:Image(x - off, y - off, perk.perk_icon, 1, hovered and 1.15 or 1)
@@ -68,7 +68,7 @@ function pg:PerksDrawPerk(x, y, hovered, perk, fn, ...)
 	if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", fn, ...) end
 end
 
---- Draws stats and perks window
+---Draws stats and perks window
 function pg:PerksDrawWindow()
 	self.perk.width = 0
 	local current_nearby_perks = #self.perks.nearby.entities
@@ -107,9 +107,9 @@ function pg:PerksDrawWindow()
 	self.perk.previous_window = self.perk.current_window
 end
 
---- Checks if perks needs to update
---- @private
---- @param current_nearby_perks number
+---Checks if perks needs to update
+---@private
+---@param current_nearby_perks number
 function pg:CheckForUpdates(current_nearby_perks)
 	local reroll_count = self.mod:GetGlobalNumber("TEMPLE_PERK_REROLL_COUNT")
 	self.perks.nearby:Scan()
@@ -128,21 +128,21 @@ function pg:CheckForUpdates(current_nearby_perks)
 	self.perk.reroll_count = reroll_count
 end
 
---- Sets maximum perk amount
---- @private
---- @param number number
+---Sets maximum perk amount
+---@private
+---@param number number
 function pg:PerksSetWidth(number)
 	self.perk.width = math.min(14, math.max(self.perk.width, number))
 end
 
---- Updates perks data
---- @private
+---Updates perks data
+---@private
 function pg:PerksUpdate()
 	self.perks:GetCurrentList()
 	self.perks.nearby:ParseEntities()
 end
 
---- Initialize data for perks
+---Initialize data for perks
 function pg:PerksInit()
 	self:PerksUpdate()
 end

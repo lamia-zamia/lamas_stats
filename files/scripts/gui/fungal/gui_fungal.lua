@@ -1,18 +1,18 @@
---- @class (exact) LS_Gui_fungal
---- @field x number
---- @field y number
---- @field offset LS_Gui_fungal_offset
---- @field future boolean to show future window or not
---- @field past boolean
---- @field row_count number
---- @field width number
+---@class (exact) LS_Gui_fungal
+---@field x number
+---@field y number
+---@field offset LS_Gui_fungal_offset
+---@field future boolean to show future window or not
+---@field past boolean
+---@field row_count number
+---@field width number
 
---- @class (exact) LS_Gui
---- @field private fungal LS_Gui_fungal
+---@class (exact) LS_Gui
+---@field private fungal LS_Gui_fungal
 local fungal = {
-	fungal = { --- @diagnostic disable-line: missing-fields
+	fungal = { ---@diagnostic disable-line: missing-fields
 		current_shift = 1,
-		offset = {}, --- @diagnostic disable-line: missing-fields
+		offset = {}, ---@diagnostic disable-line: missing-fields
 	},
 }
 
@@ -32,13 +32,13 @@ for i = 1, #modules do
 	end
 end
 
---- Draws from materials
---- @private
---- @param x number
---- @param y number
---- @param from number[]
---- @param flask boolean
---- @param draw_id? boolean
+---Draws from materials
+---@private
+---@param x number
+---@param y number
+---@param from number[]
+---@param flask boolean
+---@param draw_id? boolean
 function fungal:FungalDrawFromMaterials(x, y, from, flask, draw_id)
 	if not from then
 		local center = self:FungalGetShiftWindowOffset(1)
@@ -58,13 +58,13 @@ function fungal:FungalDrawFromMaterials(x, y, from, flask, draw_id)
 	end
 end
 
---- Draws to material
---- @private
---- @param x number
---- @param y number
---- @param to number
---- @param flask boolean
---- @param draw_id? boolean
+---Draws to material
+---@private
+---@param x number
+---@param y number
+---@param to number
+---@param flask boolean
+---@param draw_id? boolean
 function fungal:FungalDrawToMaterial(x, y, to, flask, draw_id)
 	if not to then
 		local center = self:FungalGetShiftWindowOffset(1)
@@ -79,8 +79,8 @@ function fungal:FungalDrawToMaterial(x, y, to, flask, draw_id)
 	end
 end
 
---- Main function to draw shifts
---- @private
+---Main function to draw shifts
+---@private
 function fungal:FungalDraw()
 	self.fungal.x = 3
 	self.fungal.y = 1 - self.scroll.y
@@ -95,8 +95,8 @@ function fungal:FungalDraw()
 	self:Text(0, self.fungal.y + self.scroll.y, "")
 end
 
---- Draws recipes
---- @private
+---Draws recipes
+---@private
 function fungal:FungalDrawRecipes()
 	local recipe_pos = self.menu.start_x + self.fungal.width - 3
 	if self.fs.aplc then
@@ -111,7 +111,7 @@ function fungal:FungalDrawRecipes()
 	end
 end
 
---- Draws checkboxes and shifts
+---Draws checkboxes and shifts
 function fungal:FungalDrawWindow()
 	if self:IsDrawCheckbox(self.menu.pos_x, self.menu.pos_y - 1, T.EnableFungalPast, self.fungal.past) then
 		if self:IsMouseClicked() then
@@ -132,7 +132,7 @@ function fungal:FungalDrawWindow()
 	self:MenuSetWidth(self.scroll.width - 6)
 end
 
---- Initialize data for fungal shift
+---Initialize data for fungal shift
 function fungal:FungalInit()
 	self:FungalUpdateWindowDims()
 	self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")

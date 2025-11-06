@@ -1,8 +1,8 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local apo_elixir = {}
 
---- Draws an ap or lc recipe
---- @private
+---Draws an ap or lc recipe
+---@private
 function apo_elixir:FungalApoElixirTooltipDrawRecipe()
 	local x, y = 0, 0
 	self:FungalDrawSingleMaterial(x, y, self.fs.apo_elixir.result)
@@ -20,8 +20,8 @@ function apo_elixir:FungalApoElixirTooltipDrawRecipe()
 	self:FungalDrawSingleMaterial(x, y, self.fs.apo_elixir.mats[3], self.alt)
 end
 
---- Tooltip for aplc
---- @private
+---Tooltip for aplc
+---@private
 function apo_elixir:FungalApoElixirTooltip()
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	self:FungalApoElixirTooltipDrawRecipe()
@@ -32,10 +32,10 @@ function apo_elixir:FungalApoElixirTooltip()
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
---- Draws aplc flasks
---- @private
---- @param x number
---- @param y number
+---Draws aplc flasks
+---@private
+---@param x number
+---@param y number
 function apo_elixir:FungalApoElixirDraw(x, y)
 	self:FungalDrawIcon(x, y, self.fs.apo_elixir.result)
 	self:AddOptionForNext(self.c.options.ForceFocusable)

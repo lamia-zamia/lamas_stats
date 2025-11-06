@@ -1,11 +1,11 @@
---- @class (exact) LS_Gui
+---@class (exact) LS_Gui
 local future = {}
 
---- Draws individual shift in tooltip
---- @private
---- @param y number
---- @param shift shift|failed_shift
---- @param offset number
+---Draws individual shift in tooltip
+---@private
+---@param y number
+---@param shift shift|failed_shift
+---@param offset number
 function future:FungalDrawFutureTooltipShift(y, shift, offset)
 	local x = 3
 	self.fungal.row_count = self:FungalCalculateRowCount(shift.from, shift.to, shift.flask)
@@ -17,11 +17,11 @@ function future:FungalDrawFutureTooltipShift(y, shift, offset)
 	self:FungalDrawToMaterial(x, y, shift.to, shift.flask == "to", self.alt)
 end
 
---- Draws failed shift in tooltip
---- @private
---- @param y number
---- @param shift shift
---- @param offset number
+---Draws failed shift in tooltip
+---@private
+---@param y number
+---@param shift shift
+---@param offset number
 function future:FungalDrawFutureTooltipShiftFailed(y, shift, offset)
 	local x = 0
 	x = x + self:FungalText(x, y, T.lamas_stats_fungal_if_fail) + 3
@@ -33,11 +33,11 @@ function future:FungalDrawFutureTooltipShiftFailed(y, shift, offset)
 	self:FungalDrawFutureTooltipShift(y, shift.failed, offset)
 end
 
---- Draws force failed shift in tooltip
---- @private
---- @param y number
---- @param shift shift
---- @param offset number
+---Draws force failed shift in tooltip
+---@private
+---@param y number
+---@param shift shift
+---@param offset number
 function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	local x = 0
 	if shift.failed then
@@ -55,10 +55,10 @@ function future:FungalDrawFutureTooltipShiftForceFailed(y, shift, offset)
 	self:FungalDrawFutureTooltipShift(y + 10, shift.force_failed, offset)
 end
 
---- Draws greedy information
---- @param y integer
---- @param greedy greedy_shift
---- @param offset number
+---Draws greedy information
+---@param y integer
+---@param greedy greedy_shift
+---@param offset number
 function future:FungalDrawFutureTooltipGreedy(y, greedy, offset)
 	local x = 0
 	self:ColorGray()
@@ -77,11 +77,11 @@ function future:FungalDrawFutureTooltipGreedy(y, greedy, offset)
 	self:FungalDrawSingleMaterial(x, y + 10, greedy.grass)
 end
 
---- Gets longest material name
---- @private
---- @param shift shift
---- @return number
---- @nodiscard
+---Gets longest material name
+---@private
+---@param shift shift
+---@return number
+---@nodiscard
 function future:FungalFutureCalculateOffset(shift)
 	local offset_from = self:FungalGetLongestTextInShift(shift, 0, 0, false, self.alt)
 	if shift.failed then offset_from = self:FungalGetLongestMaterialName(shift.failed.from, offset_from, self.alt) end
@@ -89,10 +89,10 @@ function future:FungalFutureCalculateOffset(shift)
 	return offset_from
 end
 
---- Draws tooltip for future shift
---- @private
---- @param shift shift
---- @param i number
+---Draws tooltip for future shift
+---@private
+---@param shift shift
+---@param i number
 function future:FungalDrawFutureTooltip(shift, i)
 	self:AddOption(self.c.options.Layout_NextSameLine)
 	local y = 0
@@ -128,11 +128,11 @@ function future:FungalDrawFutureTooltip(shift, i)
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
---- Sets color for future shift row
---- @private
---- @param hovered boolean
---- @param i integer
---- @param greedy greedy_shift
+---Sets color for future shift row
+---@private
+---@param hovered boolean
+---@param i integer
+---@param greedy greedy_shift
 function future:FungalFutureDecideRowColor(hovered, i, greedy)
 	local is_greedy_success = greedy and greedy.success
 	if is_greedy_success then
@@ -162,8 +162,8 @@ function future:FungalFutureDecideRowColor(hovered, i, greedy)
 	end
 end
 
---- Draws future shifts
---- @private
+---Draws future shifts
+---@private
 function future:FungalDrawFuture()
 	for i = self.fs.current_shift, self.fs.max_shifts do
 		local shift = self.fs.predictor.shifts[i]

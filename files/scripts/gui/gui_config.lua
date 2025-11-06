@@ -1,12 +1,12 @@
---- @class LS_Gui_config
---- @field config_list {[string]:string[]}
---- @field unfolded {[string]:boolean}
---- @field y number
---- @field width number
---- @field [string] boolean
+---@class LS_Gui_config
+---@field config_list {[string]:string[]}
+---@field unfolded {[string]:boolean}
+---@field y number
+---@field width number
+---@field [string] boolean
 
---- @class LS_Gui
---- @field config LS_Gui_config
+---@class LS_Gui
+---@field config LS_Gui_config
 local config = {
 	config = {
 		y = 0,
@@ -111,8 +111,8 @@ function config:ConfigDrawScrollBox()
 	self:MenuSetWidth(self.scroll.width - 6)
 end
 
---- Fetch settings
---- @private
+---Fetch settings
+---@private
 function config:ConfigGetSettings()
 	local max = 0
 	for category, _ in pairs(self.config.config_list) do

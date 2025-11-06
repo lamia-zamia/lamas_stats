@@ -1,4 +1,4 @@
---- @diagnostic disable: name-style-check
+---@diagnostic disable: name-style-check
 dofile_once("data/scripts/lib/mod_settings.lua")
 
 local mod_id = "lamas_stats"
@@ -34,28 +34,28 @@ local U = {
 	waiting_for_input = false,
 }
 do -- helpers
-	--- @param setting_name setting_id
-	--- @param value setting_value
+	---@param setting_name setting_id
+	---@param value setting_value
 	function U.set_setting(setting_name, value)
 		ModSettingSet(mod_prfx .. setting_name, value)
 		ModSettingSetNextValue(mod_prfx .. setting_name, value, false)
 	end
 
-	--- @param setting_name setting_id
-	--- @return setting_value?
+	---@param setting_name setting_id
+	---@return setting_value?
 	function U.get_setting(setting_name)
 		return ModSettingGet(mod_prfx .. setting_name)
 	end
 
-	--- @param setting_name setting_id
-	--- @return setting_value?
+	---@param setting_name setting_id
+	---@return setting_value?
 	function U.get_setting_next(setting_name)
 		return ModSettingGetNextValue(mod_prfx .. setting_name)
 	end
 
-	--- @param array mod_settings_global|mod_settings
-	--- @param gui? gui
-	--- @return number
+	---@param array mod_settings_global|mod_settings
+	---@param gui? gui
+	---@return number
 	function U.calculate_elements_offset(array, gui)
 		if not gui then
 			gui = GuiCreate()
@@ -76,14 +76,14 @@ do -- helpers
 		return max_width + 3
 	end
 
-	--- @param all boolean reset all
+	---@param all boolean reset all
 	function U.set_default(all)
 		for setting, value in pairs(D) do
 			if U.get_setting(setting) == nil or all then U.set_setting(setting, value) end
 		end
 	end
 
-	--- gather keycodes from game file
+	---gather keycodes from game file
 	function U.gather_key_codes()
 		U.keycodes = {}
 		U.keycodes[0] = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_action_unbound")
@@ -100,7 +100,7 @@ do -- helpers
 		end
 	end
 
-	--- Resets settings
+	---Resets settings
 	function U.reset_settings()
 		local count = ModSettingGetCount()
 		local setting_list = {}
@@ -128,18 +128,18 @@ do -- gui helpers
 		GuiOptionsAddForNextWidget(gui, GUI_OPTION.HandleDoubleClickAsClick)
 	end
 
-	--- @param gui gui
-	--- @param hovered boolean
+	---@param gui gui
+	---@param hovered boolean
 	function G.yellow_if_hovered(gui, hovered)
 		if hovered then GuiColorSetForNextWidget(gui, 1, 1, 0.7, 1) end
 	end
 
-	--- @param gui gui
-	--- @param x_pos number
-	--- @param text string
-	--- @param color? table
-	--- @return boolean
-	--- @nodiscard
+	---@param gui gui
+	---@param x_pos number
+	---@param text string
+	---@param color? table
+	---@return boolean
+	---@nodiscard
 	function G.button(gui, x_pos, text, color)
 		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
 		GuiText(gui, x_pos, 0, "")
@@ -158,9 +158,9 @@ do -- gui helpers
 		return clicked
 	end
 
-	--- @param setting_name setting_id
-	--- @param value setting_value
-	--- @param default setting_value
+	---@param setting_name setting_id
+	---@param value setting_value
+	---@param default setting_value
 	function G.on_clicks(setting_name, value, default)
 		if InputIsMouseButtonJustDown(1) then U.set_setting(setting_name, value) end
 		if InputIsMouseButtonJustDown(2) then
@@ -169,8 +169,8 @@ do -- gui helpers
 		end
 	end
 
-	--- @param gui gui
-	--- @param setting_name setting_id
+	---@param gui gui
+	---@param setting_name setting_id
 	function G.toggle_checkbox_boolean(gui, setting_name)
 		local text = T[setting_name]
 		local _, _, _, prev_x, y, prev_w = GuiGetPreviousWidgetInfo(gui)
@@ -203,9 +203,9 @@ do -- gui helpers
 		if hovered then G.on_clicks(setting_name, not value, D[setting_name]) end
 	end
 
-	--- @param gui gui
-	--- @param setting mod_setting_number
-	--- @return number, number
+	---@param gui gui
+	---@param setting mod_setting_number
+	---@return number, number
 	function G.mod_setting_number(gui, setting)
 		GuiLayoutBeginHorizontal(gui, 0, 0, true, 0, 0)
 		GuiText(gui, mod_setting_group_x_offset, 0, setting.ui_name)
@@ -225,9 +225,9 @@ do -- gui helpers
 		return value, value_new
 	end
 
-	--- @param gui gui
-	--- @param setting_name setting_id
-	--- @param scope? mod_setting_scopes
+	---@param gui gui
+	---@param setting_name setting_id
+	---@param scope? mod_setting_scopes
 	function G.tooltip(gui, setting_name, scope)
 		local description = T[setting_name .. "_d"]
 		local value = U.get_setting_next(setting_name)
@@ -260,8 +260,8 @@ end
 
 local S = {}
 do -- Settings GUI
-	--- @param setting mod_setting_number
-	--- @param gui gui
+	---@param setting mod_setting_number
+	---@param gui gui
 	function S.mod_setting_number_integer(_, gui, _, _, setting)
 		local value, value_new = G.mod_setting_number(gui, setting)
 		value_new = math.floor(value_new + 0.5)
@@ -419,7 +419,7 @@ D = {
 }
 
 local function build_settings()
-	--- @type mod_settings_global
+	---@type mod_settings_global
 	local settings = {
 		{
 			id = "input_key",
@@ -484,7 +484,7 @@ end
 -- #############		Meh		##############
 -- ###########################################
 
---- @param init_scope number
+---@param init_scope number
 function ModSettingsUpdate(init_scope)
 	if U.get_setting("overlay_enabled") == nil then U.reset_settings() end
 	U.set_default(false)
@@ -494,13 +494,13 @@ function ModSettingsUpdate(init_scope)
 	current_language_last_frame = current_language
 end
 
---- @return number
+---@return number
 function ModSettingsGuiCount()
 	return mod_settings_gui_count(mod_id, mod_settings)
 end
 
---- @param gui gui
---- @param in_main_menu boolean
+---@param gui gui
+---@param in_main_menu boolean
 function ModSettingsGui(gui, in_main_menu)
 	GuiIdPushString(gui, mod_prfx)
 	gui_id = mod_id_hash * 1000
@@ -510,5 +510,5 @@ end
 
 U.gather_key_codes()
 
---- @type mod_settings_global
+---@type mod_settings_global
 mod_settings = build_settings()

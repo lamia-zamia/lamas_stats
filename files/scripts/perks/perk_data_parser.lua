@@ -1,20 +1,20 @@
---- @class (exact) perk_data
---- @field ui_name string
---- @field ui_description string
---- @field perk_icon string
---- @field picked_count number
---- @field id string
---- @field max number
+---@class (exact) perk_data
+---@field ui_name string
+---@field ui_description string
+---@field perk_icon string
+---@field picked_count number
+---@field id string
+---@field max number
 
---- @class perks_parser
---- @field perks {[string]:perk_data}
---- @field list string[]
+---@class perks_parser
+---@field perks {[string]:perk_data}
+---@field list string[]
 local perks = {
 	perks = {},
 	list = {},
 }
 
---- Add perks to the list
+---Add perks to the list
 local function add_perk(perk_data)
 	perks.list[#perks.list + 1] = perk_data.id
 	perks.perks[perk_data.id] = {
@@ -27,10 +27,10 @@ local function add_perk(perk_data)
 	}
 end
 
---- Parse perks in sandbox
+---Parse perks in sandbox
 function perks:Parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") --- @type ML_sandbox
+	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
 
 	-- Redefining some functions so fungal shift would do nothing
@@ -58,9 +58,9 @@ function perks:Parse()
 	sandbox:end_sandbox()
 end
 
---- Returns perk data if exist
---- @param id string
---- @return perk_data
+---Returns perk data if exist
+---@param id string
+---@return perk_data
 function perks:GetData(id)
 	return self.perks[id] or self.perks["lamas_stats_unknown"]
 end

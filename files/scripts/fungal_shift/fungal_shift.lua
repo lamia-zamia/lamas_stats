@@ -1,27 +1,27 @@
-local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") --- @type error_reporter
+local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua") ---@type error_reporter
 
---- @alias greedy_shift {gold:integer, grass:integer, success:boolean}
+---@alias greedy_shift {gold:integer, grass:integer, success:boolean}
 
---- @class (exact) failed_shift
---- @field from? integer[]
---- @field to? integer
+---@class (exact) failed_shift
+---@field from? integer[]
+---@field to? integer
 
---- @class (exact) shift
---- @field from? integer[]
---- @field to? integer
---- @field flask? string
---- @field failed? failed_shift
---- @field force_failed? failed_shift
---- @field greedy? greedy_shift
+---@class (exact) shift
+---@field from? integer[]
+---@field to? integer
+---@field flask? string
+---@field failed? failed_shift
+---@field force_failed? failed_shift
+---@field greedy? greedy_shift
 
---- @class fungal_shift
---- @field predictor shift_predictor
---- @field shifted fungal_reader
---- @field max_shifts integer
---- @field cooldown number
---- @field past_shifts shift
---- @field current_shift integer
---- @field aplc APLC_recipes|false
+---@class fungal_shift
+---@field predictor shift_predictor
+---@field shifted fungal_reader
+---@field max_shifts integer
+---@field cooldown number
+---@field past_shifts shift
+---@field current_shift integer
+---@field aplc APLC_recipes|false
 local fs = {
 	predictor = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua"),
 	shifted = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_past_getter.lua"),
@@ -30,11 +30,11 @@ local fs = {
 	current_shift = 0,
 }
 
---- Checks is shift is identical to failed shift
---- @private
---- @param shift failed_shift
---- @return boolean
---- @nodiscard
+---Checks is shift is identical to failed shift
+---@private
+---@param shift failed_shift
+---@return boolean
+---@nodiscard
 function fs:IsShiftIdenticalToFailed(shift)
 	for i = 1, #shift.from do
 		local index = self.shifted.indexed + i - 1
@@ -46,12 +46,12 @@ function fs:IsShiftIdenticalToFailed(shift)
 	return true
 end
 
---- Gets "from" materials that does not equal to "to"
---- @private
---- @param from integer[]
---- @param to integer
---- @return integer[]
---- @nodiscard
+---Gets "from" materials that does not equal to "to"
+---@private
+---@param from integer[]
+---@param to integer
+---@return integer[]
+---@nodiscard
 function fs:SanitizeFromMaterials(from, to)
 	local seed_shift_from_count = #from
 	if seed_shift_from_count > 1 then
@@ -66,10 +66,10 @@ function fs:SanitizeFromMaterials(from, to)
 	return from
 end
 
---- Additional check for shift in case with Apotheosis cursed liquid
---- @private
---- @param past_shift shift
---- @return boolean
+---Additional check for shift in case with Apotheosis cursed liquid
+---@private
+---@param past_shift shift
+---@return boolean
 function fs:ApotheosisCheckFrom(past_shift)
 	local cursed = CellFactory_GetType("apotheosis_cursed_liquid_red")
 	local cursed_static = CellFactory_GetType("apotheosis_cursed_liquid_red_static")
@@ -82,9 +82,9 @@ function fs:ApotheosisCheckFrom(past_shift)
 	return false
 end
 
---- Analize past shift
---- @private
---- @param shift_number integer
+---Analize past shift
+---@private
+---@param shift_number integer
 function fs:AnalysePastShift(shift_number)
 	self.past_shifts[shift_number] = {}
 	local past_shift = self.past_shifts[shift_number]
@@ -150,7 +150,7 @@ function fs:AnalysePastShift(shift_number)
 	end
 end
 
---- Analize past shifts
+---Analize past shifts
 function fs:AnalysePastShifts()
 	if #self.predictor.shifts < self.current_shift then
 		reporter:Report("There was an error reading world shifts")
@@ -166,7 +166,7 @@ function fs:AnalysePastShifts()
 	end
 end
 
---- Gets APLC recipe if success
+---Gets APLC recipe if success
 function fs:GetApLcRecipe()
 	local aplc = dofile_once("mods/lamas_stats/files/scripts/aplc.lua") ---@type APLC
 	local aplc_recipe = aplc:get()
@@ -181,7 +181,7 @@ function fs:GetApoElixirRecipe()
 	self.apo_elixir = dofile_once("mods/lamas_stats/files/scripts/apo_elixir.lua")
 end
 
---- Init fungal shifts
+---Init fungal shifts
 function fs:Init()
 	self:GetApLcRecipe()
 	if ModIsEnabled("Apotheosis") then self:GetApoElixirRecipe() end

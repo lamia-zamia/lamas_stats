@@ -1,21 +1,21 @@
---- @class (exact) LS_Gui_menu
---- @field start_x number
---- @field start_y number
---- @field width number
---- @field pos_x number
---- @field pos_y number
---- @field opened boolean
---- @field package header string
---- @field package fungal boolean
---- @field package perks boolean
---- @field package kys boolean
---- @field package current_window function|nil
---- @field package previous_window function|nil
+---@class (exact) LS_Gui_menu
+---@field start_x number
+---@field start_y number
+---@field width number
+---@field pos_x number
+---@field pos_y number
+---@field opened boolean
+---@field package header string
+---@field package fungal boolean
+---@field package perks boolean
+---@field package kys boolean
+---@field package current_window function|nil
+---@field package previous_window function|nil
 
---- @class (exact) LS_Gui
---- @field private menu LS_Gui_menu
+---@class (exact) LS_Gui
+---@field private menu LS_Gui_menu
 local menu = {
-	menu = { --- @diagnostic disable-line: missing-fields
+	menu = { ---@diagnostic disable-line: missing-fields
 		start_x = 16,
 		start_y = 48,
 		pos_y = 44,
@@ -29,27 +29,27 @@ local menu = {
 	},
 }
 
---- Draws tooltip near menu
---- @param background string
---- @param tooltip_fn function
---- @param ... any
+---Draws tooltip near menu
+---@param background string
+---@param tooltip_fn function
+---@param ... any
 function menu:MenuTooltip(background, tooltip_fn, ...)
 	self.tooltip_img = background
 	self:ShowTooltip(self.menu.start_x + self.scroll.width + 12, self.menu.start_y + 3, tooltip_fn, ...)
 	self.tooltip_img = self.default_tooltip
 end
 
---- Sets width if it's higher than current width
---- @private
---- @param value number
+---Sets width if it's higher than current width
+---@private
+---@param value number
 function menu:MenuSetWidth(value)
 	self.menu.width = math.max(self.menu.width, value)
 end
 
---- Adds clickable button
---- @param text string
---- @param fn function
---- @param run? function
+---Adds clickable button
+---@param text string
+---@param fn function
+---@param run? function
 function menu:MenuAddButton(text, fn, run)
 	if self.menu.current_window == fn then
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, false)
@@ -66,8 +66,8 @@ function menu:MenuAddButton(text, fn, run)
 	self.menu.pos_x = self.menu.pos_x + self:GetTextDimension(text) + 9
 end
 
---- Draw menu
---- @private
+---Draw menu
+---@private
 function menu:MenuDraw()
 	self:AnimateStart(false)
 	self.menu.pos_x = self.menu.start_x

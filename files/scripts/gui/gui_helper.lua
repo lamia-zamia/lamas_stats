@@ -1,26 +1,26 @@
-local helper = {} --- @class (exact) LS_Gui
+local helper = {} ---@class (exact) LS_Gui
 
---- Starts animation
---- @private
---- @param reset boolean
+---Starts animation
+---@private
+---@param reset boolean
 function helper:AnimateStart(reset)
 	self:AnimateB()
 	self:AnimateAlpha(0.1, 0.1, reset)
 	self:AnimateScale(0.1, reset)
 end
 
---- Sets yellow color for next widget
---- @private
+---Sets yellow color for next widget
+---@private
 function helper:ColorYellow()
 	self:Color(1, 1, 0.7)
 end
 
---- Splits string and returns lines
---- @private
---- @param text string
---- @param length number
---- @return string[]
---- @nodiscard
+---Splits string and returns lines
+---@private
+---@param text string
+---@param length number
+---@return string[]
+---@nodiscard
 function helper:SplitString(text, length)
 	local lines = {}
 	local current_line = ""
@@ -41,12 +41,12 @@ function helper:SplitString(text, length)
 	return lines
 end
 
---- Draws checbox
---- @param x number
---- @param y number
---- @param text string
---- @param value boolean
---- @return boolean hovered
+---Draws checbox
+---@param x number
+---@param y number
+---@param text string
+---@param value boolean
+---@return boolean hovered
 function helper:IsDrawCheckbox(x, y, text, value)
 	local text_dim = self:GetTextDimension(text)
 	local hovered = self:IsHoverBoxHovered(x, y + 1, text_dim + 13, 9)
@@ -63,13 +63,13 @@ function helper:IsDrawCheckbox(x, y, text, value)
 	return hovered
 end
 
---- Draws text button
---- @private
---- @param x number
---- @param y number
---- @param text string
---- @return boolean
---- @nodiscard
+---Draws text button
+---@private
+---@param x number
+---@param y number
+---@param text string
+---@return boolean
+---@nodiscard
 function helper:IsTextButtonClicked(x, y, text)
 	text = "[" .. text .. "]"
 	local width = self:GetTextDimension(text)
@@ -82,10 +82,10 @@ function helper:IsTextButtonClicked(x, y, text)
 	return clicked
 end
 
---- Returns fungal shift cooldown
---- @private
---- @return number
---- @nodiscard
+---Returns fungal shift cooldown
+---@private
+---@return number
+---@nodiscard
 function helper:GetFungalShiftCooldown()
 	if not self.fs.current_shift or self.fs.current_shift > self.fs.max_shifts then return 0 end
 
@@ -97,8 +97,8 @@ function helper:GetFungalShiftCooldown()
 	return math.max(math.floor((self.fs.cooldown - (frame - last_frame)) / 60), 0)
 end
 
---- Sets max parallel positions
---- @private
+---Sets max parallel positions
+---@private
 function helper:ScanPWPosition()
 	local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
 	if player_par_x < self.stats.position_pw_west then
