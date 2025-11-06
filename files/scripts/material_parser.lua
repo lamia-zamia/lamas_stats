@@ -143,7 +143,7 @@ local function parse_file(file)
 end
 
 ---Parses material list
-function mat:Parse()
+function mat:parse()
 	local files = ModMaterialFilesGet()
 	for i = 1, #files do
 		parse_file(files[i])
@@ -161,7 +161,7 @@ function mat:Parse()
 end
 
 ---Converts buffer data into actual data
-function mat:Convert()
+function mat:convert()
 	for name, value in pairs(self.buffer) do
 		self.data[CellFactory_GetType(name)] = value
 	end
@@ -171,7 +171,7 @@ end
 ---Returns data
 ---@param material_type number
 ---@return material_data
-function mat:GetData(material_type)
+function mat:get_data(material_type)
 	return self.data[material_type] or self.invalid
 end
 

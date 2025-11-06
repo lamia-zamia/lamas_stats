@@ -28,7 +28,7 @@ local function add_perk(perk_data)
 end
 
 ---Parse perks in sandbox
-function perks:Parse()
+function perks:parse()
 	-- Starting sandbox to not load any globals
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
@@ -61,7 +61,7 @@ end
 ---Returns perk data if exist
 ---@param id string
 ---@return perk_data
-function perks:GetData(id)
+function perks:get_data(id)
 	return self.perks[id] or self.perks["lamas_stats_unknown"]
 end
 

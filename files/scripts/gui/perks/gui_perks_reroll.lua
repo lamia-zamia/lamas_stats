@@ -13,7 +13,7 @@ function pg:PerksDrawRerollPerks()
 				self.perk.y = self.perk.y + 17
 			end
 			local perk_id = self.perks.nearby.entities[j] and perks[self.perks.nearby.data[j].spawn_order] or perks[j]
-			local perk_data = self.perks.data:GetData(perk_id)
+			local perk_data = self.perks.data:get_data(perk_id)
 			local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
 			self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk_data, self.PerksCurrentPerkTooltip, perk_data, self.alt)
 			self.perk.x = self.perk.x + 17

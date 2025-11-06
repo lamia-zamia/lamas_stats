@@ -39,7 +39,7 @@ end
 ---@private
 ---@param perk_id string
 function pg:PerksDrawCurrentPerk(perk_id)
-	local perk = self.perks.data:GetData(perk_id)
+	local perk = self.perks.data:get_data(perk_id)
 	if perk.picked_count < 1 then return end
 	if self.perk.x > self.scroll.width then
 		self.perk.x = 0

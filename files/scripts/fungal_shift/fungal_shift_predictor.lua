@@ -285,7 +285,7 @@ local function get_greedy_shift_results(i)
 end
 
 ---Parses data from fungal_shift.lua
-function shift_predictor:Parse()
+function shift_predictor:parse()
 	-- Starting sandbox to not load any globals
 	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()

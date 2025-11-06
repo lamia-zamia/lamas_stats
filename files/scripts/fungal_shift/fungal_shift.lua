@@ -192,7 +192,7 @@ function fs:Init()
 		self.cooldown = 18000
 		return -- do nothing in case everything is gold
 	end
-	self.predictor:Parse()
+	self.predictor:parse()
 	self.max_shifts = self.predictor.max_shifts
 	self.cooldown = self.predictor.cooldown
 end

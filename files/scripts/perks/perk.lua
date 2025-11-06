@@ -23,7 +23,7 @@ function perk:GetCurrentList()
 end
 
 function perk:Init()
-	self.data:Parse()
+	self.data:parse()
 	self.predict:Init()
 end
 

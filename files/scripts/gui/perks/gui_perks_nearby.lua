@@ -5,7 +5,7 @@ local pg = {}
 ---@private
 ---@param nearby_perk nearby_perks_data
 function pg:PerksNearbyTooltip(nearby_perk)
-	local perk = self.perks.data:GetData(nearby_perk.id)
+	local perk = self.perks.data:get_data(nearby_perk.id)
 	local ui_name = self:Locale(perk.ui_name)
 	local description_lines = self:SplitString(self:Locale(perk.ui_description), 200)
 	local picked_count = T.PerkCount .. ": " .. perk.picked_count
@@ -34,7 +34,7 @@ function pg:PerksNearbyTooltip(nearby_perk)
 	if nearby_perk.cast and self.config.enable_nearby_always_cast then
 		local cast_length = self:GetTextDimension(always_cast)
 		local cast_pos = (longest - cast_length) / 2 - 6
-		local cast_data = self.actions:GetData(nearby_perk.cast)
+		local cast_data = self.actions:get_data(nearby_perk.cast)
 		self:AddOptionForNext(self.c.options.Layout_NextSameLine)
 		self:Text(cast_pos, 3, always_cast)
 		self:Image(cast_pos + cast_length + 3, 3, cast_data.sprite, 1, 0.625)
@@ -72,7 +72,7 @@ function pg:PerksDrawNearby()
 			self.perk.y = self.perk.y + 17
 		end
 		local nearby_perk = self.perks.nearby.data[i] ---@type nearby_perks_data
-		local perk_data = self.perks.data:GetData(nearby_perk.id)
+		local perk_data = self.perks.data:get_data(nearby_perk.id)
 		local hovered = self:IsHoverBoxHovered(x, self.perk.y, 16, 16)
 		self:PerksDrawPerk(x, self.perk.y, hovered, perk_data, self.PerksNearbyTooltip, nearby_perk, self.alt)
 		if nearby_perk.lottery then

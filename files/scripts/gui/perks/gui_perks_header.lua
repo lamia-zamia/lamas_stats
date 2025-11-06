@@ -4,7 +4,7 @@ local pg = {}
 ---Draws stats for perks
 ---@private
 function pg:PerksDrawStats()
-	local perks_lottery = self.perks.data:GetData("PERKS_LOTTERY")
+	local perks_lottery = self.perks.data:get_data("PERKS_LOTTERY")
 
 	if self.perks.total_amount > 0 then
 		local text = string.format(T.Perks .. ": %d", self.perks.total_amount)
