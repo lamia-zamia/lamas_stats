@@ -87,18 +87,19 @@ local function abgr_to_rgb(color)
 end
 
 ---@param element element
----@return string
+---@return string?
 local function get_icon(element)
 	local graphics = element:first_of("Graphics")
-	if graphics and graphics.attr.texture_file and graphics.attr.texture_file ~= "" then
-		if element.attr.tags and element.attr.tags:find("static") then
-			return create_virtual_icon(element.attr.name, graphics.attr.texture_file, "mods/lamas_stats/files/gfx/solid_static.png")
-		end
-		if element.attr.liquid_sand == "1" then
-			return create_virtual_icon(element.attr.name, graphics.attr.texture_file, "mods/lamas_stats/files/gfx/pile.png")
-		end
+	if not graphics then return end
+	local graphics_attributes = graphics.attr
+	if not graphics_attributes.texture_file or graphics_attributes.texture_file == "" then return end
+	local element_attributes = element.attr
+	if element_attributes.tags and element_attributes.tags:find("static") then
+		return create_virtual_icon(element_attributes.name, graphics_attributes.texture_file, "mods/lamas_stats/files/gfx/solid_static.png")
 	end
-	return "data/items_gfx/potion.png"
+	if element_attributes.liquid_sand == "1" then
+		return create_virtual_icon(element_attributes.name, graphics_attributes.texture_file, "mods/lamas_stats/files/gfx/pile.png")
+	end
 end
 
 ---Parses an element color
@@ -113,15 +114,17 @@ end
 ---Parses an xml element
 ---@param element element
 local function parse_element(element)
-	if not element.attr.name or not element.attr.ui_name then return end
-	local material_icon = get_icon(element)
+	local attributes = element.attr
+	local material_id = attributes.name
+	if not material_id then return end
+	local material_icon = get_icon(element) or "data/items_gfx/potion.png"
 	local material_color = material_icon == "data/items_gfx/potion.png" and abgr_to_rgb(get_color(element))
-	mat.buffer[element.attr.name] = {
-		id = element.attr.name,
-		ui_name = element.attr.ui_name,
+	mat.buffer[material_id] = {
+		id = material_id,
+		ui_name = attributes.ui_name or material_id,
 		icon = material_icon,
 		color = material_color,
-		static = not not element.attr.name:find("_static$"),
+		static = not not material_id:find("_static$"),
 	}
 end
 
@@ -149,30 +152,32 @@ function mat:parse()
 		parse_file(files[i])
 	end
 
-	self.invalid = {
-		id = "???",
-		ui_name = "???",
-		icon = "data/items_gfx/potion_normals.png",
-		color = false,
-		static = false,
-	}
-
 	nxml = nil ---@diagnostic disable-line: cast-local-type
 end
 
 ---Converts buffer data into actual data
 function mat:convert()
 	for name, value in pairs(self.buffer) do
+		local ui_name = GameTextGetTranslatedOrNot(value.ui_name)
+		if ui_name == "" then value.ui_name = value.id end
 		self.data[CellFactory_GetType(name)] = value
 	end
 	self.buffer = {}
 end
 
+local invalid_material = {
+	id = "???",
+	ui_name = "???",
+	icon = "data/items_gfx/potion_normals.png",
+	color = false,
+	static = false,
+}
+
 ---Returns data
 ---@param material_type number
 ---@return material_data
 function mat:get_data(material_type)
-	return self.data[material_type] or self.invalid
+	return self.data[material_type] or invalid_material
 end
 
 return mat
