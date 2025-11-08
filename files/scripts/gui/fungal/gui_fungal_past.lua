@@ -37,44 +37,56 @@ function past:FungalDrawPastTooltip(shift, i)
 	self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
+---Draws past shift
+---@param i integer
+---@param shift shift
+function past:fungal_draw_past_shift(i, shift)
+	local from = self:FungalSanitizeFromShifts(shift.from)
+	self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
+	local height = self.fungal.row_count * 10
+
+	if not self:fungal_is_element_visible(self.fungal.y, height) then
+		self.fungal.y = self.fungal.y + height + 1
+		return
+	end
+
+	local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
+
+	if hovered then
+		self:Color(0.2, 0.6, 0.7)
+	else
+		-- Darken past shift
+		self:SetZ(self.z - 101)
+		self:Color(0, 0, 0)
+		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
+
+		local color = i % 2 == 0 and 0.4 or 0.6
+		self:Color(color, color, color)
+	end
+
+	self:SetZ(self.z + 4)
+	self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
+
+	self:FungalDrawShiftNumber(i)
+	self:FungalDrawFromMaterials(self.fungal.x, self.fungal.y, from, false)
+	self.fungal.x = self.fungal.x + self.fungal.offset.from
+	self:FungalDrawArrow(self.fungal.x, self.fungal.y)
+	self.fungal.x = self.fungal.x + 15
+	self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, false)
+	self.fungal.x = self.fungal.x + self.fungal.offset.to
+
+	if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawPastTooltip, shift, i, self.alt) end
+
+	self.fungal.y = self.fungal.y + height + 1
+	self.fungal.x = 3
+end
+
 function past:FungalDrawPast()
 	for i = 1, self.fs.current_shift do
 		local shift = self.fs.past_shifts[i]
 
 		if not shift then return end -- do something
-
-		local from = self:FungalSanitizeFromShifts(shift.from)
-		self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
-		local height = self.fungal.row_count * 10
-		local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
-
-		if hovered then
-			self:Color(0.2, 0.6, 0.7)
-		else
-			-- Darken past shift
-			self:SetZ(self.z - 101)
-			self:Color(0, 0, 0)
-			self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
-
-			local color = i % 2 == 0 and 0.4 or 0.6
-			self:Color(color, color, color)
-		end
-
-		self:SetZ(self.z + 4)
-		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
-
-		self:FungalDrawShiftNumber(i)
-		self:FungalDrawFromMaterials(self.fungal.x, self.fungal.y, from, false)
-		self.fungal.x = self.fungal.x + self.fungal.offset.from
-		self:FungalDrawArrow(self.fungal.x, self.fungal.y)
-		self.fungal.x = self.fungal.x + 15
-		self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, false)
-		self.fungal.x = self.fungal.x + self.fungal.offset.to
-
-		if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawPastTooltip, shift, i, self.alt) end
-
-		self.fungal.y = self.fungal.y + height + 1
-		self.fungal.x = 3
+		self:fungal_draw_past_shift(i, shift)
 	end
 end
 

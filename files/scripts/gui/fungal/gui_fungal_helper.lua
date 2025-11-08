@@ -20,6 +20,10 @@ function helper:FungalText(x, y, text)
 	return (self:GetTextDimension(text))
 end
 
+function helper:fungal_is_element_visible(y, height)
+	return y + height > 0 and y < self.scroll.height_max
+end
+
 ---Returns true if shift is hovered
 ---@private
 ---@param x number
@@ -28,12 +32,8 @@ end
 ---@return boolean
 ---@nodiscard
 function helper:FungalIsHoverBoxHovered(x, y, height)
-	if
-		y + height / 2 > 0
-		and y + height / 2 < self.scroll.height_max
-		and self:IsHoverBoxHovered(self.menu.start_x + x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, height, true)
-	then
-		return true
+	if y + height / 2 > 0 and y + height / 2 < self.scroll.height_max then
+		return self:IsHoverBoxHovered(self.menu.start_x + x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, height, true)
 	end
 	return false
 end

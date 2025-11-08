@@ -162,33 +162,46 @@ function future:FungalFutureDecideRowColor(hovered, i, greedy)
 	end
 end
 
+---Draws future shift
+---@param i number
+---@param shift shift
+function future:fungal_draw_future_shift(i, shift)
+	local from = self:FungalSanitizeFromShifts(shift.from)
+	self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
+	local height = self.fungal.row_count * 10
+
+	if not self:fungal_is_element_visible(self.fungal.y, height) then
+		self.fungal.y = self.fungal.y + height + 1
+		return
+	end
+
+	local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
+
+	self:FungalFutureDecideRowColor(hovered, i, shift.greedy)
+	self:SetZ(self.z + 4)
+	self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
+
+	self:FungalDrawShiftNumber(i)
+	self:FungalDrawFromMaterials(self.fungal.x, self.fungal.y, from, shift.flask == "from")
+	self.fungal.x = self.fungal.x + self.fungal.offset.from
+	self:FungalDrawArrow(self.fungal.x, self.fungal.y)
+	self.fungal.x = self.fungal.x + 15
+	self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, shift.flask == "to")
+	self.fungal.x = self.fungal.x + self.fungal.offset.to
+
+	if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawFutureTooltip, shift, i, self.alt) end
+
+	self.fungal.y = self.fungal.y + height + 1
+	self.fungal.x = 3
+end
+
 ---Draws future shifts
 ---@private
 function future:FungalDrawFuture()
 	for i = self.fs.current_shift, self.fs.max_shifts do
 		local shift = self.fs.predictor.shifts[i]
 		if not shift then return end
-		local from = self:FungalSanitizeFromShifts(shift.from)
-		self.fungal.row_count = self:FungalCalculateRowCount(from, shift.to, shift.flask)
-		local height = self.fungal.row_count * 10
-		local hovered = self:FungalIsHoverBoxHovered(self.fungal.x, self.fungal.y, height)
-
-		self:FungalFutureDecideRowColor(hovered, i, shift.greedy)
-		self:SetZ(self.z + 4)
-		self:Image(self.fungal.x - 3, self.fungal.y - 1, self.c.px, 0.2, self.fungal.width - 3, height + 1)
-
-		self:FungalDrawShiftNumber(i)
-		self:FungalDrawFromMaterials(self.fungal.x, self.fungal.y, from, shift.flask == "from")
-		self.fungal.x = self.fungal.x + self.fungal.offset.from
-		self:FungalDrawArrow(self.fungal.x, self.fungal.y)
-		self.fungal.x = self.fungal.x + 15
-		self:FungalDrawToMaterial(self.fungal.x, self.fungal.y, shift.to, shift.flask == "to")
-		self.fungal.x = self.fungal.x + self.fungal.offset.to
-
-		if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.FungalDrawFutureTooltip, shift, i, self.alt) end
-
-		self.fungal.y = self.fungal.y + height + 1
-		self.fungal.x = 3
+		self:fungal_draw_future_shift(i, shift)
 	end
 end
 
