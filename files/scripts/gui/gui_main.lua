@@ -43,6 +43,7 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/gui_kys.lua",
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_config.lua",
+	"mods/lamas_stats/files/scripts/gui/materials/gui_materials.lua",
 }
 
 for i = 1, #modules do
@@ -67,13 +68,14 @@ function gui:FetchData()
 end
 
 ---Fetches settings
-function gui:GetSettings()
+---@param did_language_changed boolean
+function gui:GetSettings(did_language_changed)
 	self.hotkey = self.mod:GetSettingNumber("input_key")
 	self.stats.position_pw_west = self.mod:GetGlobalNumber("lamas_stats_farthest_west")
 	self.stats.position_pw_east = self.mod:GetGlobalNumber("lamas_stats_farthest_east")
 	self:HeaderGetSettings()
-	self:FungalGetSettings()
-	self:ConfigGetSettings()
+	self:FungalGetSettings(did_language_changed)
+	self:ConfigGetSettings(did_language_changed)
 	self.max_height = self.mod:GetSettingNumber("max_height")
 end
 
@@ -90,7 +92,7 @@ function gui:PostWorldInit()
 	self.actions:parse()
 	self.mat:convert()
 	self.fs:Init()
-	self:GetSettings()
+	self:GetSettings(true)
 	self.show = self.mod:GetSettingBoolean("overlay_enabled")
 	self.menu.opened = self.mod:GetSettingBoolean("menu_enabled")
 end

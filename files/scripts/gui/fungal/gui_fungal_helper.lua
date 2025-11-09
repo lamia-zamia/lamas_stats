@@ -244,8 +244,9 @@ function helper:FungalUpdateWindowDims()
 end
 
 ---Fetches settings
-function helper:FungalGetSettings()
-	self:FungalUpdateWindowDims()
+---@param did_language_changed boolean
+function helper:FungalGetSettings(did_language_changed)
+	if did_language_changed then self:FungalUpdateWindowDims() end
 end
 
 return helper

@@ -1,6 +1,7 @@
 dofile_once("mods/lamas_stats/files/scripts/redefined_functions.lua")
 T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation strings (i hate this)
 local gui = dofile_once("mods/lamas_stats/files/scripts/gui/gui_main.lua") ---@type LS_Gui
+local current_language = GameTextGetTranslatedOrNot("$current_language")
 
 ---After OnModPostInit
 function OnMagicNumbersAndWorldSeedInitialized()
@@ -19,5 +20,8 @@ end
 
 ---Fetch settings
 function OnPausedChanged()
-	gui:GetSettings()
+	local language = GameTextGetTranslatedOrNot("$current_language")
+	local did_language_changed = current_language ~= language
+	if did_language_changed then current_language = language end
+	gui:GetSettings(did_language_changed)
 end

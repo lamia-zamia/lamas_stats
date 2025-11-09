@@ -76,6 +76,7 @@ function menu:MenuDraw()
 
 	if self.config.show_fungal_menu then self:MenuAddButton(T.FungalShifts, self.FungalDrawWindow, self.FungalInit) end
 	if self.config.show_perks_menu then self:MenuAddButton(T.Perks, self.PerksDrawWindow, self.PerksInit) end
+	if self.config.show_materials then self:MenuAddButton("materials", self.materials_draw_window) end
 	if self.config.show_kys_menu then self:MenuAddButton(T.KYS_Suicide, self.KysDraw) end
 	self:MenuAddButton(T.config, self.ConfigDrawScrollBox, self.ConfigInit)
 

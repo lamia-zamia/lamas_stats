@@ -15,6 +15,7 @@ local config = {
 			Menu = {
 				"show_fungal_menu",
 				"show_perks_menu",
+				"show_materials",
 				"show_kys_menu",
 			},
 			Stats = {
@@ -103,7 +104,7 @@ function config:ConfigDraw()
 		if self.config.unfolded[category] then self:ConfigDrawConfigs(category) end
 	end
 	self.scroll.width = math.max(self.menu.width + 6, self.config.width)
-	self:Text(0, self.config.y + self.scroll.y + 10, "")
+	self:Text(0, self.config.y + self.scroll.y, "")
 end
 
 function config:ConfigDrawScrollBox()
@@ -113,7 +114,9 @@ end
 
 ---Fetch settings
 ---@private
-function config:ConfigGetSettings()
+---@param did_language_changed boolean
+function config:ConfigGetSettings(did_language_changed)
+	if not did_language_changed then return end
 	local max = 0
 	for category, _ in pairs(self.config.config_list) do
 		local entries = self.config.config_list[category]
@@ -127,7 +130,7 @@ function config:ConfigGetSettings()
 end
 
 function config:ConfigInit()
-	self:ConfigGetSettings()
+	-- self:ConfigGetSettings()
 end
 
 return config

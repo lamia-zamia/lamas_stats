@@ -134,7 +134,7 @@ end
 
 ---Initialize data for fungal shift
 function fungal:FungalInit()
-	self:FungalUpdateWindowDims()
+	-- self:FungalUpdateWindowDims()
 	self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
 	self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")
 	self.scroll.width = self.fungal.width
