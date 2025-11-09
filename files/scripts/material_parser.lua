@@ -3,13 +3,15 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 local colors = dofile_once("mods/lamas_stats/files/scripts/color_helper.lua") ---@type colors
 nxml.error_handler = function() end
 
----@alias material_colors {r:number, g:number, b:number, a:number}
+local full_data = {}
 
 ---@class (exact) material_data
 ---@field id string
 ---@field ui_name string
----@field color material_colors|false
+---@field color material_colors?
 ---@field icon string
+---@field is_solid boolean
+---@field parent string?
 ---@field static boolean
 
 ---@class material_parser
@@ -45,22 +47,6 @@ local function create_virtual_icon(name, material, png)
 	return virtual_path
 end
 
----@param element element
----@return string?
-local function get_icon(element)
-	local graphics = element:first_of("Graphics")
-	if not graphics then return end
-	local graphics_attributes = graphics.attr
-	if not graphics_attributes.texture_file or graphics_attributes.texture_file == "" then return end
-	local element_attributes = element.attr
-	if element_attributes.tags and element_attributes.tags:find("static") then
-		return create_virtual_icon(element_attributes.name, graphics_attributes.texture_file, "mods/lamas_stats/files/gfx/solid_static.png")
-	end
-	if element_attributes.liquid_sand == "1" then
-		return create_virtual_icon(element_attributes.name, graphics_attributes.texture_file, "mods/lamas_stats/files/gfx/pile.png")
-	end
-end
-
 ---Parses an element color
 ---@param element element
 ---@return string
@@ -70,20 +56,57 @@ local function get_color(element)
 	return element.attr.wang_color
 end
 
+---@param element element
+---@param is_solid boolean
+---@return string, material_colors?
+local function get_icon(element, is_solid)
+	local graphics = element:first_of("Graphics")
+	if not graphics then return "data/items_gfx/potion.png", colors.abgr_to_rgb(get_color(element)) end
+	local graphics_attributes = graphics.attr
+	local has_texture = graphics_attributes.texture_file and graphics_attributes.texture_file ~= ""
+	-- if not graphics_attributes.texture_file or graphics_attributes.texture_file == "" then return end
+	local element_attributes = element.attr
+	if is_solid or element_attributes.tags and element_attributes.tags:find("static") then
+		if not has_texture then return "mods/lamas_stats/files/gfx/solid_static.png", colors.abgr_to_rgb(get_color(element)) end
+		return create_virtual_icon(element_attributes.name, graphics_attributes.texture_file, "mods/lamas_stats/files/gfx/solid_static.png")
+	end
+	if element_attributes.liquid_sand == "1" then
+		if not has_texture then return "mods/lamas_stats/files/gfx/pile.png", colors.abgr_to_rgb(get_color(element)) end
+		return create_virtual_icon(element_attributes.name, graphics_attributes.texture_file, "mods/lamas_stats/files/gfx/pile.png")
+	end
+	return "data/items_gfx/potion.png", colors.abgr_to_rgb(get_color(element))
+end
+
+---Checks if element is solid
+---@param attr table<string, string>
+---@return boolean
+local function is_solid_type(attr)
+	if attr.convert_to_box2d_material or attr.solid_break_to_type or attr.cell_type == "solid" then
+		return true
+	elseif attr._parent then
+		return is_solid_type(full_data[attr._parent].attr)
+	end
+	return false
+end
+
 ---Parses an xml element
 ---@param element element
 local function parse_element(element)
 	local attributes = element.attr
 	local material_id = attributes.name
 	if not material_id then return end
-	local material_icon = get_icon(element) or "data/items_gfx/potion.png"
-	local material_color = material_icon == "data/items_gfx/potion.png" and colors.abgr_to_rgb(get_color(element))
+	local is_solid = is_solid_type(attributes)
+	if is_solid then print(material_id) end
+	local material_icon, material_color = get_icon(element, is_solid)
+	-- local material_color = material_icon == "data/items_gfx/potion.png" and colors.abgr_to_rgb(get_color(element))
 	mat.buffer[material_id] = {
 		id = material_id,
 		ui_name = attributes.ui_name or material_id,
 		icon = material_icon,
 		color = material_color,
 		static = not not material_id:find("_static$"),
+		parent = attributes._parent,
+		is_solid = is_solid,
 	}
 end
 
@@ -95,11 +118,10 @@ local function parse_file(file)
 		reporter:Report("couldn't parse material file " .. file)
 		return
 	end
-	local xml = result
 
 	for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
-		for elem in xml:each_of(element_name) do
-			parse_element(elem)
+		for elem in result:each_of(element_name) do
+			full_data[elem:get("name")] = elem
 		end
 	end
 end
@@ -111,7 +133,18 @@ function mat:parse()
 		parse_file(files[i])
 	end
 
+	for k, v in pairs(full_data) do
+		parse_element(v)
+	end
+
+	-- for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
+	-- 	for elem in result:each_of(element_name) do
+	-- 		full_data[elem:get("name")] = elem
+	-- 	end
+	-- end
+
 	nxml = nil ---@diagnostic disable-line: cast-local-type
+	full_data = nil
 end
 
 ---Converts buffer data into actual data

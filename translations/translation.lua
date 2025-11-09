@@ -59,6 +59,7 @@ local translations = {
 		config = "Config",
 		stats_fps = "Show FPS",
 		stats_show_speed = "Show speed",
+		show_materials = "Show materials",
 	},
 	["русский"] = {
 		lamas_stat_current = "Текущие",
@@ -121,6 +122,7 @@ local translations = {
 		config = "Настройки",
 		stats_fps = "Показывать FPS",
 		stats_show_speed = "Показывать скорость",
+		show_materials = "Показывать материалы",
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -182,6 +184,7 @@ local translations = {
 		config = "構成",
 		stats_fps = "FPSを表示",
 		stats_show_speed = "速度表示",
+		show_materials = "資料を表示する",
 	},
 }
 
