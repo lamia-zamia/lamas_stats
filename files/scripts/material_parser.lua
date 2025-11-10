@@ -4,6 +4,14 @@ local colors = dofile_once("mods/lamas_stats/files/scripts/color_helper.lua") --
 nxml.error_handler = function() end
 
 local full_data = {}
+local reaction_input_index = {}
+local reaction_output_index = {}
+
+---@class reactions_data
+---@field inputs string[]
+---@field outputs string[]
+
+local reactions = {} ---@type reactions_data[]
 
 ---@class (exact) material_data
 ---@field id string
@@ -123,9 +131,9 @@ local function get_material_type(attributes)
 	return mat.material_types.liquid
 end
 
----Parses an xml element
+---Parses an xml material element
 ---@param element element
-local function parse_element(element)
+local function parse_material(element)
 	local attributes = element.attr
 	local material_id = attributes.name
 	if not material_id then return end
@@ -144,6 +152,31 @@ local function parse_element(element)
 	}
 end
 
+local function reaction_add_to_index_table(index_table, material, index)
+	if not index_table[material] then index_table[material] = {} end
+	local idx_table = index_table[material]
+	idx_table[#idx_table + 1] = index
+end
+
+---@param element element
+local function parse_reaction(element)
+	local attributes = element.attr
+	local input_cell1 = attributes.input_cell1
+	local input_cell2 = attributes.input_cell2
+	local output_cell1 = attributes.output_cell1
+	local output_cell2 = attributes.output_cell2
+	local reaction_index = #reactions + 1
+	print(reaction_index)
+	reactions[reaction_index] = {
+		inputs = { input_cell1, input_cell2 },
+		outputs = { output_cell1, output_cell2 },
+	}
+	reaction_add_to_index_table(reaction_input_index, input_cell1, reaction_index)
+	reaction_add_to_index_table(reaction_input_index, input_cell2, reaction_index)
+	reaction_add_to_index_table(reaction_output_index, output_cell1, reaction_index)
+	reaction_add_to_index_table(reaction_output_index, output_cell2, reaction_index)
+end
+
 ---Parses a file
 ---@param file string
 local function parse_file(file)
@@ -158,6 +191,9 @@ local function parse_file(file)
 			full_data[elem:get("name")] = elem
 		end
 	end
+	for reaction in result:each_of("Reaction") do
+		parse_reaction(reaction)
+	end
 end
 
 ---Parses material list
@@ -168,7 +204,7 @@ function mat:parse()
 	end
 
 	for _, v in pairs(full_data) do
-		parse_element(v)
+		parse_material(v)
 	end
 
 	nxml = nil ---@diagnostic disable-line: cast-local-type
@@ -198,6 +234,16 @@ local invalid_material = {
 ---@return material_data
 function mat:get_data(material_type)
 	return self.data[material_type] or invalid_material
+end
+
+---@param material_id string
+---@return reactions_data[]
+function mat:get_reactions_using(material_id)
+	local result = {}
+	for _, rid in ipairs(reaction_input_index[material_id] or {}) do
+		result[#result + 1] = reactions[rid]
+	end
+	return result
 end
 
 return mat

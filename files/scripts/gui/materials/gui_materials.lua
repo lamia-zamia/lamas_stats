@@ -21,6 +21,31 @@ for k, v in pairs(material_types_enum) do
 	material_types[v] = k
 end
 
+---@param material_index integer
+function materials:show_reactions(material_index)
+	self:AddOption(self.c.options.Layout_NextSameLine)
+	local material = self.mat:get_data(material_index)
+	self:FungalDrawSingleMaterial(0, 0, material_index, true)
+	local reactions = self.mat:get_reactions_using(material.id)
+	local x = 0
+	local y = 15
+	for _, reaction in ipairs(reactions) do
+		for _, input in ipairs(reaction.inputs) do
+			self:Text(x, y, input)
+			x = x + self:GetTextDimension(input) + 5
+		end
+		self:Text(x, y, "->")
+		x = x + 25
+		for _, output in ipairs(reaction.outputs) do
+			self:Text(x, y, output)
+			x = x + self:GetTextDimension(output) + 5
+		end
+		x = 0
+		y = y + 11
+	end
+	self:RemoveOption(self.c.options.Layout_NextSameLine)
+end
+
 ---Draws single material
 ---@param y number
 ---@param material_index integer
@@ -34,6 +59,9 @@ function materials:materials_draw_material(y, material_index)
 	end
 
 	self:FungalDrawSingleMaterial(0, y, material_index, true)
+
+	local hovered = self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, 10)
+	if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.show_reactions, material_index) end
 	self.materials.y = self.materials.y + 10
 end
 
