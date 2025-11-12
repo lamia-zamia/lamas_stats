@@ -1,5 +1,6 @@
 ---@class (exact) LS_Gui_materials
 ---@field y number
+---@field reaction_y number
 ---@field visible_types { [number]:boolean}
 ---@field current_recipe integer?
 ---@field showing_recipe integer?
@@ -12,6 +13,7 @@ local materials = {
 		visible_types = {},
 		current_recipe = nil,
 		showing_recipe = nil,
+		reaction_y = 0,
 	},
 }
 
@@ -27,27 +29,28 @@ end
 
 function materials:show_reactions()
 	if not self.materials.showing_recipe then return end
-	-- self:AddOption(self.c.options.Layout_NextSameLine)
+	self.materials.reaction_y = 1 - self.scroll.y
 	local material = self.mat:get_data(self.materials.showing_recipe)
-	self:FungalDrawSingleMaterial(0, 0, self.materials.showing_recipe, true)
+	self:FungalDrawSingleMaterial(0, self.materials.reaction_y, self.materials.showing_recipe, true)
 	local reactions = self.mat:get_reactions_using(material.id)
 	local x = 0
-	local y = 15
+	self.materials.reaction_y = self.materials.reaction_y + 15
+
 	for _, reaction in ipairs(reactions) do
 		for _, input in ipairs(reaction.inputs) do
-			self:Text(x, y, input)
+			self:Text(x, self.materials.reaction_y, input)
 			x = x + self:GetTextDimension(input) + 5
 		end
-		self:Text(x, y, "->")
+		self:Text(x, self.materials.reaction_y, "->")
 		x = x + 25
 		for _, output in ipairs(reaction.outputs) do
-			self:Text(x, y, output)
+			self:Text(x, self.materials.reaction_y, output)
 			x = x + self:GetTextDimension(output) + 5
 		end
 		x = 0
-		y = y + 11
+		self.materials.reaction_y = self.materials.reaction_y + 11
 	end
-	-- self:RemoveOption(self.c.options.Layout_NextSameLine)
+	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
 end
 
 ---Draws single material
@@ -64,13 +67,10 @@ function materials:materials_draw_material(y, material_index)
 
 	self:FungalDrawSingleMaterial(0, y, material_index, true)
 
-	self.materials.showing_recipe = self.materials.current_recipe
-
 	local hovered = self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, 10)
 	if hovered then
 		self.materials.showing_recipe = material_index
 		if self:IsLeftClicked() then self.materials.current_recipe = material_index end
-		-- self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.show_reactions, material_index)
 	end
 
 	self.materials.y = self.materials.y + 10
@@ -82,6 +82,8 @@ function materials:materials_draw_list()
 	self:AddOption(self.c.options.NonInteractive)
 
 	self.materials.y = 1 - self.scroll.y
+
+	self.materials.showing_recipe = self.materials.current_recipe
 	for material_index, _ in pairs(self.mat.data) do
 		self:materials_draw_material(self.materials.y, material_index)
 	end
@@ -103,13 +105,14 @@ end
 ---Draws materials window
 function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
+	self:MenuSetWidth(300)
 
 	self.menu.pos_y = self.menu.pos_y + 12
 	self:ScrollBox(
 		self.menu.start_x - 3,
 		self.menu.pos_y + 7,
 		self.z + 5,
-		300,
+		306,
 		self.max_height,
 		self.c.default_9piece,
 		3,
@@ -118,18 +121,17 @@ function materials:materials_draw_window()
 	)
 	if self.materials.showing_recipe then
 		self:ScrollBox(
-			self.menu.start_x + self.menu.width + 12,
+			self.menu.start_x + self.menu.width + 18,
 			self.menu.start_y + 3,
 			self.z + 5,
-			100,
+			250,
 			200,
-			"mods/lamas_stats/files/gfx/ui_9piece_tooltip.png",
+			self.c.default_9piece,
 			3,
 			3,
 			self.show_reactions
 		)
 	end
-	-- self:MenuSetWidth(self.scroll.width - 6)
 end
 
 return materials

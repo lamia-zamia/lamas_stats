@@ -57,7 +57,7 @@ function menu:MenuAddButton(text, fn, run)
 	else
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, true)
 		if self:IsHovered() and self:IsLeftClicked() then
-			self:ScrollBoxReset()
+			-- self:ScrollBoxReset()
 			if run then run(self) end
 			self.menu.current_window = fn
 		end

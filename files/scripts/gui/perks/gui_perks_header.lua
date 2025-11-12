@@ -52,7 +52,7 @@ function pg:PerksAddButton(text, fn)
 			"mods/lamas_stats/files/gfx/ui_9piece_button_alt_highlight.png"
 		)
 		if self:IsHovered() and self:IsLeftClicked() then
-			self:ScrollBoxReset()
+			-- self:ScrollBoxReset()
 			self:CheckForUpdates(-1)
 			self.perk.current_window = fn
 		end
