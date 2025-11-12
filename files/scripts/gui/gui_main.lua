@@ -126,7 +126,6 @@ function gui:Loop()
 	self:FetchData()
 	self:DetermineAltMode()
 
-	self.scroll.height_max = self.max_height
 	GuiZSet(self.gui, self.z - 100)
 	self:HeaderDraw()
 	if self.config.stats_enable then self:StatsDraw() end

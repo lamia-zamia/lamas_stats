@@ -8,7 +8,7 @@ function pg:PerksDrawFuturePerks()
 		local perks = self.perks.predict.future_perks[i]
 		local start_y = self.perk.y
 		for j = 1, #perks do
-			if self.perk.x + 17 > self.scroll.width then
+			if self.perk.x > self.menu.width then
 				self.perk.x = 0
 				self.perk.y = self.perk.y + 17
 			end
@@ -24,13 +24,23 @@ function pg:PerksDrawFuturePerks()
 		local color = i % 2 == 0 and 0.1 or 0.2
 		self:Color(color, color, color)
 		self:SetZ(self.z + 4)
-		self:Image(-3, start_y - 2, self.c.px, 0.4, self.scroll.width, self.perk.y - start_y)
+		self:Image(-3, start_y - 2, self.c.px, 0.4, self.menu.width + 3, self.perk.y - start_y)
 	end
 	self:Text(self.perk.x, self.perk.y + self.scroll.y, "")
 end
 
 function pg:PerksDrawFuturePerkScrollBox()
-	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3, self.PerksDrawFuturePerks)
+	self:ScrollBox(
+		self.menu.start_x - 3,
+		self.perk.scrollbox_start,
+		self.z + 5,
+		self.menu.width + 6,
+		self.perk.scroll_height,
+		self.c.default_9piece,
+		3,
+		3,
+		self.PerksDrawFuturePerks
+	)
 end
 
 return pg

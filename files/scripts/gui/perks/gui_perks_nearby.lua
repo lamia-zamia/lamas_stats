@@ -67,7 +67,7 @@ end
 function pg:PerksDrawNearby()
 	local x = self.menu.start_x - 3
 	for i = 1, #self.perks.nearby.data do
-		if x > self.scroll.width then
+		if x > self.menu.width then
 			x = self.menu.start_x - 3
 			self.perk.y = self.perk.y + 17
 		end

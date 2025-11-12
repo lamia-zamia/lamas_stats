@@ -7,6 +7,7 @@
 ---@field scrollbox_start number
 ---@field current_children_entities number
 ---@field reroll_count number
+---@field scroll_height number
 
 ---@class (exact) LS_Gui
 ---@field perk LS_Gui_perks
@@ -20,6 +21,7 @@ local pg = {
 		scrollbox_start = 0,
 		current_children_entities = 0,
 		reroll_count = 0,
+		scroll_height = 0,
 	},
 }
 
@@ -47,7 +49,7 @@ pg.perk.current_window = pg.PerksDrawCurrentPerkScrollBox
 ---@return boolean
 ---@nodiscard
 function pg:PerksIsHoverBoxHovered(x, y)
-	if y + 8 > 0 and y + 8 < self.scroll.height_max and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start + y, 16, 16) then
+	if y + 8 > 0 and y + 8 < self.max_height and self:IsHoverBoxHovered(self.menu.start_x + x - 3, self.perk.scrollbox_start + y, 16, 16) then
 		return true
 	end
 	return false
@@ -82,7 +84,7 @@ function pg:PerksDrawWindow()
 	self:PerksAddButton(T.lamas_stats_perks_reroll, self.PerksDrawRerollPerkScrollBox)
 	self:PerksDrawStats()
 	self:PerksSetWidth(math.ceil(self.perk.x / 17))
-	self.scroll.width = math.max(self.menu.width + 6, self.perk.width * 17 - 1)
+	self:MenuSetWidth(self.perk.width * 17 - 1)
 	local start_y = self.perk.y
 	self.perk.y = self.perk.y + 10
 
@@ -91,9 +93,9 @@ function pg:PerksDrawWindow()
 		self:PerksDrawNearby()
 		self.perk.y = self.perk.y + 12
 	end
-	self.scroll.height_max = self.scroll.height_max - self.perk.y + start_y
-	self:Draw9Piece(self.menu.start_x - 6, self.menu.pos_y + 4, self.z + 49, self.scroll.width + 6, self.perk.y - self.menu.pos_y)
-	if self:IsHoverBoxHovered(self.menu.start_x - 9, self.menu.pos_y + 1, self.scroll.width + 12, self.perk.y - self.menu.pos_y + 12, true) then
+	self.perk.scroll_height = self.max_height - self.perk.y + start_y
+	self:Draw9Piece(self.menu.start_x - 6, self.menu.pos_y + 4, self.z + 49, self.menu.width + 12, self.perk.y - self.menu.pos_y)
+	if self:IsHoverBoxHovered(self.menu.start_x - 9, self.menu.pos_y + 1, self.menu.width + 12, self.perk.y - self.menu.pos_y + 12, true) then
 		self:BlockInput()
 	end
 
@@ -103,7 +105,6 @@ function pg:PerksDrawWindow()
 	if self.perk.current_window then self.perk.current_window(self) end
 	self:AnimateE()
 
-	self:MenuSetWidth(self.scroll.width - 6)
 	self.perk.previous_window = self.perk.current_window
 end
 

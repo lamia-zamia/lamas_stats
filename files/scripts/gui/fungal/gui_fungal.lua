@@ -128,8 +128,18 @@ function fungal:FungalDrawWindow()
 	self:FungalDrawRecipes()
 
 	self.menu.pos_y = self.menu.pos_y + 12
-	self:ScrollBox(self.menu.start_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self.FungalDraw)
-	self:MenuSetWidth(self.scroll.width - 6)
+	self:MenuSetWidth(self.fungal.width - 6)
+	self:ScrollBox(
+		self.menu.start_x - 3,
+		self.menu.pos_y + 7,
+		self.z + 5,
+		self.menu.width + 6,
+		self.max_height,
+		self.c.default_9piece,
+		3,
+		3,
+		self.FungalDraw
+	)
 end
 
 ---Initialize data for fungal shift
@@ -137,7 +147,6 @@ function fungal:FungalInit()
 	-- self:FungalUpdateWindowDims()
 	self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
 	self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")
-	self.scroll.width = self.fungal.width
 end
 
 return fungal

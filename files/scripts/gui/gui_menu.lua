@@ -35,7 +35,7 @@ local menu = {
 ---@param ... any
 function menu:MenuTooltip(background, tooltip_fn, ...)
 	self.tooltip_img = background
-	self:ShowTooltip(self.menu.start_x + self.scroll.width + 12, self.menu.start_y + 3, tooltip_fn, ...)
+	self:ShowTooltip(self.menu.start_x + self.menu.width + 18, self.menu.start_y + 3, tooltip_fn, ...)
 	self.tooltip_img = self.default_tooltip
 end
 
@@ -58,7 +58,6 @@ function menu:MenuAddButton(text, fn, run)
 		self:DrawButton(self.menu.pos_x, self.menu.pos_y, self.z - 1, text, true)
 		if self:IsHovered() and self:IsLeftClicked() then
 			self:ScrollBoxReset()
-			self.scroll.height_max = self.max_height
 			if run then run(self) end
 			self.menu.current_window = fn
 		end

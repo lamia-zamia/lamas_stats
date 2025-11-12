@@ -41,7 +41,7 @@ end
 function pg:PerksDrawCurrentPerk(perk_id)
 	local perk = self.perks.data:get_data(perk_id)
 	if perk.picked_count < 1 then return end
-	if self.perk.x > self.scroll.width then
+	if self.perk.x > self.menu.width then
 		self.perk.x = 0
 		self.perk.y = self.perk.y + 17
 	end
@@ -62,7 +62,17 @@ function pg:PerksDrawCurrentPerks()
 end
 
 function pg:PerksDrawCurrentPerkScrollBox()
-	self:ScrollBox(self.menu.start_x - 3, self.perk.scrollbox_start, self.z + 5, self.c.default_9piece, 3, 3, self.PerksDrawCurrentPerks)
+	self:ScrollBox(
+		self.menu.start_x - 3,
+		self.perk.scrollbox_start,
+		self.z + 5,
+		self.menu.width + 6,
+		self.max_height,
+		self.c.default_9piece,
+		3,
+		3,
+		self.PerksDrawCurrentPerks
+	)
 end
 
 return pg

@@ -1,6 +1,8 @@
 ---@class (exact) LS_Gui_materials
 ---@field y number
 ---@field visible_types { [number]:boolean}
+---@field current_recipe integer?
+---@field showing_recipe integer?
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -8,6 +10,8 @@ local materials = {
 	materials = {
 		y = 0,
 		visible_types = {},
+		current_recipe = nil,
+		showing_recipe = nil,
 	},
 }
 
@@ -21,11 +25,11 @@ for k, v in pairs(material_types_enum) do
 	material_types[v] = k
 end
 
----@param material_index integer
-function materials:show_reactions(material_index)
-	self:AddOption(self.c.options.Layout_NextSameLine)
-	local material = self.mat:get_data(material_index)
-	self:FungalDrawSingleMaterial(0, 0, material_index, true)
+function materials:show_reactions()
+	if not self.materials.showing_recipe then return end
+	-- self:AddOption(self.c.options.Layout_NextSameLine)
+	local material = self.mat:get_data(self.materials.showing_recipe)
+	self:FungalDrawSingleMaterial(0, 0, self.materials.showing_recipe, true)
 	local reactions = self.mat:get_reactions_using(material.id)
 	local x = 0
 	local y = 15
@@ -43,7 +47,7 @@ function materials:show_reactions(material_index)
 		x = 0
 		y = y + 11
 	end
-	self:RemoveOption(self.c.options.Layout_NextSameLine)
+	-- self:RemoveOption(self.c.options.Layout_NextSameLine)
 end
 
 ---Draws single material
@@ -60,8 +64,15 @@ function materials:materials_draw_material(y, material_index)
 
 	self:FungalDrawSingleMaterial(0, y, material_index, true)
 
+	self.materials.showing_recipe = self.materials.current_recipe
+
 	local hovered = self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, 10)
-	if hovered then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.show_reactions, material_index) end
+	if hovered then
+		self.materials.showing_recipe = material_index
+		if self:IsLeftClicked() then self.materials.current_recipe = material_index end
+		-- self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip.png", self.show_reactions, material_index)
+	end
+
 	self.materials.y = self.materials.y + 10
 end
 
@@ -94,8 +105,31 @@ function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
 
 	self.menu.pos_y = self.menu.pos_y + 12
-	self:ScrollBox(self.menu.start_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self.materials_draw_list)
-	self:MenuSetWidth(self.scroll.width - 6)
+	self:ScrollBox(
+		self.menu.start_x - 3,
+		self.menu.pos_y + 7,
+		self.z + 5,
+		300,
+		self.max_height,
+		self.c.default_9piece,
+		3,
+		3,
+		self.materials_draw_list
+	)
+	if self.materials.showing_recipe then
+		self:ScrollBox(
+			self.menu.start_x + self.menu.width + 12,
+			self.menu.start_y + 3,
+			self.z + 5,
+			100,
+			200,
+			"mods/lamas_stats/files/gfx/ui_9piece_tooltip.png",
+			3,
+			3,
+			self.show_reactions
+		)
+	end
+	-- self:MenuSetWidth(self.scroll.width - 6)
 end
 
 return materials

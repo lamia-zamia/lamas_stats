@@ -4,7 +4,7 @@ local options = {
 	NonInteractive = 2,
 	AlwaysClickable = 3,
 	NoPositionTween = 6,
-	Layout_NextSameLine = 14
+	Layout_NextSameLine = 14,
 }
 
 --- @class UI_const
@@ -17,7 +17,7 @@ local const = {
 	default_9piece = "data/ui_gfx/decorations/9piece0_gray.png",
 	px = "mods/lamas_stats/vfs/white.png", -- white pixel
 	codes = dofile_once("mods/lamas_stats/files/lib/keycodes.lua"),
-	options = options
+	options = options,
 }
 
 --- @class (exact) UI_dimensions
@@ -53,7 +53,7 @@ local ui_class = {
 	c = const,
 	dim = {
 		x = 640,
-		y = 360
+		y = 360,
 	},
 	gui_id = 100000,
 	tooltip_gui_id = 1000,
@@ -85,8 +85,8 @@ local ui_class = {
 	},
 	buttons = {
 		img = "data/ui_gfx/decorations/9piece0_gray.png",
-		img_hl = "data/ui_gfx/decorations/9piece0.png"
-	}
+		img_hl = "data/ui_gfx/decorations/9piece0.png",
+	},
 }
 ui_class.__index = ui_class
 
@@ -95,7 +95,7 @@ ui_class.__index = ui_class
 function ui_class:New()
 	local o = {
 		gui = GuiCreate(),
-		gui_tooltip = GuiCreate()
+		gui_tooltip = GuiCreate(),
 	}
 	setmetatable(o, self)
 	return o
@@ -148,8 +148,9 @@ end
 --- @return boolean
 --- @nodiscard
 function ui_class:IsControlCharsPressed()
-	return InputIsKeyJustDown(self.c.codes.keyboard.enter) or InputIsKeyDown(self.c.codes.keyboard.escape) or
-		InputIsKeyDown(self.c.codes.keyboard.space)
+	return InputIsKeyJustDown(self.c.codes.keyboard.enter)
+		or InputIsKeyDown(self.c.codes.keyboard.escape)
+		or InputIsKeyDown(self.c.codes.keyboard.space)
 end
 
 --- Draws a button with text
@@ -180,13 +181,9 @@ end
 --- @return boolean
 --- @nodiscard
 function ui_class:IsDisablableButtonClicked(x, y, z, text, tooltip_text, active, inactive_tooltip_text)
-	if active then
-		return self:IsButtonClicked(x, y, z, text, tooltip_text)
-	end
+	if active then return self:IsButtonClicked(x, y, z, text, tooltip_text) end
 	self:DrawButton(x, y, z, text, false)
-	if inactive_tooltip_text and self:IsHovered() then
-		self:ShowTooltipTextCenteredX(1, 20, inactive_tooltip_text)
-	end
+	if inactive_tooltip_text and self:IsHovered() then self:ShowTooltipTextCenteredX(1, 20, inactive_tooltip_text) end
 	return false
 end
 
@@ -209,9 +206,7 @@ end
 --- @return boolean
 --- @nodiscard
 function ui_class:IsHoverBoxHovered(x, y, width, height, dont_focus)
-	if not dont_focus then
-		self:AddOptionForNext(self.c.options.ForceFocusable)
-	end
+	if not dont_focus then self:AddOptionForNext(self.c.options.ForceFocusable) end
 	self:Draw9Piece(x, y, -10000, width, height, self.c.empty, self.c.empty)
 	return self:IsHovered()
 end
@@ -247,13 +242,9 @@ function ui_class:GetOffsetX(x, w)
 	local x_offset = 0
 
 	-- Move the tooltip left if it overflows the right edge
-	if x + w > self.dim.x - min_offset then
-		x_offset = self.dim.x - x - w - min_offset
-	end
+	if x + w > self.dim.x - min_offset then x_offset = self.dim.x - x - w - min_offset end
 	-- Move the tooltip right if it overflows the left edge
-	if x + x_offset < min_offset then
-		x_offset = min_offset - x
-	end
+	if x + x_offset < min_offset then x_offset = min_offset - x end
 
 	return x_offset
 end
@@ -269,7 +260,7 @@ function ui_class:SetTooltipCache(x, y, key)
 		width = prev.w,
 		height = prev.h,
 		x_offset = self:GetOffsetX(x, prev.w),
-		y_offset = self:GetOffsetY(y, prev.h)
+		y_offset = self:GetOffsetY(y, prev.h),
 	}
 end
 
@@ -301,9 +292,7 @@ end
 --- @return gui_tooltip_size_cache
 function ui_class:GetTooltipData(x, y, ui_fn, ...)
 	local key = self:GetKey(x, y, ui_fn, ...)
-	if not self.gui_tooltip_size_cache[key] then
-		self:DrawTooltipOffScreen(x, y, ui_fn, key, ...)
-	end
+	if not self.gui_tooltip_size_cache[key] then self:DrawTooltipOffScreen(x, y, ui_fn, key, ...) end
 	return self.gui_tooltip_size_cache[key]
 end
 
@@ -316,7 +305,7 @@ end
 --- @return string
 function ui_class:GetKey(x, y, ui_fn, ...)
 	local key = self:Locale("$current_language") .. tostring(x) .. tostring(y) .. tostring(ui_fn)
-	for _, var in ipairs { ... } do
+	for _, var in ipairs({ ... }) do
 		key = key .. tostring(var)
 	end
 	return key
@@ -411,23 +400,21 @@ end
 -- #########		SCROLLBOX		###########
 -- ############################################
 
---- @class ui_fake_scroll
---- @field public y number current offset for elements
---- @field package target_y number target offset for elements (for smooth scrolling)
---- @field package max_y number size of contents within scrollbox
---- @field package max_y_target number maximum possible value for target_y
---- @field package move_triggered boolean for mouse drag
---- @field package scrollbar_pos number position of scrollbar thumb
---- @field package scrollbar_height number height of scrollbar thumb
---- @field package content_height number height of content within scrollbox
---- @field package visible_height number visible part of content within scrollbox
---- @field package click_offset number for mouse drag
---- @field package sprite_dim number dimension of 9box that is used for scrollbox
---- @field package height number current height of scrollbox
---- @field public height_max number maximum height of scrollbox
---- @field public width number width of scrollbox
---- @field public scroll_img string path to scrollbox img
---- @field public scroll_img_hl string path to highlighted img
+---@class ui_fake_scroll
+---@field public y number current offset for elements
+---@field package target_y number target offset for elements (for smooth scrolling)
+---@field package max_y number size of contents within scrollbox
+---@field package max_y_target number maximum possible value for target_y
+---@field package move_triggered boolean for mouse drag
+---@field package scrollbar_pos number position of scrollbar thumb
+---@field package scrollbar_height number height of scrollbar thumb
+---@field package content_height number height of content within scrollbox
+---@field package visible_height number visible part of content within scrollbox
+---@field package click_offset number for mouse drag
+---@field package sprite_dim number dimension of 9box that is used for scrollbox
+---@field package height number current height of scrollbox
+---@field public scroll_img string path to scrollbox img
+---@field public scroll_img_hl string path to highlighted img
 
 --- function to reset scrollbox cache
 --- @protected
@@ -448,8 +435,7 @@ end
 --- @return number
 function ui_class:ScrollBoxCalculateTargetScroll(mouse_y, y, height, target)
 	local target_pos = mouse_y - y - target
-	return (target_pos / (height - self.scroll.scrollbar_height)) *
-		(self.scroll.content_height - self.scroll.visible_height)
+	return (target_pos / (height - self.scroll.scrollbar_height)) * (self.scroll.content_height - self.scroll.visible_height)
 end
 
 --- function to check if click was on scroll thumb or bar
@@ -458,8 +444,7 @@ end
 --- @param y number start position of scrollbar
 --- @return boolean
 function ui_class:ScrollBoxClickedOnScrollBarThumb(mouse_y, y)
-	return mouse_y < y + self.scroll.scrollbar_pos or
-		mouse_y > y + self.scroll.scrollbar_pos + self.scroll.scrollbar_height
+	return mouse_y < y + self.scroll.scrollbar_pos or mouse_y > y + self.scroll.scrollbar_pos + self.scroll.scrollbar_height
 end
 
 --- function to calculate scrollbar thumb position
@@ -478,49 +463,43 @@ end
 function ui_class:ScrollBoxHandleClick(y, height)
 	local _, mouse_y = self:get_mouse_pos()
 	if self:ScrollBoxClickedOnScrollBarThumb(mouse_y, y) then
-		local scroll_target = self:ScrollBoxCalculateTargetScroll(mouse_y, y, height,
-			self.scroll.scrollbar_height / 2)
+		local scroll_target = self:ScrollBoxCalculateTargetScroll(mouse_y, y, height, self.scroll.scrollbar_height / 2)
 		self.scroll.scrollbar_pos = self:ScrollBoxCalculateScrollbarPos(scroll_target, height)
 	end
 	self.scroll.move_triggered = true
 	self.scroll.click_offset = mouse_y - (y + self.scroll.scrollbar_pos)
 end
 
---- function to draw scrollbar
---- @private
---- @param x number x pos for scrollbox
---- @param y number y pos or scrollbox
---- @param z number z of scrollbox
-function ui_class:ScrollBoxDrawScrollbarTrack(x, y, z)
+---function to draw scrollbar
+---@private
+---@param x number x pos for scrollbox
+---@param y number y pos or scrollbox
+---@param z number z of scrollbox
+---@param width number
+function ui_class:ScrollBoxDrawScrollbarTrack(x, y, z, width)
 	local scroll_img = self.scroll.scroll_img
-	if self:IsHoverBoxHovered(x + self.scroll.width + self.scroll.sprite_dim / 3 - 7, y + self.scroll.scrollbar_pos, 5, self.scroll.scrollbar_height + 2, true) or self.scroll.move_triggered then
+	if
+		self:IsHoverBoxHovered(x + width + self.scroll.sprite_dim / 3 - 7, y + self.scroll.scrollbar_pos, 5, self.scroll.scrollbar_height + 2, true)
+		or self.scroll.move_triggered
+	then
 		scroll_img = self.scroll.scroll_img_hl
 	end
 	-- Draw the scrollbar thumb
-	self:Draw9Piece(x + self.scroll.width + self.scroll.sprite_dim / 3 - 5, y + self.scroll.scrollbar_pos, z - 10, 0,
-		self.scroll
-		.scrollbar_height, scroll_img)
+	self:Draw9Piece(x + width + self.scroll.sprite_dim / 3 - 5, y + self.scroll.scrollbar_pos, z - 10, 0, self.scroll.scrollbar_height, scroll_img)
 
 	-- Draw the scrollbar track
-	self:Draw9Piece(x + self.scroll.width + self.scroll.sprite_dim / 3 - 8, y, z - 10, 6, self.scroll.height, self.c
-		.empty,
-		self.c.empty)
+	self:Draw9Piece(x + width + self.scroll.sprite_dim / 3 - 8, y, z - 10, 6, self.scroll.height, self.c.empty, self.c.empty)
 end
 
 --- function that make scrollbar draggable
 --- @private
 --- @param y number start position of scrollbar
 function ui_class:ScrollBoxMouseDrag(y)
-	if self:IsHovered() and self:IsLeftClicked() then
-		self:ScrollBoxHandleClick(y, self.scroll.height)
-	end
-	if not InputIsMouseButtonDown(self.c.codes.mouse.lc) then
-		self.scroll.move_triggered = false
-	end
+	if self:IsHovered() and self:IsLeftClicked() then self:ScrollBoxHandleClick(y, self.scroll.height) end
+	if not InputIsMouseButtonDown(self.c.codes.mouse.lc) then self.scroll.move_triggered = false end
 	if self.scroll.move_triggered then
 		local _, mouse_y = self:get_mouse_pos()
-		self.scroll.target_y = self:ScrollBoxCalculateTargetScroll(mouse_y, y, self.scroll.height,
-			self.scroll.click_offset)
+		self.scroll.target_y = self:ScrollBoxCalculateTargetScroll(mouse_y, y, self.scroll.height, self.scroll.click_offset)
 	end
 end
 
@@ -530,7 +509,7 @@ end
 function ui_class:ScrollBoxCalculateDims(y)
 	self.scroll.content_height = self.scroll.max_y
 	self.scroll.visible_height = self.scroll.height
-	self.scroll.scrollbar_height = (self.scroll.visible_height / self.scroll.content_height) * (self.scroll.height)
+	self.scroll.scrollbar_height = (self.scroll.visible_height / self.scroll.content_height) * self.scroll.height
 	self.scroll.scrollbar_pos = self:ScrollBoxCalculateScrollbarPos(self.scroll.y, self.scroll.height)
 end
 
@@ -538,12 +517,8 @@ end
 --- @private
 --- :)
 function ui_class:ScrollBoxAnswerToWheel()
-	if InputIsMouseButtonJustDown(self.c.codes.mouse.wheel_up) then
-		self.scroll.target_y = self.scroll.target_y - 10
-	end
-	if InputIsMouseButtonJustDown(self.c.codes.mouse.wheel_down) then
-		self.scroll.target_y = self.scroll.target_y + 10
-	end
+	if InputIsMouseButtonJustDown(self.c.codes.mouse.wheel_up) then self.scroll.target_y = self.scroll.target_y - 10 end
+	if InputIsMouseButtonJustDown(self.c.codes.mouse.wheel_down) then self.scroll.target_y = self.scroll.target_y + 10 end
 end
 
 --- function to clump target and move content
@@ -558,36 +533,41 @@ function ui_class:ScrollBoxClumpAndMove()
 	end
 end
 
---- fake scroll box
---- @protected
---- @param x number position x
---- @param y number position y
---- @param z number z of scrollbox
---- @param sprite string 9piece for scrollbox
---- @param margin_x number margin to add to width
---- @param margin_y number margin to add to height
---- @param draw_fn function function to draw inside scrollbox, position is relative
-function ui_class:ScrollBox(x, y, z, sprite, margin_x, margin_y, draw_fn)
+---fake scroll box
+---@protected
+---@param x number position x
+---@param y number position y
+---@param z number z of scrollbox
+---@param width number
+---@param height_max number
+---@param sprite string 9piece for scrollbox
+---@param margin_x number margin to add to width
+---@param margin_y number margin to add to height
+---@param draw_fn function function to draw inside scrollbox, position is relative
+function ui_class:ScrollBox(x, y, z, width, height_max, sprite, margin_x, margin_y, draw_fn)
 	local id = self:id()
 	self.scroll.sprite_dim = GuiGetImageDimensions(self.gui, sprite, 1)
 	self.scroll.max_y_target = self.scroll.max_y - self.scroll.height
 	local box_x = x - margin_x
 	local box_y = y - margin_y
-	local box_width = self.scroll.width + margin_x * 2
+	local box_width = width + margin_x * 2
 	local box_height = self.scroll.height + margin_y * 2
 	self:Draw9Piece(box_x, box_y, z, box_width, box_height, sprite)
 
 	--- phantom 9piece with corrent hitbox
-	local hovered = self:IsHoverBoxHovered(box_x - self.scroll.sprite_dim / 3, box_y - self.scroll.sprite_dim / 3,
-		box_width + self.scroll.sprite_dim / 1.5, box_height + self.scroll.sprite_dim / 1.5, true)
+	local hovered = self:IsHoverBoxHovered(
+		box_x - self.scroll.sprite_dim / 3,
+		box_y - self.scroll.sprite_dim / 3,
+		box_width + self.scroll.sprite_dim / 1.5,
+		box_height + self.scroll.sprite_dim / 1.5,
+		true
+	)
 
-	if hovered then
-		self:BlockInput()
-	end
+	if hovered then self:BlockInput() end
 
 	if self.scroll.max_y > self.scroll.height then
 		self:ScrollBoxCalculateDims(y)
-		self:ScrollBoxDrawScrollbarTrack(x + margin_x, y, z)
+		self:ScrollBoxDrawScrollbarTrack(x + margin_x, y, z, width)
 		self:ScrollBoxMouseDrag(y)
 		if hovered then self:ScrollBoxAnswerToWheel() end
 	end
@@ -595,13 +575,13 @@ function ui_class:ScrollBox(x, y, z, sprite, margin_x, margin_y, draw_fn)
 	GuiAnimateBegin(self.gui)
 	GuiAnimateAlphaFadeIn(self.gui, id, 0, 0, true)
 	GuiBeginAutoBox(self.gui)
-	GuiBeginScrollContainer(self.gui, id, x, y, self.scroll.width, self.scroll.height, false, 0, 0)
+	GuiBeginScrollContainer(self.gui, id, x, y, width, self.scroll.height, false, 0, 0)
 	GuiEndAutoBoxNinePiece(self.gui)
 	GuiAnimateEnd(self.gui)
 	draw_fn(self)
 	local prev = self:GetPrevious()
 	self.scroll.max_y = prev.y + prev.h - y
-	self.scroll.height = math.min(self.scroll.max_y, self.scroll.height_max)
+	self.scroll.height = math.min(self.scroll.max_y, height_max)
 	self:ScrollBoxClumpAndMove()
 	GuiEndScrollContainer(self.gui)
 end
@@ -693,9 +673,7 @@ function ui_class:DrawButton(x, y, z, text, active, sprite, sprite_hl)
 	sprite = sprite or self.buttons.img
 	sprite_hl = sprite_hl or active and self.buttons.img_hl or self.buttons.img
 	self:SetZ(z - 1)
-	if not active then
-		self:ColorGray()
-	end
+	if not active then self:ColorGray() end
 	self:Text(x, y, text)
 	self:AddOptionForNext(self.c.options.ForceFocusable)
 	self:Draw9Piece(x - 1, y, z, self:GetTextDimension(text) + 1.5, 11, sprite, sprite_hl)
@@ -754,7 +732,7 @@ function ui_class:GetPrevious()
 		x = x,
 		y = y,
 		w = width,
-		h = height
+		h = height,
 	}
 end
 

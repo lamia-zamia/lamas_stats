@@ -44,7 +44,7 @@ local config = {
 }
 
 function config:ConfigIsHovered()
-	return self:IsHoverBoxHovered(self.menu.start_x - 3, self.menu.pos_y + self.config.y + 7, self.scroll.width - 6, 9)
+	return self:IsHoverBoxHovered(self.menu.start_x - 3, self.menu.pos_y + self.config.y + 7, self.menu.width - 6, 9)
 end
 
 function config:ConfigDrawCategory(category)
@@ -103,13 +103,23 @@ function config:ConfigDraw()
 		self.config.y = self.config.y + 10
 		if self.config.unfolded[category] then self:ConfigDrawConfigs(category) end
 	end
-	self.scroll.width = math.max(self.menu.width + 6, self.config.width)
+
 	self:Text(0, self.config.y + self.scroll.y, "")
 end
 
 function config:ConfigDrawScrollBox()
-	self:ScrollBox(self.menu.start_x - 3, self.menu.pos_y + 7, self.z + 5, self.c.default_9piece, 3, 3, self.ConfigDraw)
-	self:MenuSetWidth(self.scroll.width - 6)
+	self:MenuSetWidth(self.config.width)
+	self:ScrollBox(
+		self.menu.start_x - 3,
+		self.menu.pos_y + 7,
+		self.z + 5,
+		self.menu.width + 6,
+		self.max_height,
+		self.c.default_9piece,
+		3,
+		3,
+		self.ConfigDraw
+	)
 end
 
 ---Fetch settings
