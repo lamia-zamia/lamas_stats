@@ -166,7 +166,6 @@ local function parse_reaction(element)
 	local output_cell1 = attributes.output_cell1
 	local output_cell2 = attributes.output_cell2
 	local reaction_index = #reactions + 1
-	print(reaction_index)
 	reactions[reaction_index] = {
 		inputs = { input_cell1, input_cell2 },
 		outputs = { output_cell1, output_cell2 },
@@ -234,6 +233,13 @@ local invalid_material = {
 ---@return material_data
 function mat:get_data(material_type)
 	return self.data[material_type] or invalid_material
+end
+
+---Returns data
+---@param material_id string
+---@return material_data
+function mat:get_data_by_id(material_id)
+	return self:get_data(CellFactory_GetType(material_id))
 end
 
 ---@param material_id string

@@ -4,6 +4,7 @@
 ---@field visible_types { [number]:boolean}
 ---@field current_recipe integer?
 ---@field showing_recipe integer?
+---@field filter string
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -14,17 +15,15 @@ local materials = {
 		current_recipe = nil,
 		showing_recipe = nil,
 		reaction_y = 0,
+		filter = "",
 	},
 }
-
-for i = 1, 6 do
-	materials.materials.visible_types[i] = true
-end
 
 local material_types_enum = dofile_once("mods/lamas_stats/files/scripts/material_types.lua") ---@type material_types_enum
 local material_types = {}
 for k, v in pairs(material_types_enum) do
 	material_types[v] = k
+	materials.materials.visible_types[v] = true
 end
 
 function materials:show_reactions()
@@ -53,12 +52,20 @@ function materials:show_reactions()
 	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
 end
 
+function materials:material_in_filter(material_index)
+	local material = self.mat:get_data(material_index)
+	if not self.materials.visible_types[material.type] then return end
+	if material.id:find(self.materials.filter) then return true end
+	if material.ui_name:find(self.materials.filter) then return true end
+	if self:Locale(material.ui_name):find(self.materials.filter) then return true end
+end
+
 ---Draws single material
 ---@param y number
 ---@param material_index integer
 function materials:materials_draw_material(y, material_index)
-	local material_type = self.mat:get_data(material_index).type
-	if not self.materials.visible_types[material_type] then return end
+	-- local material_type = self.mat:get_data(material_index).type
+	if not self:material_in_filter(material_index) then return end
 
 	if not self:fungal_is_element_visible(y, 10) then
 		self.materials.y = self.materials.y + 10
@@ -102,9 +109,15 @@ function materials:materials_draw_checkboxes()
 	end
 end
 
+function materials:materials_textbox()
+	self.menu.pos_y = self.menu.pos_y + 12
+	self.materials.filter = self.textbox:draw_textbox(self.menu.pos_x, self.menu.pos_y, self.z + 1, 200, 10, self.materials.filter)
+end
+
 ---Draws materials window
 function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
+	self:materials_textbox()
 	self:MenuSetWidth(300)
 
 	self.menu.pos_y = self.menu.pos_y + 12

@@ -15,6 +15,7 @@
 ---@field private mat material_parser
 ---@field private max_height number
 ---@field private default_tooltip string
+---@field private textbox textbox
 local gui = dofile_once("mods/lamas_stats/files/lib/ui_lib.lua")
 gui.buttons.img = "mods/lamas_stats/files/gfx/ui_9piece_button.png"
 gui.buttons.img_hl = "mods/lamas_stats/files/gfx/ui_9piece_button_highlight.png"
@@ -53,6 +54,9 @@ for i = 1, #modules do
 		gui[k] = v
 	end
 end
+
+gui.textbox = dofile_once("mods/lamas_stats/files/scripts/gui/materials/textbox.lua")
+gui.textbox.gui = gui.gui
 
 ---Fetches common data
 ---@private
@@ -121,7 +125,11 @@ function gui:Loop()
 	if InputIsKeyJustDown(self.hotkey) then self.show = not self.show end
 	self.player = ENTITY_GET_WITH_TAG("player_unit")[1]
 
-	if not self.show or not self.player or GameIsInventoryOpen() then return end
+	if not self.player then return end
+
+	if self.textbox.controls_disabled then self.textbox:enable_controls() end
+
+	if not self.show or GameIsInventoryOpen() then return end
 
 	self:FetchData()
 	self:DetermineAltMode()
