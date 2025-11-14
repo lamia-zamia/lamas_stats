@@ -105,13 +105,13 @@ function materials:materials_draw_checkboxes()
 		if self:IsDrawCheckbox(x, self.menu.pos_y - 1, type_name, self.materials.visible_types[material_type]) and self:IsMouseClicked() then
 			self.materials.visible_types[material_type] = not self.materials.visible_types[material_type]
 		end
-		x = x + 50
+		x = x + self:GetTextDimension(type_name) + 18
 	end
 end
 
 function materials:materials_textbox()
 	self.menu.pos_y = self.menu.pos_y + 12
-	self.materials.filter = self.textbox:draw_textbox(self.menu.pos_x, self.menu.pos_y, self.z + 1, 200, 10, self.materials.filter)
+	self.materials.filter = self.textbox:draw_textbox(self.menu.pos_x, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
 end
 
 ---Draws materials window

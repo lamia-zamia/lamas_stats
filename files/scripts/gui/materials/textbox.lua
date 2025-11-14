@@ -8,12 +8,16 @@ local textbox = {
 	caret_force_visible_until = 0,
 }
 
+local img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
+local img_hl = "mods/lamas_stats/files/gfx/ui_9piece_textbox.png"
 local caret = "mods/lamas_stats/files/gfx/caret.png"
+local max_chars = 15
 
 local keycodes = {
 	backspace = 42,
 	mouse_left = 1,
 	enter = 88,
+	return_key = 40,
 	left = 80,
 	right = 79,
 	delete = 76,
@@ -174,7 +178,7 @@ end
 ---@return string
 function textbox:draw_textbox(x, y, z, width, height, text)
 	GuiZSetForNextWidget(self.gui, z + 1)
-	GuiImageNinePiece(self.gui, 100, x, y, width, height, 1)
+	GuiImageNinePiece(self.gui, 100, x, y, width, height, 1, self.inputting and img_hl or img)
 	local _, _, hovered = GuiGetPreviousWidgetInfo(self.gui)
 	local clicked = InputIsMouseButtonJustDown(keycodes.mouse_left)
 
@@ -197,13 +201,18 @@ function textbox:draw_textbox(x, y, z, width, height, text)
 
 	self:disable_controls()
 
-	if (not hovered and clicked) or InputIsKeyJustDown(keycodes.enter) then
+	if (not hovered and clicked) or InputIsKeyJustDown(keycodes.enter) or InputIsKeyJustDown(keycodes.return_key) then
 		self.inputting = false
 		self:enable_controls()
 		return text
 	end
 
-	return self:process_keys(text)
+	text = self:process_keys(text)
+	if #text > max_chars then
+		text = text:sub(1, math.min(#text, max_chars))
+		self.cursor_pos = math.min(#text + 1, self.cursor_pos)
+	end
+	return text:sub(1, math.min(#text, max_chars))
 end
 
 return textbox
