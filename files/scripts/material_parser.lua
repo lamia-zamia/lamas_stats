@@ -6,6 +6,10 @@ nxml.error_handler = function() end
 local full_data = {}
 local reaction_input_index = {}
 local reaction_output_index = {}
+local reaction_input_tag_index = {}
+local reaction_output_tag_index = {}
+
+---@alias material_tags {[string]:boolean}
 
 ---@class reactions_data
 ---@field inputs string[]
@@ -21,6 +25,7 @@ local reactions = {} ---@type reactions_data[]
 ---@field parent string?
 ---@field static boolean
 ---@field type material_types
+---@field tags material_tags
 
 ---@class material_parser
 ---@field private buffer {[string]: material_data}|nil
@@ -131,6 +136,19 @@ local function get_material_type(attributes)
 	return mat.material_types.liquid
 end
 
+---Gets material tags
+---@param attributes table
+---@return material_tags
+local function get_material_tags(attributes)
+	local tags = attributes.tags or (attributes._parent and full_data[attributes._parent] and full_data[attributes._parent].attr.tags)
+	if not tags then return {} end
+	local tags_table = {}
+	for tag in tags:gmatch("([^,]+)") do
+		tags_table[tag] = true
+	end
+	return tags_table
+end
+
 ---Parses an xml material element
 ---@param element element
 local function parse_material(element)
@@ -149,10 +167,22 @@ local function parse_material(element)
 		static = not not material_id:find("_static$"),
 		parent = attributes._parent,
 		type = type,
+		tags = get_material_tags(attributes),
 	}
 end
 
-local function reaction_add_to_index_table(index_table, material, index)
+local function is_this_tag(value)
+	return value:sub(1, 1) == "[" and value:sub(-1) == "]"
+end
+
+local function reaction_add_to_index_table(is_input, material, index)
+	local index_table
+	if is_this_tag(material) then
+		index_table = is_input and reaction_input_tag_index or reaction_output_tag_index
+	else
+		index_table = is_input and reaction_input_index or reaction_output_index
+	end
+
 	if not index_table[material] then index_table[material] = {} end
 	local idx_table = index_table[material]
 	idx_table[#idx_table + 1] = index
@@ -165,15 +195,17 @@ local function parse_reaction(element)
 	local input_cell2 = attributes.input_cell2
 	local output_cell1 = attributes.output_cell1
 	local output_cell2 = attributes.output_cell2
+
 	local reaction_index = #reactions + 1
 	reactions[reaction_index] = {
 		inputs = { input_cell1, input_cell2 },
 		outputs = { output_cell1, output_cell2 },
 	}
-	reaction_add_to_index_table(reaction_input_index, input_cell1, reaction_index)
-	reaction_add_to_index_table(reaction_input_index, input_cell2, reaction_index)
-	reaction_add_to_index_table(reaction_output_index, output_cell1, reaction_index)
-	reaction_add_to_index_table(reaction_output_index, output_cell2, reaction_index)
+
+	reaction_add_to_index_table(true, input_cell1, reaction_index)
+	reaction_add_to_index_table(true, input_cell2, reaction_index)
+	reaction_add_to_index_table(false, output_cell1, reaction_index)
+	reaction_add_to_index_table(false, output_cell2, reaction_index)
 end
 
 ---Parses a file
@@ -249,6 +281,11 @@ function mat:get_reactions_using(material_id)
 	for _, rid in ipairs(reaction_input_index[material_id] or {}) do
 		result[#result + 1] = reactions[rid]
 	end
+	for tag, _ in pairs(mat:get_data_by_id(material_id).tags) do
+		for _, rid in ipairs(reaction_input_tag_index[tag] or {}) do
+			result[#result + 1] = reactions[rid]
+		end
+	end
 	return result
 end
 
@@ -258,6 +295,11 @@ function mat:get_reactions_producing(material_id)
 	local result = {}
 	for _, rid in ipairs(reaction_output_index[material_id] or {}) do
 		result[#result + 1] = reactions[rid]
+	end
+	for tag, _ in pairs(mat:get_data_by_id(material_id).tags) do
+		for _, rid in ipairs(reaction_output_tag_index[tag] or {}) do
+			result[#result + 1] = reactions[rid]
+		end
 	end
 	return result
 end

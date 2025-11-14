@@ -52,19 +52,26 @@ function materials:show_reactions()
 	local x = 0
 	self.materials.reaction_y = self.materials.reaction_y + 15
 
-	self:Text(x + 30, self.materials.reaction_y, "using")
-	self.materials.reaction_y = self.materials.reaction_y + 15
-	for _, reaction in ipairs(self.mat:get_reactions_using(material.id)) do
-		self:show_reaction(x, self.materials.reaction_y, reaction)
-		self.materials.reaction_y = self.materials.reaction_y + 11
+	local reactions_using = self.mat:get_reactions_using(material.id)
+	if #reactions_using > 0 then
+		self:Text(x + 30, self.materials.reaction_y, "using")
+		self.materials.reaction_y = self.materials.reaction_y + 15
+		for _, reaction in ipairs(reactions_using) do
+			self:show_reaction(x, self.materials.reaction_y, reaction)
+			self.materials.reaction_y = self.materials.reaction_y + 11
+		end
 	end
 
-	self:Text(x + 30, self.materials.reaction_y, "producing")
-	self.materials.reaction_y = self.materials.reaction_y + 15
-	for _, reaction in ipairs(self.mat:get_reactions_producing(material.id)) do
-		self:show_reaction(x, self.materials.reaction_y, reaction)
-		self.materials.reaction_y = self.materials.reaction_y + 11
+	local reactions_producing = self.mat:get_reactions_producing(material.id)
+	if #reactions_producing > 0 then
+		self:Text(x + 30, self.materials.reaction_y, "producing")
+		self.materials.reaction_y = self.materials.reaction_y + 15
+		for _, reaction in ipairs(reactions_producing) do
+			self:show_reaction(x, self.materials.reaction_y, reaction)
+			self.materials.reaction_y = self.materials.reaction_y + 11
+		end
 	end
+
 	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
 end
 
