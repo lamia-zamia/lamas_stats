@@ -5,6 +5,7 @@
 ---@field current_recipe integer?
 ---@field showing_recipe integer?
 ---@field filter string
+---@field width number
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -16,6 +17,7 @@ local materials = {
 		showing_recipe = nil,
 		reaction_y = 0,
 		filter = "",
+		width = 200,
 	},
 }
 
@@ -26,27 +28,41 @@ for k, v in pairs(material_types_enum) do
 	materials.materials.visible_types[v] = true
 end
 
+---@param x number
+---@param y number
+---@param reaction reactions_data
+function materials:show_reaction(x, y, reaction)
+	for _, input in ipairs(reaction.inputs) do
+		self:Text(x, y, input)
+		x = x + self:GetTextDimension(input) + 5
+	end
+	self:Text(x, y, "->")
+	x = x + 25
+	for _, output in ipairs(reaction.outputs) do
+		self:Text(x, y, output)
+		x = x + self:GetTextDimension(output) + 5
+	end
+end
+
 function materials:show_reactions()
 	if not self.materials.showing_recipe then return end
 	self.materials.reaction_y = 1 - self.scroll.y
 	local material = self.mat:get_data(self.materials.showing_recipe)
 	self:FungalDrawSingleMaterial(0, self.materials.reaction_y, self.materials.showing_recipe, true)
-	local reactions = self.mat:get_reactions_using(material.id)
 	local x = 0
 	self.materials.reaction_y = self.materials.reaction_y + 15
 
-	for _, reaction in ipairs(reactions) do
-		for _, input in ipairs(reaction.inputs) do
-			self:Text(x, self.materials.reaction_y, input)
-			x = x + self:GetTextDimension(input) + 5
-		end
-		self:Text(x, self.materials.reaction_y, "->")
-		x = x + 25
-		for _, output in ipairs(reaction.outputs) do
-			self:Text(x, self.materials.reaction_y, output)
-			x = x + self:GetTextDimension(output) + 5
-		end
-		x = 0
+	self:Text(x + 30, self.materials.reaction_y, "using")
+	self.materials.reaction_y = self.materials.reaction_y + 15
+	for _, reaction in ipairs(self.mat:get_reactions_using(material.id)) do
+		self:show_reaction(x, self.materials.reaction_y, reaction)
+		self.materials.reaction_y = self.materials.reaction_y + 11
+	end
+
+	self:Text(x + 30, self.materials.reaction_y, "producing")
+	self.materials.reaction_y = self.materials.reaction_y + 15
+	for _, reaction in ipairs(self.mat:get_reactions_producing(material.id)) do
+		self:show_reaction(x, self.materials.reaction_y, reaction)
 		self.materials.reaction_y = self.materials.reaction_y + 11
 	end
 	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
@@ -111,21 +127,24 @@ end
 
 function materials:materials_textbox()
 	self.menu.pos_y = self.menu.pos_y + 12
-	self.materials.filter = self.textbox:draw_textbox(self.menu.pos_x, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
+	local text = "filter"
+	local text_width = self:GetTextDimension(text)
+	self:Text(self.menu.pos_x, self.menu.pos_y, text)
+	self.materials.filter = self.textbox:draw_textbox(self.menu.pos_x + text_width + 5, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
 end
 
 ---Draws materials window
 function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
 	self:materials_textbox()
-	self:MenuSetWidth(300)
+	self:MenuSetWidth(self.materials.width)
 
 	self.menu.pos_y = self.menu.pos_y + 12
 	self:ScrollBox(
 		self.menu.start_x - 3,
 		self.menu.pos_y + 7,
 		self.z + 5,
-		306,
+		self.materials.width + 6,
 		self.max_height,
 		self.c.default_9piece,
 		3,
@@ -135,7 +154,7 @@ function materials:materials_draw_window()
 	if self.materials.showing_recipe then
 		self:ScrollBox(
 			self.menu.start_x + self.menu.width + 18,
-			self.menu.start_y + 3,
+			self.menu.start_y + 2,
 			self.z + 5,
 			250,
 			200,
@@ -146,5 +165,7 @@ function materials:materials_draw_window()
 		)
 	end
 end
+
+-- function materials:update() end
 
 return materials

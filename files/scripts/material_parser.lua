@@ -252,4 +252,14 @@ function mat:get_reactions_using(material_id)
 	return result
 end
 
+---@param material_id string
+---@return reactions_data[]
+function mat:get_reactions_producing(material_id)
+	local result = {}
+	for _, rid in ipairs(reaction_output_index[material_id] or {}) do
+		result[#result + 1] = reactions[rid]
+	end
+	return result
+end
+
 return mat
