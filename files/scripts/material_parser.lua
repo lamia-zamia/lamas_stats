@@ -171,10 +171,18 @@ local function parse_material(element)
 	}
 end
 
+---Is this string a tag
+---@param value string
+---@return boolean
+---@nodiscard
 local function is_this_tag(value)
 	return value:sub(1, 1) == "[" and value:sub(-1) == "]"
 end
 
+---Adds reaction to index table
+---@param is_input boolean
+---@param material string
+---@param index integer
 local function reaction_add_to_index_table(is_input, material, index)
 	local index_table
 	if is_this_tag(material) then
@@ -188,6 +196,7 @@ local function reaction_add_to_index_table(is_input, material, index)
 	idx_table[#idx_table + 1] = index
 end
 
+---Parses a reaction element
 ---@param element element
 local function parse_reaction(element)
 	local attributes = element.attr
