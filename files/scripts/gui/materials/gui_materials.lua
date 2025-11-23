@@ -50,7 +50,6 @@ end
 function materials:show_reactions()
 	self.materials.reaction_y = 1 - self.scroll.y
 	local material = self.mat:get_data(self.materials.showing_recipe)
-	-- self:FungalDrawSingleMaterial(0, self.materials.reaction_y, self.materials.showing_recipe, true)
 	local x = 0
 	self.materials.reaction_y = self.materials.reaction_y + 15
 
@@ -77,14 +76,17 @@ function materials:show_reactions()
 	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
 end
 
+---Draws material tags, tooltip
+---@private
 ---@param tags material_tags
 function materials:draw_material_tags(tags)
 	for tag, _ in pairs(tags) do
 		self:Text(0, 0, tag)
-		-- tag_offset = tag_offset + self:GetTextDimension(tag) + 3
 	end
 end
 
+---Draws reaction window
+---@private
 function materials:draw_reaction_window()
 	local material_type = self.materials.showing_recipe
 	if not material_type then return end
@@ -100,8 +102,13 @@ function materials:draw_reaction_window()
 	if material_data.tags then
 		local tags_text = "[tags]"
 		local tags_width = self:GetTextDimension(tags_text)
+		local pos_x = x + width - tags_width
+		local is_hovered = self:IsHoverBoxHovered(pos_x, y, tags_width, 10)
+		if is_hovered then
+			self:ShowTooltipCenteredX(0, 20, self.draw_material_tags, material_data.tags)
+			self:ColorYellow()
+		end
 		self:Text(x + width - tags_width, y, tags_text)
-		if self:IsHovered() then self:ShowTooltipCenteredX(0, 20, self.draw_material_tags, material_data.tags) end
 	end
 
 	-- draw material name
@@ -121,6 +128,9 @@ function materials:draw_reaction_window()
 	self:ScrollBox(x + 3, y + 18, self.z + 5, width - 6, 200, self.c.default_9piece, 3, 3, self.show_reactions)
 end
 
+---Checks if material should be shown
+---@param material_index integer
+---@return boolean?
 function materials:is_material_in_filter(material_index)
 	local material = self.mat:get_data(material_index)
 	if not self.materials.visible_types[material.type] then return end
@@ -169,6 +179,8 @@ function materials:materials_draw_list()
 	self:Text(0, self.materials.y + self.scroll.y, "")
 end
 
+---Draws filter checkboxes
+---@private
 function materials:materials_draw_checkboxes()
 	local x = self.menu.pos_x
 	for material_type, type_name in ipairs(material_types) do
@@ -179,6 +191,8 @@ function materials:materials_draw_checkboxes()
 	end
 end
 
+---Draws searchbox
+---@private
 function materials:materials_textbox()
 	self.menu.pos_y = self.menu.pos_y + 12
 	local text = "Search:"
@@ -194,17 +208,9 @@ function materials:materials_draw_window()
 	self:MenuSetWidth(self.materials.width)
 
 	self.menu.pos_y = self.menu.pos_y + 12
-	self:ScrollBox(
-		self.menu.start_x - 3,
-		self.menu.pos_y + 7,
-		self.z + 5,
-		self.materials.width + 6,
-		self.max_height,
-		self.c.default_9piece,
-		3,
-		3,
-		self.materials_draw_list
-	)
+	local pos_x = self.menu.start_x - 3
+	local pos_y = self.menu.pos_y + 7
+	self:ScrollBox(pos_x, pos_y, self.z + 5, self.materials.width + 6, self.max_height, self.c.default_9piece, 3, 3, self.materials_draw_list)
 	self:draw_reaction_window()
 end
 
