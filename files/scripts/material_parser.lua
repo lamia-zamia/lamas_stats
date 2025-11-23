@@ -200,21 +200,21 @@ end
 ---@param element element
 local function parse_reaction(element)
 	local attributes = element.attr
-	local input_cell1 = attributes.input_cell1
-	local input_cell2 = attributes.input_cell2
-	local output_cell1 = attributes.output_cell1
-	local output_cell2 = attributes.output_cell2
 
 	local reaction_index = #reactions + 1
 	reactions[reaction_index] = {
-		inputs = { input_cell1, input_cell2 },
-		outputs = { output_cell1, output_cell2 },
+		inputs = {},
+		outputs = {},
 	}
-
-	reaction_add_to_index_table(true, input_cell1, reaction_index)
-	reaction_add_to_index_table(true, input_cell2, reaction_index)
-	reaction_add_to_index_table(false, output_cell1, reaction_index)
-	reaction_add_to_index_table(false, output_cell2, reaction_index)
+	for i = 1, 3 do
+		local input_cell = attributes["input_cell" .. i]
+		local output_cell = attributes["output_cell" .. i]
+		if not input_cell or not output_cell then break end
+		table.insert(reactions[reaction_index].inputs, input_cell)
+		reaction_add_to_index_table(true, input_cell, reaction_index)
+		table.insert(reactions[reaction_index].outputs, output_cell)
+		reaction_add_to_index_table(false, output_cell, reaction_index)
+	end
 end
 
 ---Parses a file
