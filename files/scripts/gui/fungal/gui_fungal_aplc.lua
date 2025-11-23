@@ -40,8 +40,8 @@ end
 ---@param x number
 ---@param y number
 function aplc:FungalApLcDraw(x, y)
-	self:FungalDrawIcon(x, y, self.fs.aplc.ap.result)
-	self:FungalDrawIcon(x + 9, y, self.fs.aplc.lc.result)
+	self:FungalDrawIcon(x, y, self.mat:get_data(self.fs.aplc.ap.result))
+	self:FungalDrawIcon(x + 9, y, self.mat:get_data(self.fs.aplc.lc.result))
 	self:AddOptionForNext(self.c.options.ForceFocusable)
 	self:Draw9Piece(x, y + 1, self.z + 5, 16, 8, self.buttons.img, self.buttons.img_hl)
 	if self:IsHovered() then self:MenuTooltip("mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png", self.FungalApLcTooltip) end

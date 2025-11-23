@@ -25,7 +25,7 @@ local reactions = {} ---@type reactions_data[]
 ---@field parent string?
 ---@field static boolean
 ---@field type material_types
----@field tags material_tags
+---@field tags material_tags?
 
 ---@class material_parser
 ---@field private buffer {[string]: material_data}|nil
@@ -138,10 +138,10 @@ end
 
 ---Gets material tags
 ---@param attributes table
----@return material_tags
+---@return material_tags?
 local function get_material_tags(attributes)
 	local tags = attributes.tags or (attributes._parent and full_data[attributes._parent] and full_data[attributes._parent].attr.tags)
-	if not tags then return {} end
+	if not tags then return end
 	local tags_table = {}
 	for tag in tags:gmatch("([^,]+)") do
 		tags_table[tag] = true
@@ -290,7 +290,7 @@ function mat:get_reactions_using(material_id)
 	for _, rid in ipairs(reaction_input_index[material_id] or {}) do
 		result[#result + 1] = reactions[rid]
 	end
-	for tag, _ in pairs(mat:get_data_by_id(material_id).tags) do
+	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
 		for _, rid in ipairs(reaction_input_tag_index[tag] or {}) do
 			result[#result + 1] = reactions[rid]
 		end
@@ -305,7 +305,7 @@ function mat:get_reactions_producing(material_id)
 	for _, rid in ipairs(reaction_output_index[material_id] or {}) do
 		result[#result + 1] = reactions[rid]
 	end
-	for tag, _ in pairs(mat:get_data_by_id(material_id).tags) do
+	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
 		for _, rid in ipairs(reaction_output_tag_index[tag] or {}) do
 			result[#result + 1] = reactions[rid]
 		end

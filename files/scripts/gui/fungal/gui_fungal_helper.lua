@@ -48,11 +48,11 @@ end
 
 ---Returns translated material name
 ---@private
----@param material_type integer
+---@param material_data material_data
 ---@return string
 ---@nodiscard
-function helper:FungalGetName(material_type)
-	local locale = self:Locale(self.mat:get_data(material_type).ui_name)
+function helper:FungalGetName(material_data)
+	local locale = self:Locale(material_data.ui_name)
 	return string.gsub(" " .. locale, "%W%l", string.upper):sub(2)
 end
 
@@ -67,11 +67,10 @@ end
 ---@private
 ---@param x number
 ---@param y number
----@param material_type integer
-function helper:FungalDrawIcon(x, y, material_type)
-	local data = self.mat:get_data(material_type)
-	if data.color then self:FungalPotionColor(data.color) end
-	self:Image(x, y + 1, data.icon)
+---@param material_data material_data
+function helper:FungalDrawIcon(x, y, material_data)
+	if material_data.color then self:FungalPotionColor(material_data.color) end
+	self:Image(x, y + 1, material_data.icon)
 end
 
 ---Draws material name and icon
@@ -81,8 +80,9 @@ end
 ---@param material_type integer
 ---@param draw_id? boolean
 function helper:FungalDrawSingleMaterial(x, y, material_type, draw_id)
-	self:FungalDrawIcon(x, y, material_type)
-	local material_name = self:FungalGetName(material_type)
+	local material_data = self.mat:get_data(material_type)
+	self:FungalDrawIcon(x, y, material_data)
+	local material_name = self:FungalGetName(material_data)
 	x = x + 9
 	self:Text(x, y, material_name)
 	if draw_id then
@@ -144,8 +144,9 @@ end
 ---@return number
 ---@nodiscard
 function helper:FungalGetMaterialNameLength(material, draw_id)
-	local id = draw_id and self:GetTextDimension("(" .. self.mat:get_data(material).id .. ")") or 0
-	return self:GetTextDimension(self:FungalGetName(material)) + 9 + id
+	local material_data = self.mat:get_data(material)
+	local id = draw_id and self:GetTextDimension("(" .. material_data.id .. ")") or 0
+	return self:GetTextDimension(self:FungalGetName(material_data)) + 9 + id
 end
 
 ---Returns longest material name from array of material types
