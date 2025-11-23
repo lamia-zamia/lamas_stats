@@ -7,6 +7,7 @@
 ---@field filter string
 ---@field width number
 ---@field width_reaction number
+---@field reaction_show_output boolean
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -19,6 +20,7 @@ local materials = {
 		filter = "",
 		width = 200,
 		width_reaction = 256,
+		reaction_show_output = false,
 	},
 }
 
@@ -29,48 +31,74 @@ for k, v in pairs(material_types_enum) do
 	materials.materials.visible_types[v] = true
 end
 
+---Draws material centered
 ---@param x number
 ---@param y number
----@param reaction reactions_data
-function materials:show_reaction(x, y, reaction)
-	for _, input in ipairs(reaction.inputs) do
-		-- self:FungalDrawSingleMaterial(x, y, CellFactory_GetType(input), false)
-		self:Text(x, y, input)
-		x = x + self:GetTextDimension(input) + 5
-	end
-	self:Text(x, y, "->")
-	x = x + 25
-	for _, output in ipairs(reaction.outputs) do
-		-- self:FungalDrawSingleMaterial(x, y, CellFactory_GetType(output), false)
-		self:Text(x, y, output)
-		x = x + self:GetTextDimension(output) + 5
+---@param material_data material_data
+---@param width number
+---@param alt boolean?
+function materials:draw_material_centered(x, y, material_data, width, alt)
+	local material_name = alt and material_data.id or self:FungalGetName(material_data)
+	local name_offset = (width - self:GetTextDimension(material_name)) / 2
+	self:FungalDrawIcon(x + name_offset - 9, y, material_data)
+	self:Text(x + name_offset, y, material_name)
+end
+
+---Draws material row in reaction
+---@param x number
+---@param y number
+---@param material string
+---@param width number
+function materials:draw_reaction_row(x, y, material, width)
+	if material:sub(1, 1) == "[" then
+		local text_width = self:GetTextDimension(material)
+		self:Text(x + (width - text_width) / 2, self.materials.reaction_y, material)
+	else
+		self:draw_material_centered(x, self.materials.reaction_y, self.mat:get_data_by_id(material), width, self.alt)
 	end
 end
 
+---@param reaction reactions_data
+function materials:show_reaction(reaction)
+	local x = 0
+	local width = self.materials.width_reaction / #reaction.inputs
+	for _, input in ipairs(reaction.inputs) do
+		self:draw_reaction_row(x, self.materials.reaction_y, input, width)
+		x = x + width
+		self:Text(x, self.materials.reaction_y, "+")
+	end
+	x = 0
+	self.materials.reaction_y = self.materials.reaction_y + 10
+	for _, output in ipairs(reaction.outputs) do
+		self:draw_reaction_row(x, self.materials.reaction_y, output, width)
+		x = x + width
+	end
+	self.materials.reaction_y = self.materials.reaction_y + 11
+end
+
+---Draws a separator line
+---@private
+function materials:draw_reaction_separator()
+	self:Image(0, self.materials.reaction_y - 1, self.c.px, 0.4, self.materials.width_reaction - 10, 1)
+end
+
+---Draws reactions
+---@private
 function materials:show_reactions()
 	self.materials.reaction_y = 1 - self.scroll.y
 	local material = self.mat:get_data(self.materials.showing_recipe)
-	local x = 0
-	self.materials.reaction_y = self.materials.reaction_y + 15
+	local reactions = self.materials.reaction_show_output and self.mat:get_reactions_producing(material.id)
+		or self.mat:get_reactions_using(material.id)
 
-	local reactions_using = self.mat:get_reactions_using(material.id)
-	if #reactions_using > 0 then
-		self:Text(x + 30, self.materials.reaction_y, "using")
-		self.materials.reaction_y = self.materials.reaction_y + 15
-		for _, reaction in ipairs(reactions_using) do
-			self:show_reaction(x, self.materials.reaction_y, reaction)
-			self.materials.reaction_y = self.materials.reaction_y + 11
+	if #reactions > 0 then
+		self:draw_reaction_separator()
+		for _, reaction in ipairs(reactions) do
+			self:show_reaction(reaction)
+			self:draw_reaction_separator()
 		end
-	end
-
-	local reactions_producing = self.mat:get_reactions_producing(material.id)
-	if #reactions_producing > 0 then
-		self:Text(x + 30, self.materials.reaction_y, "producing")
-		self.materials.reaction_y = self.materials.reaction_y + 15
-		for _, reaction in ipairs(reactions_producing) do
-			self:show_reaction(x, self.materials.reaction_y, reaction)
-			self.materials.reaction_y = self.materials.reaction_y + 11
-		end
+	else
+		self:Text(0, self.materials.reaction_y, "None")
+		self.materials.reaction_y = self.materials.reaction_y + 11
 	end
 
 	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
@@ -85,6 +113,31 @@ function materials:draw_material_tags(tags)
 	end
 end
 
+---Draws output/input button
+---@private
+---@param x number
+---@param y number
+---@param width number
+---@param label string
+---@param is_active boolean
+---@param on_click boolean
+function materials:draw_reaction_toggle_button(x, y, width, label, is_active, on_click)
+	local text_width = self:GetTextDimension(label)
+	local text_offset = (width - text_width) / 2
+
+	if not is_active then self:AddOptionForNext(self.c.options.ForceFocusable) end
+	self:Draw9Piece(x, y + 2, self.z + 4, width, 8, self.buttons.img)
+
+	if is_active then
+		self:ColorYellow()
+	elseif self:IsHovered() and self:IsLeftClicked() then
+		self.materials.reaction_show_output = on_click
+		GamePlaySound("ui", "ui/button_click", 0, 0)
+	end
+
+	self:Text(x + text_offset, y + 1, label)
+end
+
 ---Draws reaction window
 ---@private
 function materials:draw_reaction_window()
@@ -94,7 +147,8 @@ function materials:draw_reaction_window()
 	local x = self.menu.start_x + self.menu.width + 15
 	local y = self.menu.start_y - 1
 	local width = self.materials.width_reaction
-	self:Draw9Piece(x, y, self.z + 5, width, 30)
+	self:Draw9Piece(x, y, self.z + 5, width, 32)
+	if self:IsHovered() then self:BlockInput() end
 
 	local material_data = self.mat:get_data(material_type)
 
@@ -112,10 +166,7 @@ function materials:draw_reaction_window()
 	end
 
 	-- draw material name
-	local material_name = self:FungalGetName(material_data)
-	local name_offset = (width - self:GetTextDimension(material_name)) / 2
-	self:FungalDrawIcon(x + name_offset - 9, y, material_data)
-	self:Text(x + name_offset, y, material_name)
+	self:draw_material_centered(x, y, material_data, width)
 	y = y + 10
 
 	-- draw material id
@@ -125,7 +176,13 @@ function materials:draw_reaction_window()
 	self:Text(x + id_offset, y, material_id)
 	y = y + 10
 
-	self:ScrollBox(x + 3, y + 18, self.z + 5, width - 6, 200, self.c.default_9piece, 3, 3, self.show_reactions)
+	-- buttons
+	local buttons_width = width / 2 - 6
+	local is_output = self.materials.reaction_show_output
+	self:draw_reaction_toggle_button(x + 3, y, buttons_width, "Using", not is_output, false)
+	self:draw_reaction_toggle_button(x + 9 + buttons_width, y, buttons_width, "Producing", is_output, true)
+
+	self:ScrollBox(x + 3, y + 20, self.z + 5, width - 6, 200, self.c.default_9piece, 3, 3, self.show_reactions)
 end
 
 ---Checks if material should be shown
