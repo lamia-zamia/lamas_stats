@@ -31,6 +31,76 @@ for k, v in pairs(material_types_enum) do
 	materials.materials.visible_types[v] = true
 end
 
+---Returns true if passed name contains tag
+---@param name string
+---@return boolean
+local function is_tag(name)
+	return name:sub(1, 1) == "["
+end
+
+---Returns longest material name
+---@private
+---@param material_names string[]
+---@return number
+function materials:material_get_longest_name(material_names)
+	local max = 0
+	for _, material_name in pairs(material_names) do
+		max = math.max(max, self:GetTextDimension(material_name))
+		if not is_tag(material_name) then
+			local material_data = self.mat:get_data_by_id(material_name)
+			max = math.max(max, self:GetTextDimension(self:Locale(material_data.ui_name)))
+		end
+	end
+	return max
+end
+
+---Returns longest material name from an array of reaction datas
+---@private
+---@param reaction_datas reactions_data[]
+---@return number
+function materials:reaction_datas_get_longest_name(reaction_datas)
+	local max = 0
+	for _, reaction_data in ipairs(reaction_datas) do
+		for _, material_names in pairs(reaction_data) do
+			max = math.max(max, self:material_get_longest_name(material_names))
+		end
+	end
+	return max
+end
+
+---@class gui_reaction_data
+---@field using reactions_data[]
+---@field producing reactions_data[]
+---@field max_length number
+
+local reactions_data = setmetatable({}, { __mode = "k" }) ---@type gui_reaction_data[]
+
+---Gathers reaction data and whats not
+---@param material_id string
+---@private
+function materials:gather_reaction_data(material_id)
+	local using = self.mat:get_reactions_using(material_id)
+	local producing = self.mat:get_reactions_producing(material_id)
+	local max = 0
+	for _, reaction_datas in ipairs({ using, producing }) do
+		max = math.max(max, self:reaction_datas_get_longest_name(reaction_datas))
+	end
+	reactions_data[material_id] = {
+		using = using,
+		producing = producing,
+		max_length = max,
+	}
+end
+
+---Gets reaction data
+---@param material_id string
+---@return reactions_data[], number
+function materials:get_reaction_data(material_id)
+	if not reactions_data[material_id] then self:gather_reaction_data(material_id) end
+	local data = reactions_data[material_id]
+	return (self.materials.reaction_show_output and data.producing or data.using), data.max_length
+end
+
 ---Draws material centered
 ---@param x number
 ---@param y number
@@ -50,11 +120,11 @@ end
 ---@param material string
 ---@param width number
 function materials:draw_reaction_row(x, y, material, width)
-	if material:sub(1, 1) == "[" then
+	if is_tag(material) then
 		local text_width = self:GetTextDimension(material)
-		self:Text(x + (width - text_width) / 2, self.materials.reaction_y, material)
+		self:Text(x + (width - text_width) / 2, y, material)
 	else
-		self:draw_material_centered(x, self.materials.reaction_y, self.mat:get_data_by_id(material), width, self.alt)
+		self:draw_material_centered(x, y, self.mat:get_data_by_id(material), width, self.alt)
 	end
 end
 
@@ -87,8 +157,8 @@ end
 function materials:show_reactions()
 	self.materials.reaction_y = 1 - self.scroll.y
 	local material = self.mat:get_data(self.materials.showing_recipe)
-	local reactions = self.materials.reaction_show_output and self.mat:get_reactions_producing(material.id)
-		or self.mat:get_reactions_using(material.id)
+	local reactions, max_length = self:get_reaction_data(material.id)
+	self.materials.width_reaction = math.max(200, math.min((max_length + 10) * 3, 400))
 
 	if #reactions > 0 then
 		self:draw_reaction_separator()
@@ -271,6 +341,8 @@ function materials:materials_draw_window()
 	self:draw_reaction_window()
 end
 
--- function materials:update() end
+function materials:update()
+	reactions_data = setmetatable({}, { __mode = "k" })
+end
 
 return materials
