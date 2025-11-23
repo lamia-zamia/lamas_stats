@@ -22,12 +22,14 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 ---@field past_shifts shift
 ---@field current_shift integer
 ---@field aplc APLC_recipes|false
+---@field shift_indexed integer
 local fs = {
 	predictor = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua"),
 	shifted = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_past_getter.lua"),
 	max_shifts = 20,
 	past_shifts = {},
 	current_shift = 0,
+	shift_indexed = 1,
 }
 
 ---Checks is shift is identical to failed shift
@@ -37,7 +39,7 @@ local fs = {
 ---@nodiscard
 function fs:IsShiftIdenticalToFailed(shift)
 	for i = 1, #shift.from do
-		local index = self.shifted.indexed + i - 1
+		local index = self.shift_indexed + i - 1
 		local shifted_materials = self.shifted.materials[index]
 		if not shifted_materials then return false end
 		local material_from = shift.from[i]
@@ -73,10 +75,10 @@ end
 function fs:ApotheosisCheckFrom(past_shift)
 	local cursed = CellFactory_GetType("apotheosis_cursed_liquid_red")
 	local cursed_static = CellFactory_GetType("apotheosis_cursed_liquid_red_static")
-	local from = self.shifted.materials[self.shifted.indexed].from
+	local from = self.shifted.materials[self.shift_indexed].from
 	if from == cursed or from == cursed_static then
 		past_shift.from = { cursed, cursed_static }
-		self.shifted.indexed = self.shifted.indexed + 2
+		self.shift_indexed = self.shift_indexed + 2
 		return true
 	end
 	return false
@@ -90,7 +92,7 @@ function fs:AnalysePastShift(shift_number)
 	local past_shift = self.past_shifts[shift_number]
 
 	past_shift.from = {}
-	past_shift.to = self.shifted.materials[self.shifted.indexed].to
+	past_shift.to = self.shifted.materials[self.shift_indexed].to
 
 	local seed_shift = self.predictor.shifts[shift_number]
 
@@ -98,7 +100,7 @@ function fs:AnalysePastShift(shift_number)
 	if seed_shift.failed and self:IsShiftIdenticalToFailed(seed_shift.failed) then
 		-- set it as failed
 		past_shift.from = seed_shift.failed.from
-		self.shifted.indexed = self.shifted.indexed + #seed_shift.failed.from
+		self.shift_indexed = self.shift_indexed + #seed_shift.failed.from
 		return
 	end
 
@@ -107,7 +109,7 @@ function fs:AnalysePastShift(shift_number)
 		-- set it as failed
 		past_shift.from = seed_shift.force_failed.from
 		past_shift.flask = "force_failed"
-		self.shifted.indexed = self.shifted.indexed + #seed_shift.force_failed.from
+		self.shift_indexed = self.shift_indexed + #seed_shift.force_failed.from
 		return
 	end
 
@@ -118,35 +120,30 @@ function fs:AnalysePastShift(shift_number)
 	if past_shift.to ~= seed_shift.to and seed_shift.flask == "to" then
 		past_shift.flask = "to"
 		past_shift.from = unique_from
-		self.shifted.indexed = self.shifted.indexed + #past_shift.from
+		self.shift_indexed = self.shift_indexed + #past_shift.from
 		return
 	end
 
 	-- Checking if shifted from is different from seed
 	for j = 1, #unique_from do
 		local material_type = unique_from[j]
-		if self.shifted.materials[self.shifted.indexed].from ~= material_type then
+		local shifted_from = self.shifted.materials[self.shift_indexed].from
+
+		if shifted_from ~= material_type then
 			if seed_shift.flask == "from" then
 				past_shift.flask = "from"
 				-- Apotheosis compatibility
 				if ModIsEnabled("Apotheosis") and self:ApotheosisCheckFrom(past_shift) then return end
 
 				if j == 1 then -- foolproofing cases where first material matching shifted material
-					past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
-					self.shifted.indexed = self.shifted.indexed + 1
+					past_shift.from[#past_shift.from + 1] = shifted_from
+					self.shift_indexed = self.shift_indexed + 1
 				end
 				break
-			else
-				past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
-				self.shifted.indexed = self.shifted.indexed + 1
 			end
-		else
-			past_shift.from[#past_shift.from + 1] = self.shifted.materials[self.shifted.indexed].from
-			self.shifted.indexed = self.shifted.indexed + 1
-			-- if past_shifts[i].to ~= past_materials[shift_number + 1] then --failproof cases where failed shifts are identical to true shift
-			-- 	break
-			-- end
 		end
+		past_shift.from[#past_shift.from + 1] = shifted_from
+		self.shift_indexed = self.shift_indexed + 1
 	end
 end
 
@@ -158,7 +155,7 @@ function fs:AnalysePastShifts()
 	end
 	self.shifted:GetShiftedMaterials()
 	for i = #self.past_shifts + 1, self.current_shift - 1 do
-		if not self.shifted.materials[self.shifted.indexed] then
+		if not self.shifted.materials[self.shift_indexed] then
 			reporter:Report(T.lamas_stats_fungal_predict_error .. ", " .. i)
 			return
 		end
