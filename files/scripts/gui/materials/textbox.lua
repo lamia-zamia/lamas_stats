@@ -1,11 +1,15 @@
 ---@class textbox
 ---@field gui gui
+---@field selection_start integer?
+---@field selection_end integer?
 local textbox = {
 	controls_disabled = false,
 	inputting = false,
 	held_key = nil,
 	next_repeat_time = 0,
 	caret_force_visible_until = 0,
+	selection_start = nil,
+	selection_end = nil,
 }
 
 local img = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
@@ -21,6 +25,11 @@ local keycodes = {
 	left = 80,
 	right = 79,
 	delete = 76,
+	shift_l = 225,
+	shift_r = 229,
+	ctrl_l = 224,
+	ctrl_r = 228,
+	a = 4,
 }
 
 local keycodes_lookup = {
@@ -121,37 +130,101 @@ function textbox:key_repeat(frame, key)
 	return false
 end
 
+---Clears selection
+---@private
+function textbox:clear_selection()
+	self.selection_start = nil
+	self.selection_end = nil
+end
+
+---Deletes selected
+---@private
+---@param text string
+---@return string
+function textbox:delete_selection(text)
+	local selection_start, selection_end = self.selection_start, self.selection_end
+	if not selection_start or not selection_end then return text end
+
+	local s = math.min(selection_start, selection_end)
+	local e = math.max(selection_start, selection_end)
+
+	text = text:sub(1, s - 1) .. text:sub(e)
+
+	self.cursor_pos = s
+	self:clear_selection()
+	return text
+end
+
+---Moves cursor
+---@param new_pos integer
+---@param shift_held boolean
+function textbox:apply_selection_movement(new_pos, shift_held)
+	if shift_held then
+		self.selection_start = self.selection_start or self.cursor_pos
+		self.selection_end = new_pos
+	else
+		self:clear_selection()
+	end
+	self.cursor_pos = new_pos
+end
+
 ---Processes key presses
 ---@private
 ---@param text string
 ---@return string
 function textbox:process_keys(text)
+	if not self.inputting then return text end
 	local now = GameGetFrameNum()
 
-	-- backspace
-	if self:key_repeat(now, keycodes.backspace) and #text > 0 and self.cursor_pos > 1 then
-		text = text:sub(1, self.cursor_pos - 2) .. text:sub(self.cursor_pos)
-		self.cursor_pos = math.max(1, self.cursor_pos - 1)
-		return text
+	-- selection: ctrl+a
+	if InputIsKeyDown(keycodes.ctrl_l) or InputIsKeyDown(keycodes.ctrl_r) then -- ctrl keys
+		if InputIsKeyJustDown(keycodes.a) then -- 'a'
+			self.selection_start = 1
+			self.selection_end = #text + 1
+			self.cursor_pos = self.selection_end
+			self.caret_force_visible_until = now + 30
+			return text
+		end
 	end
 
-	-- move cursor left
+	-- shift + left/right selection
+	local shift = InputIsKeyDown(keycodes.shift_l) or InputIsKeyDown(keycodes.shift_r) -- both shift keys
+
 	if self:key_repeat(now, keycodes.left) then
-		self.cursor_pos = math.max(1, self.cursor_pos - 1)
+		local new_pos = math.max(1, self.cursor_pos - 1)
+		self:apply_selection_movement(new_pos, shift)
 		self.caret_force_visible_until = now + 30
 		return text
 	end
 
-	-- move cursor right
 	if self:key_repeat(now, keycodes.right) then
-		self.cursor_pos = math.min(#text + 1, self.cursor_pos + 1)
+		local new_pos = math.min(#text + 1, self.cursor_pos + 1)
+		self:apply_selection_movement(new_pos, shift)
 		self.caret_force_visible_until = now + 30
+		return text
+	end
+
+	-- backspace
+	if self:key_repeat(now, keycodes.backspace) then
+		if self.selection_start then return self:delete_selection(text) end
+		if #text > 0 and self.cursor_pos > 1 then
+			text = text:sub(1, self.cursor_pos - 2) .. text:sub(self.cursor_pos)
+			self.cursor_pos = math.max(1, self.cursor_pos - 1)
+		end
+		return text
+	end
+
+	-- delete key (delete the symbol under the cursor)
+	if self:key_repeat(now, keycodes.delete) then
+		if self.selection_start then return self:delete_selection(text) end
+		if self.cursor_pos <= #text then text = text:sub(1, self.cursor_pos - 1) .. text:sub(self.cursor_pos + 1) end
 		return text
 	end
 
 	-- normal character input
 	for key, value in pairs(keycodes_lookup) do
 		if self:key_repeat(now, key) then
+			if self.selection_start then text = self:delete_selection(text) end
 			local before = text:sub(1, self.cursor_pos - 1)
 			local after = text:sub(self.cursor_pos)
 			text = before .. value .. after
@@ -160,13 +233,26 @@ function textbox:process_keys(text)
 		end
 	end
 
-	-- delete key (delete the symbol under the cursor)
-	if self:key_repeat(now, keycodes.delete) and self.cursor_pos <= #text then
-		text = text:sub(1, self.cursor_pos - 1) .. text:sub(self.cursor_pos + 1)
-		return text
-	end
-
 	return text
+end
+
+function textbox:draw_selection(x, y, z, text)
+	if not self.selection_start or not self.selection_end then return end
+
+	local s = math.min(self.selection_start, self.selection_end)
+	local e = math.max(self.selection_start, self.selection_end)
+	if s == e then return end
+
+	local before = text:sub(1, s - 1)
+	local selected = text:sub(s, e - 1)
+
+	local before_w = GuiGetTextDimensions(self.gui, before)
+	local selected_w = GuiGetTextDimensions(self.gui, selected)
+
+	GuiZSetForNextWidget(self.gui, z + 1)
+	GuiColorSetForNextWidget(self.gui, 0.3, 0.3, 1.0, 1)
+
+	GuiImage(self.gui, 100, x + before_w, y, "mods/lamas_stats/vfs/white.png", 0.8, selected_w, 10)
 end
 
 ---@param x number
@@ -177,7 +263,7 @@ end
 ---@param text string
 ---@return string
 function textbox:draw_textbox(x, y, z, width, height, text)
-	GuiZSetForNextWidget(self.gui, z + 1)
+	GuiZSetForNextWidget(self.gui, z + 2)
 	GuiImageNinePiece(self.gui, 100, x, y, width, height, 1, self.inputting and img_hl or img)
 	local _, _, hovered = GuiGetPreviousWidgetInfo(self.gui)
 	local clicked = InputIsMouseButtonJustDown(keycodes.mouse_left)
@@ -186,6 +272,8 @@ function textbox:draw_textbox(x, y, z, width, height, text)
 		self.inputting = true
 		if not self.cursor_pos then self.cursor_pos = #text + 1 end
 	end
+
+	self:draw_selection(x, y, z, text)
 
 	GuiZSetForNextWidget(self.gui, z)
 	GuiText(self.gui, x, y, text)
@@ -196,7 +284,8 @@ function textbox:draw_textbox(x, y, z, width, height, text)
 	local caret_visible = frame < self.caret_force_visible_until or ((math.floor(frame / 30)) % 2) == 0
 	if caret_visible then
 		local caret_pos = GuiGetTextDimensions(self.gui, text:sub(1, self.cursor_pos - 1)) - 1
-		GuiImage(self.gui, 100, x + caret_pos, y, caret, 0.6, 1)
+		caret_pos = math.max(0, caret_pos - 1)
+		GuiImage(self.gui, 100, x + caret_pos + 1, y, caret, 0.6, 1)
 	end
 
 	self:disable_controls()
@@ -210,7 +299,7 @@ function textbox:draw_textbox(x, y, z, width, height, text)
 	text = self:process_keys(text)
 	if #text > max_chars then
 		text = text:sub(1, math.min(#text, max_chars))
-		self.cursor_pos = math.min(#text + 1, self.cursor_pos)
+		self.cursor_pos = math.min(#text + 1, math.max(1, self.cursor_pos))
 	end
 	return text:sub(1, math.min(#text, max_chars))
 end
