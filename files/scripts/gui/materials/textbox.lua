@@ -253,11 +253,18 @@ function textbox:process_keys(text)
 	return text
 end
 
+---Draws selection background
+---@private
+---@param x number
+---@param y number
+---@param z number
+---@param text string
 function textbox:draw_selection(x, y, z, text)
-	if not self.selection_start or not self.selection_end then return end
+	local selection_start, selection_end = self.selection_start, self.selection_end
+	if not selection_start or not selection_end then return end
 
-	local s = math.min(self.selection_start, self.selection_end)
-	local e = math.max(self.selection_start, self.selection_end)
+	local s = math.min(selection_start, selection_end)
+	local e = math.max(selection_start, selection_end)
 	if s == e then return end
 
 	local before = text:sub(1, s - 1)
