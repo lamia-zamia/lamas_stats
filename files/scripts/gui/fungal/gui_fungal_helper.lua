@@ -88,7 +88,7 @@ function helper:FungalDrawSingleMaterial(x, y, material_type, draw_id)
 	if draw_id then
 		x = x + self:GetTextDimension(material_name) + 3
 		self:ColorGray()
-		self:Text(x, y, "(" .. self.mat:get_data(material_type).id .. ")")
+		self:Text(x, y, "(" .. material_data.id .. ")")
 	end
 end
 
