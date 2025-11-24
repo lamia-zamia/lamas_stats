@@ -30,6 +30,7 @@ local keycodes = {
 	ctrl_l = 224,
 	ctrl_r = 228,
 	a = 4,
+	v = 25,
 }
 
 local keycodes_lookup = {
@@ -176,8 +177,24 @@ function textbox:process_keys(text)
 	if not self.inputting then return text end
 	local now = GameGetFrameNum()
 
+	local ctrl = InputIsKeyDown(keycodes.ctrl_l) or InputIsKeyDown(keycodes.ctrl_r)
+
+	if ctrl and InputIsKeyJustDown(keycodes.v) then
+		if imgui then
+			local clip = imgui.GetClipboardText()
+			if self.selection_start then text = self:delete_selection(text) end
+			local before = text:sub(1, self.cursor_pos - 1)
+			local after = text:sub(self.cursor_pos)
+			text = before .. clip .. after
+			self.cursor_pos = self.cursor_pos + #clip
+			return text
+		else
+			GamePrint("install imgui to add support for clipboard")
+		end
+	end
+
 	-- selection: ctrl+a
-	if InputIsKeyDown(keycodes.ctrl_l) or InputIsKeyDown(keycodes.ctrl_r) then -- ctrl keys
+	if ctrl then
 		if InputIsKeyJustDown(keycodes.a) then -- 'a'
 			self.selection_start = 1
 			self.selection_end = #text + 1

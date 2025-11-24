@@ -3,6 +3,8 @@ T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation 
 local gui = dofile_once("mods/lamas_stats/files/scripts/gui/gui_main.lua") ---@type LS_Gui
 local current_language = GameTextGetTranslatedOrNot("$current_language")
 
+imgui = load_imgui and load_imgui({ mod = "lamas_stats", version = "1.0.0" })
+
 ---After OnModPostInit
 function OnMagicNumbersAndWorldSeedInitialized()
 	gui:PostBiomeInit()
