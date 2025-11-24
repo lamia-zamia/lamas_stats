@@ -3,7 +3,6 @@
 ---@field reaction_y number
 ---@field visible_types { [number]:boolean}
 ---@field current_recipe integer?
----@field showing_recipe integer?
 ---@field filter string
 ---@field width number
 ---@field width_reaction number
@@ -157,7 +156,7 @@ end
 ---@private
 function materials:show_reactions()
 	self.materials.reaction_y = 1 - self.scroll.y
-	local material = self.mat:get_data(self.materials.showing_recipe)
+	local material = self.mat:get_data(self.materials.current_recipe)
 	local reactions, max_length = self:get_reaction_data(material.id)
 	self.materials.width_reaction = math.max(200, math.min((max_length + 10) * 3, 400))
 
@@ -212,7 +211,7 @@ end
 ---Draws reaction window
 ---@private
 function materials:draw_reaction_window()
-	local material_type = self.materials.showing_recipe
+	local material_type = self.materials.current_recipe
 	if not material_type then return end
 
 	local x = self.menu.start_x + self.menu.width + 15
@@ -272,19 +271,32 @@ end
 ---@param y number
 ---@param material_index integer
 function materials:materials_draw_material(y, material_index)
-	-- local material_type = self.mat:get_data(material_index).type
-	-- if not self:is_material_in_filter(material_index) then return end
-
 	if not self:fungal_is_element_visible(y, 10) then
 		self.materials.y = self.materials.y + 10
 		return
 	end
 
-	self:FungalDrawSingleMaterial(0, y, material_index, true)
+	local hovered = self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 20, 10)
 
-	local hovered = self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 3, 10)
+	local material_data = self.mat:get_data(material_index)
+	self:FungalDrawIcon(0, y, material_data)
+	local material_name = self:FungalGetName(material_data)
+
+	if self.materials.current_recipe == material_index then
+		if hovered then
+			self:Color(0.6, 1, 0.4)
+		else
+			self:Color(0.4, 1, 0.6)
+		end
+	elseif hovered then
+		self:ColorYellow()
+	end
+	self:Text(9, y, material_name)
+	self:ColorGray()
+	self:Text(12 + self:GetTextDimension(material_name), y, "(" .. material_data.id .. ")")
+
 	if hovered then
-		self.materials.showing_recipe = material_index
+		-- self.materials.showing_recipe = material_index
 		if self:IsLeftClicked() then self.materials.current_recipe = material_index end
 	end
 
@@ -311,8 +323,6 @@ function materials:materials_draw_list()
 	self:AddOption(self.c.options.NonInteractive)
 
 	self.materials.y = 1 - self.scroll.y
-
-	self.materials.showing_recipe = self.materials.current_recipe
 
 	for _, material_index in ipairs(self:get_filtered_materials()) do
 		self:materials_draw_material(self.materials.y, material_index)
