@@ -281,9 +281,9 @@ function materials:is_material_in_filter(material_index)
 	local material = self.mat:get_data(material_index)
 	if not self.materials.visible_types[material.type] then return end
 	local filter = self.materials.filter
-	if material.id:find(filter) then return true end
-	if material.ui_name:find(filter) then return true end
-	if self:Locale(material.ui_name):find(filter) then return true end
+	for _, name in ipairs({ material.id, material.ui_name, self:Locale(material.ui_name) }) do
+		if name:lower():find(filter) then return true end
+	end
 end
 
 ---Draws single material
