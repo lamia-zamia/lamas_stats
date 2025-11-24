@@ -362,8 +362,10 @@ function materials:materials_draw_window()
 	self:draw_reaction_window()
 end
 
-function materials:update()
-	reactions_data = setmetatable({}, { __mode = "k" })
+---Updates materials gui stuff
+---@param did_language_changed boolean
+function materials:materials_update(did_language_changed)
+	if did_language_changed then reactions_data = setmetatable({}, { __mode = "k" }) end
 end
 
 return materials

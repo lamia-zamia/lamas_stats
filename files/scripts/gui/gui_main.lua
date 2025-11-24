@@ -80,6 +80,7 @@ function gui:GetSettings(did_language_changed)
 	self:HeaderGetSettings()
 	self:FungalGetSettings(did_language_changed)
 	self:ConfigGetSettings(did_language_changed)
+	self:materials_update(did_language_changed)
 	self.max_height = self.mod:GetSettingNumber("max_height")
 end
 
