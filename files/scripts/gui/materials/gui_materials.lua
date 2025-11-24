@@ -31,6 +31,14 @@ for k, v in pairs(material_types_enum) do
 	materials.materials.visible_types[v] = true
 end
 
+---@class gui_reaction_data
+---@field using reactions_data[]
+---@field producing reactions_data[]
+---@field max_length number
+
+local reactions_data = setmetatable({}, { __mode = "k" }) ---@type gui_reaction_data[]
+local filtered_materials = nil
+
 ---Returns true if passed name contains tag
 ---@param name string
 ---@return boolean
@@ -67,13 +75,6 @@ function materials:reaction_datas_get_longest_name(reaction_datas)
 	end
 	return max
 end
-
----@class gui_reaction_data
----@field using reactions_data[]
----@field producing reactions_data[]
----@field max_length number
-
-local reactions_data = setmetatable({}, { __mode = "k" }) ---@type gui_reaction_data[]
 
 ---Gathers reaction data and whats not
 ---@param material_id string
@@ -272,7 +273,7 @@ end
 ---@param material_index integer
 function materials:materials_draw_material(y, material_index)
 	-- local material_type = self.mat:get_data(material_index).type
-	if not self:is_material_in_filter(material_index) then return end
+	-- if not self:is_material_in_filter(material_index) then return end
 
 	if not self:fungal_is_element_visible(y, 10) then
 		self.materials.y = self.materials.y + 10
@@ -290,6 +291,20 @@ function materials:materials_draw_material(y, material_index)
 	self.materials.y = self.materials.y + 10
 end
 
+---Gets filtered material list
+---@private
+---@return integer[]
+function materials:get_filtered_materials()
+	if not filtered_materials then
+		local result = {}
+		for material_index, _ in pairs(self.mat.data) do
+			if self:is_material_in_filter(material_index) then result[#result + 1] = material_index end
+		end
+		filtered_materials = result
+	end
+	return filtered_materials
+end
+
 ---Draws materials list
 ---@private
 function materials:materials_draw_list()
@@ -298,7 +313,8 @@ function materials:materials_draw_list()
 	self.materials.y = 1 - self.scroll.y
 
 	self.materials.showing_recipe = self.materials.current_recipe
-	for material_index, _ in pairs(self.mat.data) do
+
+	for _, material_index in ipairs(self:get_filtered_materials()) do
 		self:materials_draw_material(self.materials.y, material_index)
 	end
 
@@ -313,6 +329,7 @@ function materials:materials_draw_checkboxes()
 	for material_type, type_name in ipairs(material_types) do
 		if self:IsDrawCheckbox(x, self.menu.pos_y - 1, type_name, self.materials.visible_types[material_type]) and self:IsMouseClicked() then
 			self.materials.visible_types[material_type] = not self.materials.visible_types[material_type]
+			filtered_materials = nil
 		end
 		x = x + self:GetTextDimension(type_name) + 18
 	end
@@ -325,7 +342,11 @@ function materials:materials_textbox()
 	local text = "Search:"
 	local text_width = self:GetTextDimension(text)
 	self:Text(self.menu.pos_x, self.menu.pos_y, text)
-	self.materials.filter = self.textbox:draw_textbox(self.menu.pos_x + text_width + 5, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
+	local new_text = self.textbox:draw_textbox(self.menu.pos_x + text_width + 5, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
+	if new_text ~= self.materials.filter then
+		self.materials.filter = new_text
+		filtered_materials = nil
+	end
 end
 
 ---Draws materials window
