@@ -45,6 +45,22 @@ local function is_tag(name)
 	return name:sub(1, 1) == "["
 end
 
+---Truncates a string to a maximum length.
+---@param str string
+---@param max_len integer?
+---@param suffix string?
+---@return string
+local function truncate(str, max_len, suffix)
+	max_len = max_len or 32
+	if #str <= max_len then return str end
+
+	suffix = suffix or ".."
+	local cut_len = max_len - #suffix
+	if cut_len < 0 then cut_len = 0 end
+
+	return string.sub(str, 1, cut_len) .. suffix
+end
+
 ---Returns longest material name
 ---@private
 ---@param material_names string[]
@@ -52,10 +68,10 @@ end
 function materials:material_get_longest_name(material_names)
 	local max = 0
 	for _, material_name in pairs(material_names) do
-		max = math.max(max, self:GetTextDimension(material_name))
+		max = math.max(max, self:GetTextDimension(truncate(material_name)))
 		if not is_tag(material_name) then
 			local material_data = self.mat:get_data_by_id(material_name)
-			max = math.max(max, self:GetTextDimension(self:Locale(material_data.ui_name)))
+			max = math.max(max, self:GetTextDimension(self:FungalGetName(material_data)))
 		end
 	end
 	return max
@@ -107,7 +123,7 @@ end
 ---@param width number
 ---@param alt boolean?
 function materials:draw_material_centered(x, y, material_data, width, alt)
-	local material_name = alt and material_data.id or self:FungalGetName(material_data)
+	local material_name = alt and truncate(material_data.id) or self:FungalGetName(material_data)
 	local name_offset = (width - self:GetTextDimension(material_name)) / 2
 	self:FungalDrawIcon(x + name_offset - 9, y, material_data)
 	self:Text(x + name_offset, y, material_name)
@@ -130,19 +146,18 @@ end
 ---@param reaction reactions_data
 function materials:show_reaction(reaction)
 	local x = 0
-	local width = self.materials.width_reaction / #reaction.inputs
-	for _, input in ipairs(reaction.inputs) do
-		self:draw_reaction_row(x, self.materials.reaction_y, input, width)
-		x = x + width
-		self:Text(x, self.materials.reaction_y, "+")
+	local width = self.materials.width_reaction / 2
+	local y = self.materials.reaction_y
+	local rows = #reaction.inputs
+	for i, input in ipairs(reaction.inputs) do
+		self:draw_reaction_row(x, y + 10 * (i - 1), input, width)
 	end
-	x = 0
-	self.materials.reaction_y = self.materials.reaction_y + 10
-	for _, output in ipairs(reaction.outputs) do
-		self:draw_reaction_row(x, self.materials.reaction_y, output, width)
-		x = x + width
+	x = x + width
+	self:Image(x - 6.5, y + 10 * (rows - 1) / 2, "mods/lamas_stats/files/gfx/arrow.png")
+	for i, output in ipairs(reaction.outputs) do
+		self:draw_reaction_row(x, y + 10 * (i - 1), output, width)
 	end
-	self.materials.reaction_y = self.materials.reaction_y + 11
+	self.materials.reaction_y = self.materials.reaction_y + 11 * rows
 end
 
 ---Draws a separator line
@@ -158,7 +173,7 @@ function materials:show_reactions()
 	local material = self.mat:get_data(self.materials.current_recipe)
 	local reaction_data = self:get_reaction_data(material.id)
 	local reactions = self.materials.reaction_show_output and reaction_data.producing or reaction_data.using
-	self.materials.width_reaction = math.max(200, math.min((reaction_data.max_length + 10) * 3, 400))
+	self.materials.width_reaction = math.max(200, math.min(reaction_data.max_length * 2 + 42, 400))
 
 	if #reactions > 0 then
 		self:draw_reaction_separator()
