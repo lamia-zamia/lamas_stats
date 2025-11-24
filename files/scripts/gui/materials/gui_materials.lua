@@ -35,7 +35,7 @@ end
 ---@field producing reactions_data[]
 ---@field max_length number
 
-local reactions_data = setmetatable({}, { __mode = "k" }) ---@type gui_reaction_data[]
+local reactions_data = setmetatable({}, { __mode = "k" }) ---@type {[string]:gui_reaction_data}
 local filtered_materials = nil
 
 ---Returns true if passed name contains tag
@@ -94,11 +94,10 @@ end
 
 ---Gets reaction data
 ---@param material_id string
----@return reactions_data[], number
+---@return gui_reaction_data
 function materials:get_reaction_data(material_id)
 	if not reactions_data[material_id] then self:gather_reaction_data(material_id) end
-	local data = reactions_data[material_id]
-	return (self.materials.reaction_show_output and data.producing or data.using), data.max_length
+	return reactions_data[material_id]
 end
 
 ---Draws material centered
@@ -157,8 +156,9 @@ end
 function materials:show_reactions()
 	self.materials.reaction_y = 1 - self.scroll.y
 	local material = self.mat:get_data(self.materials.current_recipe)
-	local reactions, max_length = self:get_reaction_data(material.id)
-	self.materials.width_reaction = math.max(200, math.min((max_length + 10) * 3, 400))
+	local reaction_data = self:get_reaction_data(material.id)
+	local reactions = self.materials.reaction_show_output and reaction_data.producing or reaction_data.using
+	self.materials.width_reaction = math.max(200, math.min((reaction_data.max_length + 10) * 3, 400))
 
 	if #reactions > 0 then
 		self:draw_reaction_separator()
@@ -246,11 +246,15 @@ function materials:draw_reaction_window()
 	self:Text(x + id_offset, y, material_id)
 	y = y + 10
 
+	local reaction_data = self:get_reaction_data(material_data.id)
+
 	-- buttons
 	local buttons_width = width / 2 - 6
 	local is_output = self.materials.reaction_show_output
-	self:draw_reaction_toggle_button(x + 3, y, buttons_width, "Using", not is_output, false)
-	self:draw_reaction_toggle_button(x + 9 + buttons_width, y, buttons_width, "Producing", is_output, true)
+	local using_string = string.format("%s (%d)", "Using", #reaction_data.using)
+	self:draw_reaction_toggle_button(x + 3, y, buttons_width, using_string, not is_output, false)
+	local producing_string = string.format("%s (%d)", "Producing", #reaction_data.producing)
+	self:draw_reaction_toggle_button(x + 9 + buttons_width, y, buttons_width, producing_string, is_output, true)
 
 	self:ScrollBox(x + 3, y + 20, self.z + 5, width - 6, 200, self.c.default_9piece, 3, 3, self.show_reactions)
 end
