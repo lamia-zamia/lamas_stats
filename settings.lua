@@ -423,6 +423,7 @@ local function build_settings()
 	local settings = {
 		{
 			id = "input_key",
+			not_setting = true,
 			ui_name = T.Hotkey,
 			ui_description = T.HotkeyDesc,
 			value_default = D.input_key,
