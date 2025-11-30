@@ -4,10 +4,15 @@ local colors = dofile_once("mods/lamas_stats/files/scripts/color_helper.lua") --
 nxml.error_handler = function() end
 
 local full_data = {}
-local reaction_input_index = {}
-local reaction_output_index = {}
-local reaction_input_tag_index = {}
-local reaction_output_tag_index = {}
+
+---@class reaction_index
+---@field [string] {[string]:integer[]}
+local reaction_index = {
+	input_index = {},
+	output_index = {},
+	tag_input_index = {},
+	tag_output_index = {},
+}
 
 ---@alias material_tags {[string]:boolean}
 
@@ -186,9 +191,9 @@ end
 local function reaction_add_to_index_table(is_input, material, index)
 	local index_table
 	if is_this_tag(material) then
-		index_table = is_input and reaction_input_tag_index or reaction_output_tag_index
+		index_table = is_input and reaction_index.tag_input_index or reaction_index.tag_output_index
 	else
-		index_table = is_input and reaction_input_index or reaction_output_index
+		index_table = is_input and reaction_index.input_index or reaction_index.output_index
 	end
 
 	if not index_table[material] then index_table[material] = {} end
@@ -201,8 +206,8 @@ end
 local function parse_reaction(element)
 	local attributes = element.attr
 
-	local reaction_index = #reactions + 1
-	reactions[reaction_index] = {
+	local this_reaction_index = #reactions + 1
+	reactions[this_reaction_index] = {
 		inputs = {},
 		outputs = {},
 	}
@@ -210,10 +215,10 @@ local function parse_reaction(element)
 		local input_cell = attributes["input_cell" .. i]
 		local output_cell = attributes["output_cell" .. i]
 		if not input_cell or not output_cell then break end
-		table.insert(reactions[reaction_index].inputs, input_cell)
-		reaction_add_to_index_table(true, input_cell, reaction_index)
-		table.insert(reactions[reaction_index].outputs, output_cell)
-		reaction_add_to_index_table(false, output_cell, reaction_index)
+		table.insert(reactions[this_reaction_index].inputs, input_cell)
+		reaction_add_to_index_table(true, input_cell, this_reaction_index)
+		table.insert(reactions[this_reaction_index].outputs, output_cell)
+		reaction_add_to_index_table(false, output_cell, this_reaction_index)
 	end
 end
 
@@ -287,12 +292,12 @@ end
 ---@return reactions_data[]
 function mat:get_reactions_using(material_id)
 	local result = {}
-	for _, rid in ipairs(reaction_input_index[material_id] or {}) do
-		result[#result + 1] = reactions[rid]
+	for _, reaction_id in ipairs(reaction_index.input_index[material_id] or {}) do
+		result[#result + 1] = reactions[reaction_id]
 	end
 	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
-		for _, rid in ipairs(reaction_input_tag_index[tag] or {}) do
-			result[#result + 1] = reactions[rid]
+		for _, reaction_id in ipairs(reaction_index.tag_input_index[tag] or {}) do
+			result[#result + 1] = reactions[reaction_id]
 		end
 	end
 	return result
@@ -302,12 +307,12 @@ end
 ---@return reactions_data[]
 function mat:get_reactions_producing(material_id)
 	local result = {}
-	for _, rid in ipairs(reaction_output_index[material_id] or {}) do
-		result[#result + 1] = reactions[rid]
+	for _, reaction_id in ipairs(reaction_index.output_index[material_id] or {}) do
+		result[#result + 1] = reactions[reaction_id]
 	end
 	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
-		for _, rid in ipairs(reaction_output_tag_index[tag] or {}) do
-			result[#result + 1] = reactions[rid]
+		for _, reaction_id in ipairs(reaction_index.tag_output_index[tag] or {}) do
+			result[#result + 1] = reactions[reaction_id]
 		end
 	end
 	return result
