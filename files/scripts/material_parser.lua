@@ -5,14 +5,19 @@ nxml.error_handler = function() end
 
 local full_data = {}
 
----@class reaction_index
----@field [string] {[string]:integer[]}
+---@class (exact) reaction_index
+---@field input {[string]:integer[]}
+---@field output {[string]:integer[]}
+---@field tag_input {[string]:integer[]}
+---@field tag_output {[string]:integer[]}
 local reaction_index = {
-	input_index = {},
-	output_index = {},
-	tag_input_index = {},
-	tag_output_index = {},
+	input = {},
+	output = {},
+	tag_input = {},
+	tag_output = {},
 }
+
+local tagged_materials = {} ---@type {[string]:string[]}
 
 ---@alias material_tags {[string]:boolean}
 
@@ -141,6 +146,14 @@ local function get_material_type(attributes)
 	return mat.material_types.liquid
 end
 
+---Adds material to tagged materials lookup table
+---@param material_id string
+---@param tag string
+local function add_material_to_tagged_materials(material_id, tag)
+	if not tagged_materials[tag] then tagged_materials[tag] = {} end
+	table.insert(tagged_materials[tag], material_id)
+end
+
 ---Gets material tags
 ---@param attributes table
 ---@return material_tags?
@@ -150,6 +163,7 @@ local function get_material_tags(attributes)
 	local tags_table = {}
 	for tag in tags:gmatch("([^,]+)") do
 		tags_table[tag] = true
+		add_material_to_tagged_materials(attributes.id, tag)
 	end
 	return tags_table
 end
@@ -190,10 +204,10 @@ end
 ---@param index integer
 local function reaction_add_to_index_table(is_input, material, index)
 	local index_table
-	if is_this_tag(material) then
-		index_table = is_input and reaction_index.tag_input_index or reaction_index.tag_output_index
+	if material:sub(1, 1) == "[" then -- if this is tag
+		index_table = is_input and reaction_index.tag_input or reaction_index.tag_output
 	else
-		index_table = is_input and reaction_index.input_index or reaction_index.output_index
+		index_table = is_input and reaction_index.input or reaction_index.output
 	end
 
 	if not index_table[material] then index_table[material] = {} end
@@ -288,15 +302,22 @@ function mat:get_data_by_id(material_id)
 	return self:get_data(CellFactory_GetType(material_id))
 end
 
+---Checks if material exist
+---@param material_id string
+---@return boolean?
+function mat:does_material_exist(material_id)
+	if self.data[CellFactory_GetType(material_id)] then return true end
+end
+
 ---@param material_id string
 ---@return reactions_data[]
 function mat:get_reactions_using(material_id)
 	local result = {}
-	for _, reaction_id in ipairs(reaction_index.input_index[material_id] or {}) do
+	for _, reaction_id in ipairs(reaction_index.input[material_id] or {}) do
 		result[#result + 1] = reactions[reaction_id]
 	end
 	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
-		for _, reaction_id in ipairs(reaction_index.tag_input_index[tag] or {}) do
+		for _, reaction_id in ipairs(reaction_index.tag_input[tag] or {}) do
 			result[#result + 1] = reactions[reaction_id]
 		end
 	end
@@ -307,15 +328,62 @@ end
 ---@return reactions_data[]
 function mat:get_reactions_producing(material_id)
 	local result = {}
-	for _, reaction_id in ipairs(reaction_index.output_index[material_id] or {}) do
+	for _, reaction_id in ipairs(reaction_index.output[material_id] or {}) do
 		result[#result + 1] = reactions[reaction_id]
 	end
 	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
-		for _, reaction_id in ipairs(reaction_index.tag_output_index[tag] or {}) do
+		for _, reaction_id in ipairs(reaction_index.tag_output[tag] or {}) do
 			result[#result + 1] = reactions[reaction_id]
 		end
 	end
 	return result
+end
+
+---Does this material has this tag
+---@param material_id string
+---@param tag string
+---@return boolean?
+function mat:material_has_tag(material_id, tag)
+	local material_data = self:get_data_by_id(material_id)
+	return material_data.tags and material_data.tags[tag]
+end
+
+---Iterates all material names of a reaction
+---@param reaction_datas reactions_data[]
+---@return fun():table?, string?, integer?  -- (reaction.material_list, material_name, index)
+function mat.each_reaction_material_names(reaction_datas)
+	local this_reaction_index = 1 -- which reaction we are on
+	local material_index = 0 -- inside that list
+	local reaction_types = { "inputs", "outputs" }
+	local type_index = 1
+
+	return function()
+		while true do
+			-- no more reactions
+			local reaction = reaction_datas[this_reaction_index]
+			if not reaction then return nil end
+
+			-- get current type (inputs or outputs)
+			local material_list = reaction[reaction_types[type_index]]
+
+			-- advance inside the list
+			material_index = material_index + 1
+
+			-- element exists? return it
+			if material_list and material_list[material_index] then return material_list, material_list[material_index], material_index end
+
+			-- list exhausted → move to outputs
+			if type_index == 1 then
+				type_index = 2
+				material_index = 0
+			else
+				-- outputs exhausted → move to next reaction
+				this_reaction_index = this_reaction_index + 1
+				type_index = 1
+				material_index = 0
+			end
+		end
+	end
 end
 
 return mat
