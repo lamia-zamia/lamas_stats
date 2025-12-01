@@ -61,13 +61,13 @@ local function truncate(str, max_len, suffix)
 	return string.sub(str, 1, cut_len) .. suffix
 end
 
----Returns longest material name
+---Returns longest material name from an array of reaction datas
 ---@private
----@param material_names string[]
+---@param reaction_datas reactions_data[]
 ---@return number
-function materials:material_get_longest_name(material_names)
+function materials:reaction_datas_get_longest_name(reaction_datas)
 	local max = 0
-	for _, material_name in pairs(material_names) do
+	for _, material_name, _ in self.mat.each_reaction_material_names(reaction_datas) do
 		max = math.max(max, self:GetTextDimension(truncate(material_name)))
 		if not is_tag(material_name) then
 			local material_data = self.mat:get_data_by_id(material_name)
@@ -77,26 +77,43 @@ function materials:material_get_longest_name(material_names)
 	return max
 end
 
----Returns longest material name from an array of reaction datas
+---Gets reaction data and replaces tag if its the material itself
 ---@private
----@param reaction_datas reactions_data[]
----@return number
-function materials:reaction_datas_get_longest_name(reaction_datas)
-	local max = 0
-	for _, reaction_data in ipairs(reaction_datas) do
-		for _, material_names in pairs(reaction_data) do
-			max = math.max(max, self:material_get_longest_name(material_names))
+---@param material_id string
+---@param fn fun(self, string):reactions_data[]
+---@return reactions_data[]
+function materials:get_reaction_replace_tags(material_id, fn)
+	local original_data = fn(self, material_id)
+	local data = {}
+
+	for i, r in ipairs(original_data) do
+		data[i] = {
+			inputs = { unpack(r.inputs) },
+			outputs = { unpack(r.outputs) },
+		}
+	end
+	for list, material_name, i in self.mat.each_reaction_material_names(data) do
+		if is_tag(material_name) then
+			local closing = material_name:find("]", 1, true)
+			local tag = material_name:sub(1, closing)
+			if self.mat:material_has_tag(material_id, tag) then
+				local suffix = material_name:sub(closing + 1) -- may be empty ("") or "_rust"
+				local replace_name = material_id .. suffix
+				if self.mat:does_material_exist(replace_name) then list[i] = replace_name end
+			end
 		end
 	end
-	return max
+	return data
 end
 
 ---Gathers reaction data and whats not
 ---@param material_id string
 ---@private
 function materials:gather_reaction_data(material_id)
-	local using = self.mat:get_reactions_using(material_id)
-	local producing = self.mat:get_reactions_producing(material_id)
+	-- local using = self.mat:get_reactions_using(material_id)
+	-- local producing = self.mat:get_reactions_producing(material_id)
+	local using = self:get_reaction_replace_tags(material_id, self.mat.get_reactions_using)
+	local producing = self:get_reaction_replace_tags(material_id, self.mat.get_reactions_producing)
 	local max = 0
 	for _, reaction_datas in ipairs({ using, producing }) do
 		max = math.max(max, self:reaction_datas_get_longest_name(reaction_datas))
