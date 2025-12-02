@@ -19,8 +19,8 @@ local reaction_index = {
 }
 
 local tagged_materials = {} ---@type {[string]:string[]}
-
 local partial_matches = {} ---@type {[string]:{original:string, match:string}}
+local generate_icons = ModSettingGet("lamas_stats.generate_icons")
 
 ---@alias material_tags {[string]:boolean}
 
@@ -116,7 +116,7 @@ local textures = {
 local function get_icon(element, type)
 	local texture = get_texture(element)
 	if textures[type] then
-		if texture then return create_virtual_icon(element.attr.name, texture, textures[type]) end
+		if texture and generate_icons then return create_virtual_icon(element.attr.name, texture, textures[type]) end
 		return textures[type], get_material_color(element)
 	end
 	return "data/items_gfx/potion.png", get_material_color(element, true)

@@ -344,6 +344,8 @@ local translations = {
 		max_height = "Maximum height",
 		reset_settings = "Reset settings",
 		reset = "Reset",
+		materials = "Materials",
+		generate_icons = "Generate icons",
 	},
 	["русский"] = {
 		Hotkey = "Горячая клавиша",
@@ -358,6 +360,8 @@ local translations = {
 		max_height = "Макс высота",
 		reset_settings = "Сбросить настройки",
 		reset = "Сбросить",
+		materials = "Материалы",
+		generate_icons = "Генерировать значки",
 	},
 	["日本語"] = {
 		Hotkey = "ホットキー",
@@ -372,6 +376,8 @@ local translations = {
 		max_height = "最高高さ",
 		reset_settings = "設定をリセット",
 		reset = "リセット",
+		materials = "材料",
+		generate_icons = "アイコンを生成する",
 	},
 }
 
@@ -416,6 +422,7 @@ D = {
 	enable_nearby_perks = true,
 	enable_nearby_lottery = true,
 	enable_nearby_always_cast = true,
+	generate_icons = true,
 }
 
 local function build_settings()
@@ -435,6 +442,13 @@ local function build_settings()
 			ui_fn = S.mod_setting_better_boolean,
 			ui_name = T.StartEnabled,
 			checkboxes = { "overlay_enabled", "menu_enabled" },
+		},
+		{
+			not_setting = true,
+			id = "materials",
+			ui_fn = S.mod_setting_better_boolean,
+			ui_name = T.materials,
+			checkboxes = { "generate_icons" },
 		},
 		{
 			id = "overlay_x",
