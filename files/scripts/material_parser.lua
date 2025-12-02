@@ -155,6 +155,9 @@ end
 ---@param value any
 local function insert_to_index(index, key, value)
 	index[key] = index[key] or {}
+	for _, v in ipairs(index[key]) do
+		if v == value then return end
+	end
 	table.insert(index[key], value)
 end
 
