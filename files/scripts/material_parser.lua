@@ -5,11 +5,12 @@ nxml.error_handler = function() end
 
 local full_data = {}
 
+---@alias index_table {[string]:integer[]}
 ---@class (exact) reaction_index
----@field input {[string]:integer[]}
----@field output {[string]:integer[]}
----@field tag_input {[string]:integer[]}
----@field tag_output {[string]:integer[]}
+---@field input index_table
+---@field output index_table
+---@field tag_input index_table
+---@field tag_output index_table
 local reaction_index = {
 	input = {},
 	output = {},
@@ -146,12 +147,13 @@ local function get_material_type(attributes)
 	return mat.material_types.liquid
 end
 
----Adds material to tagged materials lookup table
----@param material_id string
----@param tag string
-local function add_material_to_tagged_materials(material_id, tag)
-	if not tagged_materials[tag] then tagged_materials[tag] = {} end
-	table.insert(tagged_materials[tag], material_id)
+---Inserts value into index table
+---@param index table
+---@param key string
+---@param value any
+local function insert_to_index(index, key, value)
+	index[key] = index[key] or {}
+	table.insert(index[key], value)
 end
 
 ---Gets material tags
@@ -163,7 +165,7 @@ local function get_material_tags(attributes)
 	local tags_table = {}
 	for tag in tags:gmatch("([^,]+)") do
 		tags_table[tag] = true
-		add_material_to_tagged_materials(attributes.id, tag)
+		insert_to_index(tagged_materials, tag, attributes.name)
 	end
 	return tags_table
 end
@@ -190,12 +192,25 @@ local function parse_material(element)
 	}
 end
 
----Is this string a tag
----@param value string
----@return boolean
----@nodiscard
-local function is_this_tag(value)
-	return value:sub(1, 1) == "[" and value:sub(-1) == "]"
+---Parses tag
+---@param str string
+---@return string?, string?
+local function parse_tagged_cell(str)
+	local tag, suffix = str:match("^(%[[^%]]+%])(.*)$")
+	return tag, suffix -- suffix may be "", "_molten", "_rust", etc
+end
+
+---Expands partial tag and adds to reaction index table if exist
+---@param tag string
+---@param suffix string?
+---@param base_table { [string]: integer[] }
+---@param index integer
+local function expand_partial_tag(tag, suffix, base_table, index)
+	if not suffix or suffix == "" then return end
+	for _, base in ipairs(tagged_materials[tag] or {}) do
+		local generated = base .. suffix
+		if full_data[generated] then insert_to_index(base_table, generated, index) end
+	end
 end
 
 ---Adds reaction to index table
@@ -203,16 +218,21 @@ end
 ---@param material string
 ---@param index integer
 local function reaction_add_to_index_table(is_input, material, index)
-	local index_table
-	if material:sub(1, 1) == "[" then -- if this is tag
-		index_table = is_input and reaction_index.tag_input or reaction_index.tag_output
-	else
-		index_table = is_input and reaction_index.input or reaction_index.output
+	local tag, suffix = parse_tagged_cell(material)
+
+	-- pick correct base table
+	local base_table = is_input and reaction_index.input or reaction_index.output
+	local tag_table = is_input and reaction_index.tag_input or reaction_index.tag_output
+
+	-- if this is a tag entry, store it as-is
+	if tag then
+		insert_to_index(tag_table, material, index)
+		expand_partial_tag(tag, suffix, base_table, index)
+		return
 	end
 
-	if not index_table[material] then index_table[material] = {} end
-	local idx_table = index_table[material]
-	idx_table[#idx_table + 1] = index
+	-- normal material
+	insert_to_index(base_table, material, index)
 end
 
 ---Parses a reaction element
@@ -221,51 +241,66 @@ local function parse_reaction(element)
 	local attributes = element.attr
 
 	local this_reaction_index = #reactions + 1
-	reactions[this_reaction_index] = {
-		inputs = {},
-		outputs = {},
-	}
+	local inputs, outputs = {}, {}
+
 	for i = 1, 3 do
 		local input_cell = attributes["input_cell" .. i]
 		local output_cell = attributes["output_cell" .. i]
 		if not input_cell or not output_cell then break end
-		table.insert(reactions[this_reaction_index].inputs, input_cell)
+		inputs[#inputs + 1] = input_cell
+		outputs[#outputs + 1] = output_cell
 		reaction_add_to_index_table(true, input_cell, this_reaction_index)
-		table.insert(reactions[this_reaction_index].outputs, output_cell)
 		reaction_add_to_index_table(false, output_cell, this_reaction_index)
 	end
+	reactions[this_reaction_index] = {
+		inputs = inputs,
+		outputs = outputs,
+	}
 end
 
----Parses a file
+---Parses a file and gets nxml element
 ---@param file string
-local function parse_file(file)
+---@return element?
+local function get_file(file)
 	local success, result = pcall(nxml.parse, ModTextFileGetContent(file))
 	if not success then
 		reporter:Report("couldn't parse material file " .. file)
 		return
 	end
-
-	for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
-		for elem in result:each_of(element_name) do
-			full_data[elem:get("name")] = elem
-		end
-	end
-	for reaction in result:each_of("Reaction") do
-		parse_reaction(reaction)
-	end
+	return result
 end
 
 ---Parses material list
 function mat:parse()
-	local files = ModMaterialFilesGet()
-	for i = 1, #files do
-		parse_file(files[i])
+	-- parsing files to nxml elements
+	local parsed_files = {}
+	for _, file in ipairs(ModMaterialFilesGet()) do
+		local parse_result = get_file(file)
+		if parse_result then parsed_files[#parsed_files + 1] = parse_result end
 	end
 
+	-- parsing materials and writing them all to temporary table (children bad)
+	for _, parsed_file in ipairs(parsed_files) do
+		for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
+			for elem in parsed_file:each_of(element_name) do
+				full_data[elem:get("name")] = elem
+			end
+		end
+	end
+
+	-- parsing materials
 	for _, v in pairs(full_data) do
 		parse_material(v)
 	end
 
+	-- parsing reactions after we finished parsing materials
+	for _, parsed_file in ipairs(parsed_files) do
+		for elem in parsed_file:each_of("Reaction") do
+			parse_reaction(elem)
+		end
+	end
+
+	parsed_files = nil
 	nxml = nil ---@diagnostic disable-line: cast-local-type
 	full_data = nil
 end
