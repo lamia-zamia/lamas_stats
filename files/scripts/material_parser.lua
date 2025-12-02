@@ -20,6 +20,8 @@ local reaction_index = {
 
 local tagged_materials = {} ---@type {[string]:string[]}
 
+local partial_matches = {} ---@type {[string]:{original:string, match:string}}
+
 ---@alias material_tags {[string]:boolean}
 
 ---@class reactions_data
@@ -56,7 +58,7 @@ local mat = {
 local function create_virtual_icon(name, material, png)
 	local png_img_id, png_img_w, png_img_h = ModImageMakeEditable(png, 0, 0)
 	local material_img_id, material_img_w, material_img_h = ModImageMakeEditable(material, 0, 0)
-	local virtual_path = "mods/lamas_stats/vfs/" .. name .. ".png"
+	local virtual_path = string.format("mods/lamas_stats/vfs/%s.png", name)
 	local custom_img_id = ModImageMakeEditable(virtual_path, png_img_w, png_img_h)
 	for y = 0, png_img_h do
 		local text_y = y % material_img_h
@@ -201,6 +203,7 @@ function mat.parse_tagged_cell(str)
 end
 
 ---Expands partial tag and adds to reaction index table if exist
+---@private
 ---@param tag string
 ---@param suffix string?
 ---@param base_table { [string]: integer[] }
@@ -209,7 +212,10 @@ local function expand_partial_tag(tag, suffix, base_table, index)
 	if not suffix or suffix == "" then return end
 	for _, base in ipairs(tagged_materials[tag] or {}) do
 		local generated = base .. suffix
-		if full_data[generated] then insert_to_index(base_table, generated, index) end
+		if full_data[generated] then
+			insert_to_index(base_table, generated, index)
+			insert_to_index(partial_matches, tag, { original = base, match = generated })
+		end
 	end
 end
 
@@ -222,11 +228,10 @@ local function reaction_add_to_index_table(is_input, material, index)
 
 	-- pick correct base table
 	local base_table = is_input and reaction_index.input or reaction_index.output
-	local tag_table = is_input and reaction_index.tag_input or reaction_index.tag_output
 
 	-- if this is a tag entry, store it as-is
 	if tag then
-		insert_to_index(tag_table, material, index)
+		insert_to_index(is_input and reaction_index.tag_input or reaction_index.tag_output, material, index)
 		expand_partial_tag(tag, suffix, base_table, index)
 		return
 	end
@@ -418,6 +423,16 @@ function mat.each_reaction_material_names(reaction_datas)
 				material_index = 0
 			end
 		end
+	end
+end
+
+---Returns original name for partial tags
+---@param tag string
+---@param material_name string
+---@return string?
+function mat.is_partial_match(tag, material_name)
+	for _, result in ipairs(partial_matches[tag] or {}) do
+		if result.match == material_name then return result.original end
 	end
 end
 

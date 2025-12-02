@@ -77,6 +77,44 @@ function materials:reaction_datas_get_longest_name(reaction_datas)
 	return max
 end
 
+---Replaces partial reactions with the material itself
+---@private
+---@param material_id string
+---@param material_name string
+---@param list table
+---@param i integer
+function materials:reaction_replace_tags(material_id, material_name, list, i)
+	local tag, suffix = self.mat.parse_tagged_cell(material_name)
+	if not tag then return end
+
+	local has_tag = self.mat:material_has_tag(material_id, tag)
+
+	if not suffix or suffix == "" then
+		-- plain tag [tag]
+		if has_tag then
+			list[i] = material_id
+			return
+		end
+		-- partial match (e.g., material_name maps to something with suffix)
+		local partial_match = self.mat.is_partial_match(material_name, material_id)
+		if partial_match then
+			list[i] = partial_match
+			return
+		end
+	else
+		-- tag + suffix
+		if has_tag then
+			local replace_name = material_id .. suffix
+			if self.mat:does_material_exist(replace_name) then list[i] = replace_name end
+			return
+		-- reverse: material_id already has suffix
+		elseif material_id:sub(-#suffix) == suffix then
+			local base = material_id:sub(1, #material_id - #suffix)
+			if base ~= "" and self.mat:material_has_tag(base, tag) then list[i] = material_id end
+		end
+	end
+end
+
 ---Gets reaction data and replaces tag if its the material itself
 ---@private
 ---@param material_id string
@@ -92,16 +130,9 @@ function materials:get_reaction_replace_tags(material_id, fn)
 			outputs = { unpack(r.outputs) },
 		}
 	end
+
 	for list, material_name, i in self.mat.each_reaction_material_names(data) do
-		if is_tag(material_name) then
-			local closing = material_name:find("]", 1, true)
-			local tag = material_name:sub(1, closing)
-			if self.mat:material_has_tag(material_id, tag) then
-				local suffix = material_name:sub(closing + 1) -- may be empty ("") or "_rust"
-				local replace_name = material_id .. suffix
-				if self.mat:does_material_exist(replace_name) then list[i] = replace_name end
-			end
-		end
+		self:reaction_replace_tags(material_id, material_name, list, i)
 	end
 	return data
 end
