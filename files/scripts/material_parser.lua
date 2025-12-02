@@ -195,7 +195,7 @@ end
 ---Parses tag
 ---@param str string
 ---@return string?, string?
-local function parse_tagged_cell(str)
+function mat.parse_tagged_cell(str)
 	local tag, suffix = str:match("^(%[[^%]]+%])(.*)$")
 	return tag, suffix -- suffix may be "", "_molten", "_rust", etc
 end
@@ -218,7 +218,7 @@ end
 ---@param material string
 ---@param index integer
 local function reaction_add_to_index_table(is_input, material, index)
-	local tag, suffix = parse_tagged_cell(material)
+	local tag, suffix = mat.parse_tagged_cell(material)
 
 	-- pick correct base table
 	local base_table = is_input and reaction_index.input or reaction_index.output
