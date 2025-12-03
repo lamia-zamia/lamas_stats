@@ -54,11 +54,11 @@ end
 ---@private
 function pg:PerksDrawCurrentPerks()
 	self.perk.x = 0
-	self.perk.y = 0
+	self.perk.y = -self.scroll.y
 	for i = 1, #self.perks.data.list do
 		self:PerksDrawCurrentPerk(self.perks.data.list[i])
 	end
-	self:Text(self.perk.x, self.perk.y + 16, "")
+	self:Text(self.perk.x, self.perk.y + 16 + self.scroll.y, "")
 end
 
 function pg:PerksDrawCurrentPerkScrollBox()
