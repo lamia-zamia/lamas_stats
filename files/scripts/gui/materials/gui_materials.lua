@@ -352,18 +352,6 @@ function materials:draw_reaction_window()
 
 	local material_data = self.mat:get_data(material_type)
 
-	-- draw tags?
-	if material_data.tags then
-		local tags_text = "[tags]"
-		local tags_width = self:GetTextDimension(tags_text)
-		local pos_x = x
-		if self:IsHoverBoxHovered(pos_x, y, tags_width, 10) then
-			self:ShowTooltipCenteredX(0, 20, self.draw_material_tags, material_data.tags)
-			self:ColorYellow()
-		end
-		self:Text(pos_x, y, tags_text)
-	end
-
 	local close_text = "Close"
 	local close_width = self:GetTextDimension(close_text)
 	local close_x = x + width - close_width - 3
@@ -372,6 +360,18 @@ function materials:draw_reaction_window()
 		GamePlaySound("ui", "ui/button_click", 0, 0)
 		self.materials.current_recipe = nil
 		return
+	end
+
+	-- draw tags?
+	if material_data.tags then
+		local tags_text = "[tags]"
+		local tags_width = self:GetTextDimension(tags_text)
+		local pos_x = close_x - tags_width - 5
+		if self:IsHoverBoxHovered(pos_x, y, tags_width, 10) then
+			self:ShowTooltipCenteredX(0, 20, self.draw_material_tags, material_data.tags)
+			self:ColorYellow()
+		end
+		self:Text(pos_x, y, tags_text)
 	end
 
 	-- draw material name
