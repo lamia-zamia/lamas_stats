@@ -471,7 +471,7 @@ local function build_settings()
 			id = "max_height",
 			ui_name = T.max_height,
 			value_default = D.max_height,
-			value_min = 50,
+			value_min = 100,
 			value_max = 250,
 			ui_fn = S.mod_setting_number_integer,
 		},
