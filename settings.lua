@@ -407,6 +407,7 @@ D = {
 	max_height = 180,
 	show_fungal_menu = true,
 	show_perks_menu = true,
+	show_materials = true,
 	show_kys_menu = false,
 	enable_fungal_past = true,
 	enable_fungal_future = false,
