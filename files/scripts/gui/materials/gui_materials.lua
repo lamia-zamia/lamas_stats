@@ -219,6 +219,25 @@ function materials:reactions_is_hoverbox_hovered(x, y, width, height)
 	end
 end
 
+---Shows probability and isreq
+---@param probability number
+---@param is_req boolean?
+function materials:show_probability(probability, is_req)
+	local speed_text = string.format("%s: %d", "Speed", probability)
+	local speed_w = self:GetTextDimension(speed_text)
+	local req_text = "This reaction only happens if requirements are not met"
+	local req_w = self:GetTextDimension(req_text)
+
+	local x = is_req and (req_w - speed_w) / 2 or 0
+
+	self:Text(x, 0, speed_text)
+
+	if is_req then
+		self:Color(1, 0.5, 0)
+		self:Text(0, 0, req_text)
+	end
+end
+
 ---@param reaction reactions_data
 function materials:show_reaction(reaction)
 	local y = self.materials.reaction_y
@@ -234,12 +253,6 @@ function materials:show_reaction(reaction)
 
 	local horizontal_center = 10 * (rows - 1) / 2
 
-	-- req marker
-	if reaction.is_req then
-		self:Color(1, 0, 0)
-		self:Text(x, y + horizontal_center, "!")
-	end
-
 	-- left column
 	for i, input in ipairs(reaction.inputs) do
 		self:draw_reaction_row(x, y + 10 * (i - 1), input, width)
@@ -248,9 +261,10 @@ function materials:show_reaction(reaction)
 	-- gap
 	x = x + width - margin
 	local arrow_x = x + (gap - arrow_w) / 2
+	if reaction.is_req then self:Color(1, 0.5, 0) end
 	self:Image(arrow_x, y + horizontal_center, "mods/lamas_stats/files/gfx/arrow.png")
 	if self:reactions_is_hoverbox_hovered(arrow_x, y + horizontal_center, arrow_w, arrow_w) then
-		self:ShowTooltipTextCenteredX(0, 15, string.format("%s: %d", "Speed", reaction.probability))
+		self:ShowTooltipCenteredX(0, 15, self.show_probability, reaction.probability, reaction.is_req)
 	end
 
 	-- right column
@@ -396,6 +410,31 @@ function materials:is_material_in_filter(material_index)
 	end
 end
 
+---Shows material tooltip on hover
+---@private
+---@param material_index integer
+function materials:show_material_tooltip(material_index)
+	if material_index == self.materials.current_recipe then return end
+	local y = 0
+	self:AddOption(self.c.options.Layout_NextSameLine)
+
+	local material = self.mat:get_data(material_index)
+	local reaction_data = self:get_reaction_data(material.id)
+	self:FungalDrawSingleMaterial(0, y, material_index, true)
+	y = y + 10
+	self:Text(0, y, string.format("%s: %d, %s: %d", "Using", #reaction_data.using, "Producing", #reaction_data.producing))
+	y = y + 10
+	if not self.materials.current_recipe then
+		self:ColorGray()
+		self:Text(0, y, "Left click to open the reaction window, right click to close the reaction window")
+		y = y + 10
+
+		self:ColorGray()
+		self:Text(0, y, T.PressShiftToSeeMore)
+	end
+	self:RemoveOption(self.c.options.Layout_NextSameLine)
+end
+
 ---Draws single material
 ---@param y number
 ---@param material_index integer
@@ -405,7 +444,8 @@ function materials:materials_draw_material(y, material_index)
 		return
 	end
 
-	local hovered = self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 20, 10)
+	local hoverbox_visible = y + 5 > 0 and y + 10 < self.max_height
+	local hovered = hoverbox_visible and self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 20, 9.9)
 
 	local material_data = self.mat:get_data(material_index)
 	self:FungalDrawIcon(0, y, material_data)
@@ -425,8 +465,14 @@ function materials:materials_draw_material(y, material_index)
 	self:Text(12 + self:GetTextDimension(material_name), y, "(" .. material_data.id .. ")")
 
 	if hovered then
-		-- self.materials.showing_recipe = material_index
+		local tooltip_y = self.materials.current_recipe and 10 or self.menu.start_y + 3
+		local tooltip_x = self.menu.start_x + self.menu.width + 18
+		self.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
+		self.tooltip_reset = false
+		self:ShowTooltip(tooltip_x, tooltip_y, self.show_material_tooltip, material_index, self.materials.current_recipe)
+		self.tooltip_img = self.default_tooltip
 		if self:IsLeftClicked() then self.materials.current_recipe = material_index end
+		if self:IsRightClicked() then self.materials.current_recipe = nil end
 	end
 
 	self.materials.y = self.materials.y + 10
