@@ -8,6 +8,10 @@
 ---@field width_reaction number
 ---@field reaction_show_output boolean
 ---@field scroll_height number
+---@field current_tag string?
+---@field reaction_scroll_height number
+---@field tag_height number
+---@field reaction_box_last_pos number
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -16,17 +20,20 @@ local materials = {
 		y = 0,
 		visible_types = {},
 		current_recipe = nil,
+		current_tag = nil,
 		reaction_y = 0,
 		filter = "",
 		width = 200,
 		width_reaction = 256,
 		reaction_show_output = false,
 		scroll_height = 100,
+		reaction_scroll_height = 100,
+		tag_height = 10,
+		reaction_box_last_pos = 10,
 	},
 }
 
 local margin = 3
-local reaction_height = 200
 local material_types_enum = dofile_once("mods/lamas_stats/files/scripts/material_types.lua") ---@type material_types_enum
 local material_types = {}
 for k, v in pairs(material_types_enum) do
@@ -189,7 +196,15 @@ end
 function materials:draw_reaction_row(x, y, material, width)
 	if is_tag(material) then
 		local text_width = self:GetTextDimension(material)
-		self:Text(x + (width - text_width) / 2, y, material)
+		local text_x = x + (width - text_width) / 2
+		if self:reactions_is_hoverbox_hovered(text_x, y, text_width, 10) then
+			self:ColorYellow()
+			if self:IsLeftClicked() then
+				self.materials.current_tag = material
+				GamePlaySound("ui", "ui/button_click", 0, 0)
+			end
+		end
+		self:Text(text_x, y, material)
 	else
 		self:draw_material_centered(x, y, self.mat:get_data_by_id(material), width, self.alt)
 	end
@@ -201,7 +216,7 @@ end
 ---@param height number
 ---@return boolean
 function materials:is_this_within_reaction_window(y, height)
-	return y + height > 0 and y < reaction_height
+	return y + height > 0 and y < self.materials.reaction_scroll_height
 end
 
 ---Returns true if hovered
@@ -211,7 +226,7 @@ end
 ---@param height number
 ---@return boolean?
 function materials:reactions_is_hoverbox_hovered(x, y, width, height)
-	if y + height / 2 > 0 and y + height / 2 < reaction_height then
+	if y + height / 2 > 0 and y + height / 2 < self.materials.reaction_scroll_height then
 		local box_x = self.menu.start_x + self.menu.width + 15 + x + margin
 		local box_y = self.menu.start_y + 37.5 + y + margin
 		-- self:Draw9Piece(box_x, box_y, -999999999, width, height)
@@ -332,6 +347,7 @@ function materials:draw_reaction_toggle_button(x, y, width, label, is_active, on
 		self:ColorYellow()
 	elseif self:IsHovered() and self:IsLeftClicked() then
 		self.materials.reaction_show_output = on_click
+		self.materials.current_tag = nil
 		GamePlaySound("ui", "ui/button_click", 0, 0)
 	end
 
@@ -359,6 +375,7 @@ function materials:draw_reaction_window()
 	if self:IsButtonClicked(close_x, close_y, self.z + 4, close_text, "Close this window") then
 		GamePlaySound("ui", "ui/button_click", 0, 0)
 		self.materials.current_recipe = nil
+		self.materials.current_tag = nil
 		return
 	end
 
@@ -395,7 +412,18 @@ function materials:draw_reaction_window()
 	local producing_string = string.format("%s (%d)", "Producing", #reaction_data.producing)
 	self:draw_reaction_toggle_button(x + margin * 3 + buttons_width, y, buttons_width, producing_string, is_output, true)
 
-	self:ScrollBox(x + margin, y + 20, self.z + 5, width - margin * 2, reaction_height, self.c.default_9piece, margin, margin, self.show_reactions)
+	self:ScrollBox(
+		x + margin,
+		y + 20,
+		self.z + 5,
+		width - margin * 2,
+		self.materials.reaction_scroll_height,
+		self.c.default_9piece,
+		margin,
+		margin,
+		self.show_reactions
+	)
+	self.materials.reaction_box_last_pos = self:GetPrevious().y
 end
 
 ---Checks if material should be shown
@@ -471,8 +499,14 @@ function materials:materials_draw_material(y, material_index)
 		self.tooltip_reset = false
 		self:ShowTooltip(tooltip_x, tooltip_y, self.show_material_tooltip, material_index, self.materials.current_recipe)
 		self.tooltip_img = self.default_tooltip
-		if self:IsLeftClicked() then self.materials.current_recipe = material_index end
-		if self:IsRightClicked() then self.materials.current_recipe = nil end
+		if self:IsLeftClicked() then
+			self.materials.current_recipe = material_index
+			self.materials.current_tag = nil
+		end
+		if self:IsRightClicked() then
+			self.materials.current_recipe = nil
+			self.materials.current_tag = nil
+		end
 	end
 
 	self.materials.y = self.materials.y + 10
@@ -530,6 +564,52 @@ function materials:materials_textbox()
 	end
 end
 
+function materials:materials_draw_tagged_materials()
+	local material_list = self.mat.get_tagged_materials(self.materials.current_tag)
+	local y = 1 - self.scroll.y
+	for _, material_name in ipairs(material_list) do
+		if y + 10 > 0 and y < self.materials.tag_height then self:FungalDrawSingleMaterial(0, y, CellFactory_GetType(material_name), true) end
+		y = y + 10
+	end
+	self:Text(0, y + self.scroll.y, "")
+end
+
+function materials:materials_show_tagged_materials()
+	if not self.materials.current_tag then return end
+	local x = self.menu.start_x + self.menu.width + 15
+	local y = self.menu.start_y + self.materials.reaction_scroll_height + 41 + margin * 2
+	y = math.min(y, self.materials.reaction_box_last_pos + margin * 2 + 2)
+	self:Draw9Piece(x, y, self.z + 5, self.materials.width_reaction, 10)
+	if self:IsHovered() then self:BlockInput() end
+	local text_width = self:GetTextDimension(self.materials.current_tag)
+	self:Text(x + (self.materials.width_reaction - text_width) / 2, y, self.materials.current_tag)
+
+	local close_text = "[X]"
+	local close_width = self:GetTextDimension(close_text)
+	local close_x = x + self.materials.width_reaction - close_width
+	if self:IsHoverBoxHovered(close_x, y, close_width, 10) then
+		self:ColorYellow()
+		if self:IsLeftClicked() then
+			GamePlaySound("ui", "ui/button_click", 0, 0)
+			self.materials.current_tag = nil
+			return
+		end
+	end
+	self:Text(close_x, y, close_text)
+
+	self:ScrollBox(
+		x + margin,
+		y + 12 + margin * 2,
+		self.z + 5,
+		self.materials.width_reaction - margin * 2,
+		self.materials.tag_height - 11 - margin * 5,
+		self.c.default_9piece,
+		margin,
+		margin,
+		self.materials_draw_tagged_materials
+	)
+end
+
 ---Draws materials window
 function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
@@ -545,6 +625,14 @@ function materials:materials_draw_window()
 	local header_height = self.menu.pos_y - header_start
 
 	self.materials.scroll_height = self.max_height - header_height
+	self.materials.reaction_scroll_height = self.max_height + 12
+	if self.materials.current_tag then
+		local list = self.mat.get_tagged_materials(self.materials.current_tag)
+		local desired = #list * 10 + 27
+		local limit = self.materials.reaction_scroll_height * 0.6
+		self.materials.tag_height = math.max(37, math.min(desired, limit))
+		self.materials.reaction_scroll_height = self.materials.reaction_scroll_height - self.materials.tag_height
+	end
 	self:ScrollBox(
 		pos_x,
 		pos_y,
@@ -557,6 +645,7 @@ function materials:materials_draw_window()
 		self.materials_draw_list
 	)
 	self:draw_reaction_window()
+	self:materials_show_tagged_materials()
 	self:RemoveOption(self.c.options.NonInteractive)
 end
 

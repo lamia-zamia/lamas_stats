@@ -220,6 +220,7 @@ local function expand_partial_tag(tag, suffix, base_table, index)
 		if full_data[generated] then
 			insert_to_index(base_table, generated, index)
 			insert_to_index(partial_matches, tag, { original = base, match = generated })
+			insert_to_index(tagged_materials, tag .. suffix, generated)
 		end
 	end
 end
@@ -445,6 +446,13 @@ function mat.is_partial_match(tag, material_name)
 	for _, result in ipairs(partial_matches[tag] or {}) do
 		if result.match == material_name then return result.original end
 	end
+end
+
+---Returns list of materials with tag
+---@param tag string
+---@return string[]
+function mat.get_tagged_materials(tag)
+	return tagged_materials[tag] or {}
 end
 
 return mat
