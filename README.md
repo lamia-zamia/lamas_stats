@@ -52,6 +52,10 @@ Alternatively, subscribe to the mod on the [Steam Workshop](https://steamcommuni
   <summary>Perks interface</summary>
   <img src="showcase/perks.png"/>
 </details>
+<details>
+  <summary>Material Index</summary>
+  <img src="showcase/material_index.png"/>
+</details>
   
 ## Localization
 * English
