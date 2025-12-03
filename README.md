@@ -17,6 +17,7 @@ Alternatively, subscribe to the mod on the [Steam Workshop](https://steamcommuni
 * Show previous fungal shifts including results with flask
 * Show fungal shift cooldown
 * Show nearby and owned perks in a more convenient window (late-game QOL)
+* Material index - see all the reactions
 * Suicide button if you become too OP
 ## Predicting functions
 * Show next fungal shifts including flask resolutions
