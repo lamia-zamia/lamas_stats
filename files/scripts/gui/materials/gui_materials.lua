@@ -238,9 +238,9 @@ end
 ---@param probability number
 ---@param is_req boolean?
 function materials:show_probability(probability, is_req)
-	local speed_text = string.format("%s: %d", "Speed", probability)
+	local speed_text = string.format("%s: %d", T.speed, probability)
 	local speed_w = self:GetTextDimension(speed_text)
-	local req_text = "This reaction only happens if requirements are not met"
+	local req_text = T.req_text
 	local req_w = self:GetTextDimension(req_text)
 
 	local x = is_req and (req_w - speed_w) / 2 or 0
@@ -368,11 +368,11 @@ function materials:draw_reaction_window()
 
 	local material_data = self.mat:get_data(material_type)
 
-	local close_text = "Close"
+	local close_text = T.close
 	local close_width = self:GetTextDimension(close_text)
 	local close_x = x + width - close_width - 3
 	local close_y = y + 3
-	if self:IsButtonClicked(close_x, close_y, self.z + 4, close_text, "Close this window") then
+	if self:IsButtonClicked(close_x, close_y, self.z + 4, close_text, T.close_d) then
 		GamePlaySound("ui", "ui/button_click", 0, 0)
 		self.materials.current_recipe = nil
 		self.materials.current_tag = nil
@@ -407,9 +407,9 @@ function materials:draw_reaction_window()
 	-- buttons
 	local buttons_width = width / 2 - margin * 2
 	local is_output = self.materials.reaction_show_output
-	local using_string = string.format("%s (%d)", "Using", #reaction_data.using)
+	local using_string = string.format("%s (%d)", T.using, #reaction_data.using)
 	self:draw_reaction_toggle_button(x + margin, y, buttons_width, using_string, not is_output, false)
-	local producing_string = string.format("%s (%d)", "Producing", #reaction_data.producing)
+	local producing_string = string.format("%s (%d)", T.producing, #reaction_data.producing)
 	self:draw_reaction_toggle_button(x + margin * 3 + buttons_width, y, buttons_width, producing_string, is_output, true)
 
 	self:ScrollBox(
@@ -450,11 +450,11 @@ function materials:show_material_tooltip(material_index)
 	local reaction_data = self:get_reaction_data(material.id)
 	self:FungalDrawSingleMaterial(0, y, material_index, true)
 	y = y + 10
-	self:Text(0, y, string.format("%s: %d, %s: %d", "Using", #reaction_data.using, "Producing", #reaction_data.producing))
+	self:Text(0, y, string.format("%s: %d, %s: %d", T.using, #reaction_data.using, T.producing, #reaction_data.producing))
 	y = y + 10
 	if not self.materials.current_recipe then
 		self:ColorGray()
-		self:Text(0, y, "Left click to open the reaction window, right click to close the reaction window")
+		self:Text(0, y, T.reaction_window_d)
 		y = y + 10
 
 		self:ColorGray()
@@ -554,7 +554,7 @@ end
 ---Draws searchbox
 ---@private
 function materials:materials_textbox()
-	local text = "Search:"
+	local text = string.format("%s:", T.search)
 	local text_width = self:GetTextDimension(text)
 	self:Text(self.menu.pos_x, self.menu.pos_y, text)
 	local new_text = self.textbox:draw_textbox(self.menu.pos_x + text_width + 5, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
