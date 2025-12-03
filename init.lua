@@ -21,7 +21,9 @@ function OnPlayerSpawned()
 end
 
 ---Fetch settings
-function OnPausedChanged()
+---@param is_paused boolean
+function OnPausedChanged(is_paused)
+	if not is_paused then return end
 	local language = GameTextGetTranslatedOrNot("$current_language")
 	local did_language_changed = current_language ~= language
 	if did_language_changed then current_language = language end
