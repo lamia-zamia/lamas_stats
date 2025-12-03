@@ -67,7 +67,7 @@ function pg:PerksDrawCurrentPerkScrollBox()
 		self.perk.scrollbox_start,
 		self.z + 5,
 		self.menu.width + 6,
-		self.max_height,
+		self.perk.scroll_height,
 		self.c.default_9piece,
 		3,
 		3,

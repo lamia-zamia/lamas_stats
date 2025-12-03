@@ -7,6 +7,7 @@
 ---@field width number
 ---@field width_reaction number
 ---@field reaction_show_output boolean
+---@field scroll_height number
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -20,6 +21,7 @@ local materials = {
 		width = 200,
 		width_reaction = 256,
 		reaction_show_output = false,
+		scroll_height = 100,
 	},
 }
 
@@ -472,7 +474,6 @@ end
 ---Draws searchbox
 ---@private
 function materials:materials_textbox()
-	self.menu.pos_y = self.menu.pos_y + 12
 	local text = "Search:"
 	local text_width = self:GetTextDimension(text)
 	self:Text(self.menu.pos_x, self.menu.pos_y, text)
@@ -486,19 +487,24 @@ end
 ---Draws materials window
 function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
+	self.menu.pos_y = self.menu.pos_y + 12
+	local header_start = self.menu.pos_y
 	self:materials_textbox()
+	self.menu.pos_y = self.menu.pos_y + 12
 	self:MenuSetWidth(self.materials.width)
 	self:AddOption(self.c.options.NonInteractive)
 
-	self.menu.pos_y = self.menu.pos_y + 12
 	local pos_x = self.menu.start_x - 3
 	local pos_y = self.menu.pos_y + 7
+	local header_height = self.menu.pos_y - header_start
+
+	self.materials.scroll_height = self.max_height - header_height
 	self:ScrollBox(
 		pos_x,
 		pos_y,
 		self.z + 5,
 		self.materials.width + 6,
-		self.max_height,
+		self.materials.scroll_height,
 		self.c.default_9piece,
 		margin,
 		margin,

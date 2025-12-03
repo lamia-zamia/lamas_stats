@@ -114,7 +114,7 @@ function config:ConfigDrawScrollBox()
 		self.menu.pos_y + 7,
 		self.z + 5,
 		self.menu.width + 6,
-		self.max_height,
+		self.max_height + 12,
 		self.c.default_9piece,
 		3,
 		3,
