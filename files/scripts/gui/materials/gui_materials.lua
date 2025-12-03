@@ -23,6 +23,8 @@ local materials = {
 	},
 }
 
+local margin = 3
+local reaction_height = 200
 local material_types_enum = dofile_once("mods/lamas_stats/files/scripts/material_types.lua") ---@type material_types_enum
 local material_types = {}
 for k, v in pairs(material_types_enum) do
@@ -128,6 +130,8 @@ function materials:get_reaction_replace_tags(material_id, fn)
 		data[i] = {
 			inputs = { unpack(r.inputs) },
 			outputs = { unpack(r.outputs) },
+			is_req = r.is_req,
+			probability = r.probability,
 		}
 	end
 
@@ -141,8 +145,6 @@ end
 ---@param material_id string
 ---@private
 function materials:gather_reaction_data(material_id)
-	-- local using = self.mat:get_reactions_using(material_id)
-	-- local producing = self.mat:get_reactions_producing(material_id)
 	local using = self:get_reaction_replace_tags(material_id, self.mat.get_reactions_using)
 	local producing = self:get_reaction_replace_tags(material_id, self.mat.get_reactions_producing)
 	local max = 0
@@ -191,27 +193,76 @@ function materials:draw_reaction_row(x, y, material, width)
 	end
 end
 
+---Checks if this element is within reactions window
+---@private
+---@param y number
+---@param height number
+---@return boolean
+function materials:is_this_within_reaction_window(y, height)
+	return y + height > 0 and y < reaction_height
+end
+
+---Returns true if hovered
+---@param x number
+---@param y number
+---@param width number
+---@param height number
+---@return boolean?
+function materials:reactions_is_hoverbox_hovered(x, y, width, height)
+	if y + height / 2 > 0 and y + height / 2 < reaction_height then
+		local box_x = self.menu.start_x + self.menu.width + 15 + x + margin
+		local box_y = self.menu.start_y + 37.5 + y + margin
+		-- self:Draw9Piece(box_x, box_y, -999999999, width, height)
+		return self:IsHoverBoxHovered(box_x, box_y, width, height, true)
+	end
+end
+
 ---@param reaction reactions_data
 function materials:show_reaction(reaction)
-	local x = 0
-	local width = self.materials.width_reaction / 2
 	local y = self.materials.reaction_y
 	local rows = #reaction.inputs
+	local height = 11 * rows
+	self.materials.reaction_y = self.materials.reaction_y + height
+	if not self:is_this_within_reaction_window(y, height) then return end
+
+	local x = 0
+	local gap = 15
+	local arrow_w = 8
+	local width = (self.materials.width_reaction - gap) / 2
+
+	local horizontal_center = 10 * (rows - 1) / 2
+
+	-- req marker
+	if reaction.is_req then
+		self:Color(1, 0, 0)
+		self:Text(x, y + horizontal_center, "!")
+	end
+
+	-- left column
 	for i, input in ipairs(reaction.inputs) do
 		self:draw_reaction_row(x, y + 10 * (i - 1), input, width)
 	end
-	x = x + width
-	self:Image(x - 6.5, y + 10 * (rows - 1) / 2, "mods/lamas_stats/files/gfx/arrow.png")
+
+	-- gap
+	x = x + width - margin
+	local arrow_x = x + (gap - arrow_w) / 2
+	self:Image(arrow_x, y + horizontal_center, "mods/lamas_stats/files/gfx/arrow.png")
+	if self:reactions_is_hoverbox_hovered(arrow_x, y + horizontal_center, arrow_w, arrow_w) then
+		self:ShowTooltipTextCenteredX(0, 15, string.format("%s: %d", "Speed", reaction.probability))
+	end
+
+	-- right column
+	x = x + gap
 	for i, output in ipairs(reaction.outputs) do
 		self:draw_reaction_row(x, y + 10 * (i - 1), output, width)
 	end
-	self.materials.reaction_y = self.materials.reaction_y + 11 * rows
 end
 
 ---Draws a separator line
 ---@private
 function materials:draw_reaction_separator()
-	self:Image(0, self.materials.reaction_y - 1, self.c.px, 0.4, self.materials.width_reaction - 10, 1)
+	local y = self.materials.reaction_y - 1
+	if self:is_this_within_reaction_window(y, 1) then self:Image(0, y, self.c.px, 0.4, self.materials.width_reaction - margin * 3, 1) end
 end
 
 ---Draws reactions
@@ -221,7 +272,7 @@ function materials:show_reactions()
 	local material = self.mat:get_data(self.materials.current_recipe)
 	local reaction_data = self:get_reaction_data(material.id)
 	local reactions = self.materials.reaction_show_output and reaction_data.producing or reaction_data.using
-	self.materials.width_reaction = math.max(200, math.min(reaction_data.max_length * 2 + 42, 400))
+	self.materials.width_reaction = math.max(200, math.min(reaction_data.max_length * 2 + 50, 400))
 
 	if #reactions > 0 then
 		self:draw_reaction_separator()
@@ -312,14 +363,14 @@ function materials:draw_reaction_window()
 	local reaction_data = self:get_reaction_data(material_data.id)
 
 	-- buttons
-	local buttons_width = width / 2 - 6
+	local buttons_width = width / 2 - margin * 2
 	local is_output = self.materials.reaction_show_output
 	local using_string = string.format("%s (%d)", "Using", #reaction_data.using)
-	self:draw_reaction_toggle_button(x + 3, y, buttons_width, using_string, not is_output, false)
+	self:draw_reaction_toggle_button(x + margin, y, buttons_width, using_string, not is_output, false)
 	local producing_string = string.format("%s (%d)", "Producing", #reaction_data.producing)
-	self:draw_reaction_toggle_button(x + 9 + buttons_width, y, buttons_width, producing_string, is_output, true)
+	self:draw_reaction_toggle_button(x + margin * 3 + buttons_width, y, buttons_width, producing_string, is_output, true)
 
-	self:ScrollBox(x + 3, y + 20, self.z + 5, width - 6, 200, self.c.default_9piece, 3, 3, self.show_reactions)
+	self:ScrollBox(x + margin, y + 20, self.z + 5, width - margin * 2, reaction_height, self.c.default_9piece, margin, margin, self.show_reactions)
 end
 
 ---Checks if material should be shown
@@ -387,15 +438,12 @@ end
 ---Draws materials list
 ---@private
 function materials:materials_draw_list()
-	self:AddOption(self.c.options.NonInteractive)
-
 	self.materials.y = 1 - self.scroll.y
 
 	for _, material_index in ipairs(self:get_filtered_materials()) do
 		self:materials_draw_material(self.materials.y, material_index)
 	end
 
-	self:RemoveOption(self.c.options.NonInteractive)
 	self:Text(0, self.materials.y + self.scroll.y, "")
 end
 
@@ -431,12 +479,24 @@ function materials:materials_draw_window()
 	self:materials_draw_checkboxes()
 	self:materials_textbox()
 	self:MenuSetWidth(self.materials.width)
+	self:AddOption(self.c.options.NonInteractive)
 
 	self.menu.pos_y = self.menu.pos_y + 12
 	local pos_x = self.menu.start_x - 3
 	local pos_y = self.menu.pos_y + 7
-	self:ScrollBox(pos_x, pos_y, self.z + 5, self.materials.width + 6, self.max_height, self.c.default_9piece, 3, 3, self.materials_draw_list)
+	self:ScrollBox(
+		pos_x,
+		pos_y,
+		self.z + 5,
+		self.materials.width + 6,
+		self.max_height,
+		self.c.default_9piece,
+		margin,
+		margin,
+		self.materials_draw_list
+	)
 	self:draw_reaction_window()
+	self:RemoveOption(self.c.options.NonInteractive)
 end
 
 ---Updates materials gui stuff

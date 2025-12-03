@@ -27,6 +27,8 @@ local generate_icons = ModSettingGet("lamas_stats.generate_icons")
 ---@class reactions_data
 ---@field inputs string[]
 ---@field outputs string[]
+---@field is_req boolean
+---@field probability number
 
 local reactions = {} ---@type reactions_data[]
 
@@ -245,7 +247,8 @@ end
 
 ---Parses a reaction element
 ---@param element element
-local function parse_reaction(element)
+---@param is_req boolean
+local function parse_reaction(element, is_req)
 	local attributes = element.attr
 
 	local this_reaction_index = #reactions + 1
@@ -263,6 +266,8 @@ local function parse_reaction(element)
 	reactions[this_reaction_index] = {
 		inputs = inputs,
 		outputs = outputs,
+		is_req = is_req,
+		probability = tonumber(attributes.probability) or 0,
 	}
 end
 
@@ -304,7 +309,10 @@ function mat:parse()
 	-- parsing reactions after we finished parsing materials
 	for _, parsed_file in ipairs(parsed_files) do
 		for elem in parsed_file:each_of("Reaction") do
-			parse_reaction(elem)
+			parse_reaction(elem, false)
+		end
+		for elem in parsed_file:each_of("ReqReaction") do
+			parse_reaction(elem, true)
 		end
 	end
 
