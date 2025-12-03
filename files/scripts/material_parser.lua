@@ -259,6 +259,7 @@ local function parse_reaction(element, is_req)
 		local input_cell = attributes["input_cell" .. i]
 		local output_cell = attributes["output_cell" .. i]
 		if not input_cell or not output_cell then break end
+		if input_cell == "" or output_cell == "" then break end
 		inputs[#inputs + 1] = input_cell
 		outputs[#outputs + 1] = output_cell
 		reaction_add_to_index_table(true, input_cell, this_reaction_index)
