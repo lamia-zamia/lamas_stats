@@ -340,13 +340,22 @@ function materials:draw_reaction_window()
 	if material_data.tags then
 		local tags_text = "[tags]"
 		local tags_width = self:GetTextDimension(tags_text)
-		local pos_x = x + width - tags_width
-		local is_hovered = self:IsHoverBoxHovered(pos_x, y, tags_width, 10)
-		if is_hovered then
+		local pos_x = x
+		if self:IsHoverBoxHovered(pos_x, y, tags_width, 10) then
 			self:ShowTooltipCenteredX(0, 20, self.draw_material_tags, material_data.tags)
 			self:ColorYellow()
 		end
-		self:Text(x + width - tags_width, y, tags_text)
+		self:Text(pos_x, y, tags_text)
+	end
+
+	local close_text = "Close"
+	local close_width = self:GetTextDimension(close_text)
+	local close_x = x + width - close_width - 3
+	local close_y = y + 3
+	if self:IsButtonClicked(close_x, close_y, self.z + 4, close_text, "Close this window") then
+		GamePlaySound("ui", "ui/button_click", 0, 0)
+		self.materials.current_recipe = nil
+		return
 	end
 
 	-- draw material name
