@@ -40,7 +40,7 @@ local reactions = {} ---@type reactions_data[]
 ---@field parent string?
 ---@field static boolean
 ---@field type material_types
----@field tags material_tags?
+---@field tags material_tags
 
 ---@class material_parser
 ---@field private buffer {[string]: material_data}|nil
@@ -52,6 +52,15 @@ local mat = {
 	data = {},
 	material_types = dofile_once("mods/lamas_stats/files/scripts/material_types.lua"),
 }
+
+local magic_tags = {
+	[mat.material_types.liquid] = "[any_liquid]",
+	[mat.material_types.sand] = "[any_powder]",
+}
+local magic_tags_index = {}
+for _, v in pairs(magic_tags) do
+	magic_tags_index[v] = true
+end
 
 ---@param name string
 ---@param material string
@@ -141,9 +150,6 @@ local function get_material_type(attributes)
 			return mat.material_types.static
 		end
 		local is_liquid = mat.material_types[cell_type] == mat.material_types.liquid
-		-- local is_gas = mat.material_types[cell_type] == mat.material_types.gas
-		-- -- is it static liquid/gas
-		-- if (is_liquid or is_gas) and attributes.liquid_static == "1" then return mat.material_types.static end
 		if is_liquid and attributes.liquid_sand == "1" then return mat.material_types.sand end
 		return mat.material_types[cell_type]
 	end
@@ -165,15 +171,22 @@ end
 
 ---Gets material tags
 ---@param attributes table
----@return material_tags?
-local function get_material_tags(attributes)
+---@param material_type material_types
+---@return material_tags
+local function get_material_tags(attributes, material_type)
+	local tags_table = {
+		["[*]"] = true,
+	}
+	local magic_tag = magic_tags[material_type]
+	if magic_tag then tags_table[magic_tag] = true end
+
 	local tags = attributes.tags or (attributes._parent and full_data[attributes._parent] and full_data[attributes._parent].attr.tags)
-	if not tags then return end
-	local tags_table = {}
+	if not tags then return tags_table end
+
 	for tag in tags:gmatch("([^,]+)") do
 		tags_table[tag] = true
-		insert_to_index(tagged_materials, tag, attributes.name)
 	end
+
 	return tags_table
 end
 
@@ -195,7 +208,7 @@ local function parse_material(element)
 		static = not not material_id:find("_static$"),
 		parent = attributes._parent,
 		type = type,
-		tags = get_material_tags(attributes),
+		tags = get_material_tags(attributes, type),
 	}
 end
 
@@ -308,6 +321,14 @@ function mat:parse()
 		parse_material(v)
 	end
 
+	-- this is liquid, but not liquid? wtf nolla
+	mat.buffer.air.tags["[any_liquid]"] = nil
+	for material_id, material_data in pairs(mat.buffer) do
+		for tag, _ in pairs(material_data.tags) do
+			insert_to_index(tagged_materials, tag, material_id)
+		end
+	end
+
 	-- parsing reactions after we finished parsing materials
 	for _, parsed_file in ipairs(parsed_files) do
 		for elem in parsed_file:each_of("Reaction") do
@@ -330,7 +351,6 @@ function mat:convert()
 		if ui_name == "" then value.ui_name = value.id end
 		self.data[CellFactory_GetType(name)] = value
 	end
-	self.buffer = {}
 end
 
 local invalid_material = {
@@ -352,44 +372,52 @@ end
 ---@param material_id string
 ---@return material_data
 function mat:get_data_by_id(material_id)
-	return self:get_data(CellFactory_GetType(material_id))
+	return self.buffer[material_id] or invalid_material
 end
 
 ---Checks if material exist
 ---@param material_id string
 ---@return boolean?
 function mat:does_material_exist(material_id)
-	if self.data[CellFactory_GetType(material_id)] then return true end
+	if self.buffer[material_id] then return true end
+end
+
+---Gets reactions
+---@private
+---@param material_id string
+---@param index_direct index_table
+---@param index_tag index_table
+---@return reactions_data[]
+function mat.get_reaction(material_id, index_direct, index_tag)
+	local result = {}
+	local seen = {}
+	for _, reaction_id in ipairs(index_direct[material_id] or {}) do
+		if not seen[reaction_id] then
+			result[#result + 1] = reactions[reaction_id]
+			seen[reaction_id] = true
+		end
+	end
+	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
+		for _, reaction_id in ipairs(index_tag[tag] or {}) do
+			if not seen[reaction_id] then
+				result[#result + 1] = reactions[reaction_id]
+				seen[reaction_id] = true
+			end
+		end
+	end
+	return result
 end
 
 ---@param material_id string
 ---@return reactions_data[]
 function mat:get_reactions_using(material_id)
-	local result = {}
-	for _, reaction_id in ipairs(reaction_index.input[material_id] or {}) do
-		result[#result + 1] = reactions[reaction_id]
-	end
-	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
-		for _, reaction_id in ipairs(reaction_index.tag_input[tag] or {}) do
-			result[#result + 1] = reactions[reaction_id]
-		end
-	end
-	return result
+	return mat.get_reaction(material_id, reaction_index.input, reaction_index.tag_input)
 end
 
 ---@param material_id string
 ---@return reactions_data[]
 function mat:get_reactions_producing(material_id)
-	local result = {}
-	for _, reaction_id in ipairs(reaction_index.output[material_id] or {}) do
-		result[#result + 1] = reactions[reaction_id]
-	end
-	for tag, _ in pairs(mat:get_data_by_id(material_id).tags or {}) do
-		for _, reaction_id in ipairs(reaction_index.tag_output[tag] or {}) do
-			result[#result + 1] = reactions[reaction_id]
-		end
-	end
-	return result
+	return mat.get_reaction(material_id, reaction_index.output, reaction_index.tag_output)
 end
 
 ---Does this material has this tag
@@ -397,6 +425,7 @@ end
 ---@param tag string
 ---@return boolean?
 function mat:material_has_tag(material_id, tag)
+	if magic_tags_index[tag] then return end
 	local material_data = self:get_data_by_id(material_id)
 	return material_data.tags and material_data.tags[tag]
 end
