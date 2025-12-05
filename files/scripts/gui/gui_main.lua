@@ -88,14 +88,14 @@ end
 function gui:PostBiomeInit()
 	local custom_img_id = ModImageMakeEditable("mods/lamas_stats/vfs/white.png", 1, 1)
 	ModImageSetPixel(custom_img_id, 0, 0, -1) -- white
-	self.mat:parse()
+	self.mat:post_biome_init()
 end
 
 ---Gets data after worlds exist
 function gui:PostWorldInit()
 	self.perks:Init()
 	self.actions:parse()
-	self.mat:convert()
+	self.mat:post_world_init()
 	self.fs:Init()
 	self:GetSettings(true)
 	self.show = self.mod:GetSettingBoolean("overlay_enabled")

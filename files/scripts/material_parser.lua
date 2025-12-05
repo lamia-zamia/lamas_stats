@@ -299,7 +299,7 @@ local function get_file(file)
 end
 
 ---Parses material list
-function mat:parse()
+function mat:post_biome_init()
 	-- parsing files to nxml elements
 	local parsed_files = {}
 	for _, file in ipairs(ModMaterialFilesGet()) do
@@ -322,9 +322,9 @@ function mat:parse()
 	end
 
 	-- this is liquid, but not liquid? wtf nolla
-	mat.buffer.air.tags["[any_liquid]"] = nil
+	mat.buffer.air.tags = nil
 	for material_id, material_data in pairs(mat.buffer) do
-		for tag, _ in pairs(material_data.tags) do
+		for tag, _ in pairs(material_data.tags or {}) do
 			insert_to_index(tagged_materials, tag, material_id)
 		end
 	end
@@ -345,7 +345,7 @@ function mat:parse()
 end
 
 ---Converts buffer data into actual data
-function mat:convert()
+function mat:post_world_init()
 	for name, value in pairs(self.buffer) do
 		local ui_name = GameTextGetTranslatedOrNot(value.ui_name)
 		if ui_name == "" then value.ui_name = value.id end
