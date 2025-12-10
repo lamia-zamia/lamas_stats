@@ -84,6 +84,8 @@ local ui_class = {
 }
 ui_class.__index = ui_class
 
+local virt_x, virt_y
+
 --- Creates a new UI instance
 --- @return UI_class
 function ui_class:New()
@@ -92,6 +94,7 @@ function ui_class:New()
 		gui_tooltip = GuiCreate(),
 	}
 	setmetatable(o, self)
+	virt_x, virt_y = GuiGetScreenDimensions(o.gui)
 	return o
 end
 
@@ -711,7 +714,7 @@ end
 --- @return number mouse_x, number mouse_y
 function ui_class:get_mouse_pos()
 	local mouse_screen_x, mouse_screen_y = InputGetMousePosOnScreen()
-	local mx_p, my_p = mouse_screen_x / 1280, mouse_screen_y / 720
+	local mx_p, my_p = mouse_screen_x / virt_x, mouse_screen_y / virt_y
 	return mx_p * self.dim.x, my_p * self.dim.y
 end
 
