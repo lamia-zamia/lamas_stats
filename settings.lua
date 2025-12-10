@@ -164,7 +164,7 @@ do -- gui helpers
 	function G.on_clicks(setting_name, value, default)
 		if InputIsMouseButtonJustDown(1) then U.set_setting(setting_name, value) end
 		if InputIsMouseButtonJustDown(2) then
-			GamePlaySound("ui", "ui/button_click", 0, 0)
+			GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
 			U.set_setting(setting_name, default)
 		end
 	end
@@ -306,7 +306,7 @@ do -- Settings GUI
 			GuiTooltip(gui, T.Hotkey_d, GameTextGetTranslatedOrNot("$menuoptions_reset_keyboard"))
 			if InputIsMouseButtonJustDown(1) then U.waiting_for_input = true end
 			if InputIsMouseButtonJustDown(2) then
-				GamePlaySound("ui", "ui/button_click", 0, 0)
+				GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
 				U.set_setting("input_key", D.input_key)
 				U.waiting_for_input = false
 			end
