@@ -130,6 +130,9 @@ function gui:Loop()
 
 	if self.textbox.controls_disabled then self.textbox:enable_controls() end
 
+	self:check_for_checkers()
+	if InputIsKeyJustDown(11) then gui:spawn_getter() end
+
 	if not self.show or GameIsInventoryOpen() then return end
 
 	self:FetchData()

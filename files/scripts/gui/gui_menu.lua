@@ -9,7 +9,7 @@
 ---@field package fungal boolean
 ---@field package perks boolean
 ---@field package kys boolean
----@field package current_window function|nil
+---@field current_window function|nil
 ---@field package previous_window function|nil
 
 ---@class (exact) LS_Gui

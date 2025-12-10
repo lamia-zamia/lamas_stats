@@ -201,7 +201,7 @@ function materials:draw_reaction_row(x, y, material, width)
 			self:ColorYellow()
 			if self:IsLeftClicked() then
 				self.materials.current_tag = material
-				GamePlaySound("ui", "ui/button_click", 0, 0)
+				GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
 			end
 		end
 		self:Text(text_x, y, material)
@@ -348,7 +348,7 @@ function materials:draw_reaction_toggle_button(x, y, width, label, is_active, on
 	elseif self:IsHovered() and self:IsLeftClicked() then
 		self.materials.reaction_show_output = on_click
 		self.materials.current_tag = nil
-		GamePlaySound("ui", "ui/button_click", 0, 0)
+		GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
 	end
 
 	self:Text(x + text_offset, y + 1, label)
@@ -373,7 +373,7 @@ function materials:draw_reaction_window()
 	local close_x = x + width - close_width - 3
 	local close_y = y + 3
 	if self:IsButtonClicked(close_x, close_y, self.z + 4, close_text, T.close_d) then
-		GamePlaySound("ui", "ui/button_click", 0, 0)
+		GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
 		self.materials.current_recipe = nil
 		self.materials.current_tag = nil
 		return
@@ -590,7 +590,7 @@ function materials:materials_show_tagged_materials()
 	if self:IsHoverBoxHovered(close_x, y, close_width, 10) then
 		self:ColorYellow()
 		if self:IsLeftClicked() then
-			GamePlaySound("ui", "ui/button_click", 0, 0)
+			GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
 			self.materials.current_tag = nil
 			return
 		end
@@ -608,6 +608,51 @@ function materials:materials_show_tagged_materials()
 		margin,
 		self.materials_draw_tagged_materials
 	)
+end
+
+-- ui/item_move_denied
+local checker_spawned = false
+
+---Spawns an entity with material checkers
+function materials:spawn_getter()
+	checker_spawned = true
+	local x, y = self:get_mouse_world_pos()
+	local parent = EntityCreateNew()
+	EntitySetTransform(parent, x, y)
+	EntityAddComponent2(parent, "LifetimeComponent", {
+		lifetime = 2,
+	})
+	for i = 1, #self.mat.data do
+		local entity = EntityCreateNew()
+		EntitySetTransform(entity, x, y)
+		EntityAddComponent2(entity, "LuaComponent", {
+			script_material_area_checker_success = "mods/lamas_stats/files/scripts/gui/materials/material_checker.lua",
+		})
+		local maac = EntityAddComponent2(entity, "MaterialAreaCheckerComponent", {
+			material = i,
+			material2 = i,
+			look_for_failure = false,
+			count_min = 1,
+			update_every_x_frame = 1,
+		})
+		ComponentSetValue2(maac, "area_aabb", 0, 0, 0, 0)
+		EntityAddChild(parent, entity)
+	end
+end
+
+---Checks if material checkers found anything
+function materials:check_for_checkers()
+	local detector = GLOBALS_GET_VALUE("LAMAS_STATS_DETECTOR", "")
+	local is_found = detector ~= ""
+	if is_found then
+		self.show = true
+		self.menu.opened = true
+		self.menu.current_window = self.materials_draw_window
+		self.materials.current_recipe = tonumber(detector)
+		GLOBALS_SET_VALUE("LAMAS_STATS_DETECTOR", "")
+	end
+	if checker_spawned then GamePlaySound("data/audio/Desktop/ui.bank", is_found and "ui/item_move_success" or "ui/item_move_denied", 0, 0) end
+	checker_spawned = false
 end
 
 ---Draws materials window
@@ -633,6 +678,7 @@ function materials:materials_draw_window()
 		self.materials.tag_height = math.max(37, math.min(desired, limit))
 		self.materials.reaction_scroll_height = self.materials.reaction_scroll_height - self.materials.tag_height
 	end
+
 	self:ScrollBox(
 		pos_x,
 		pos_y,
@@ -644,6 +690,7 @@ function materials:materials_draw_window()
 		margin,
 		self.materials_draw_list
 	)
+
 	self:draw_reaction_window()
 	self:materials_show_tagged_materials()
 	self:RemoveOption(self.c.options.NonInteractive)
