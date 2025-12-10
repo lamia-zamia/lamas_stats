@@ -84,7 +84,8 @@ local ui_class = {
 }
 ui_class.__index = ui_class
 
-local virt_x, virt_y
+local virt_x, virt_y = 1280, 720
+local vrx, vry = MagicNumbersGetValue("VIRTUAL_RESOLUTION_X"), MagicNumbersGetValue("VIRTUAL_RESOLUTION_Y")
 
 --- Creates a new UI instance
 --- @return UI_class
@@ -707,6 +708,25 @@ end
 function ui_class:UpdateDimensions()
 	GuiStartFrame(self.gui)
 	self.dim.x, self.dim.y = GuiGetScreenDimensions(self.gui)
+end
+
+---Returns world x, y for mouse position
+---@return number x, number y
+function ui_class:get_mouse_world_pos()
+	local msx, msy = InputGetMousePosOnScreen()
+	local nx = msx / virt_x
+	local ny = msy / virt_y
+
+	local vx = nx * vrx
+	local vy = ny * vry
+
+	local _, _, cam_w, cam_h = GameGetCameraBounds()
+	local cx, cy = GameGetCameraPos()
+
+	cx = cx - cam_w * 0.5
+	cy = cy - cam_h * 0.5
+
+	return cx + vx, cy + vy
 end
 
 --- return x and y of mouse pos
