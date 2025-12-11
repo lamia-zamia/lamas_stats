@@ -47,7 +47,6 @@ function util:get_hotkey(setting_id)
 	local code = tonumber(self:GetSettingString(setting_id)) or 0
 	local code_type = self:GetSettingString(setting_id .. "_type")
 	local fn = code_type == "kb" and InputIsKeyJustDown or InputIsMouseButtonJustDown
-	print(code, code_type)
 	return function()
 		return fn(code)
 	end

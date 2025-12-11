@@ -300,7 +300,6 @@ do -- Settings GUI
 			current_key = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_pressakey")
 			local new_key, new_type = U.pending_input()
 			if new_key and new_type then
-				print(new_key, input_type, new_type)
 				U.set_setting(setting_id, new_key)
 				U.set_setting(type_string, new_type)
 				U.waiting_for_input = ""
