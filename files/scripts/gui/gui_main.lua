@@ -1,7 +1,8 @@
 ---@class (exact) LS_Gui:UI_class
 ---@field private mod mod_util
 ---@field private show boolean
----@field private hotkey number
+---@field private hotkey fun():boolean
+---@field private sampler fun():boolean
 ---@field private player entity_id|nil
 ---@field private player_x number
 ---@field private player_y number
@@ -74,7 +75,8 @@ end
 ---Fetches settings
 ---@param did_language_changed boolean
 function gui:GetSettings(did_language_changed)
-	self.hotkey = self.mod:GetSettingNumber("input_key")
+	self.hotkey = self.mod:get_hotkey("input_key")
+	self.sampler = self.mod:get_hotkey("checker_hey")
 	self.stats.position_pw_west = self.mod:GetGlobalNumber("lamas_stats_farthest_west")
 	self.stats.position_pw_east = self.mod:GetGlobalNumber("lamas_stats_farthest_east")
 	self:HeaderGetSettings()
@@ -123,15 +125,14 @@ end
 ---Main function to draw gui
 function gui:Loop()
 	self:StartFrame()
-	if InputIsKeyJustDown(self.hotkey) then self.show = not self.show end
 	self.player = ENTITY_GET_WITH_TAG("player_unit")[1]
-
 	if not self.player then return end
 
 	if self.textbox.controls_disabled then self.textbox:enable_controls() end
 
+	if self.hotkey() then self.show = not self.show end
 	self:check_for_checkers()
-	if InputIsKeyJustDown(11) then gui:spawn_getter() end
+	if self:sampler() then gui:spawn_getter() end
 
 	if not self.show or GameIsInventoryOpen() then return end
 

@@ -40,4 +40,17 @@ function util:SetModSetting(id, value)
 	ModSettingSet(self.mod_prfx .. id, value)
 end
 
+---Returns hotkey getter
+---@param setting_id string hotkey_id
+---@return fun():boolean
+function util:get_hotkey(setting_id)
+	local code = tonumber(self:GetSettingString(setting_id)) or 0
+	local code_type = self:GetSettingString(setting_id .. "_type")
+	local fn = code_type == "kb" and InputIsKeyJustDown or InputIsMouseButtonJustDown
+	print(code, code_type)
+	return function()
+		return fn(code)
+	end
+end
+
 return util

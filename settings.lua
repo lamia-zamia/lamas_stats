@@ -31,7 +31,7 @@ local U = {
 	min_y = 50,
 	keycodes = {},
 	keycodes_file = "data/scripts/debug/keycodes.lua",
-	waiting_for_input = false,
+	waiting_for_input = "",
 }
 do -- helpers
 	---@param setting_name setting_id
@@ -85,18 +85,28 @@ do -- helpers
 
 	---gather keycodes from game file
 	function U.gather_key_codes()
-		U.keycodes = {}
-		U.keycodes[0] = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_action_unbound")
+		U.keycodes = {
+			kb = {},
+			mouse = {},
+		}
 		local keycodes_all = ModTextFileGetContent(U.keycodes_file)
 		for line in keycodes_all:gmatch("Key_.-\n") do
 			local _, key, code = line:match("(Key_)(.+) = (%d+)")
-			U.keycodes[code] = key:upper()
+			U.keycodes.kb[code] = key:upper()
+		end
+		for line in keycodes_all:gmatch("Mouse_.-\n") do
+			local _, key, code = line:match("(Mouse_)(.+) = (%d+)")
+			U.keycodes.mouse[code] = key:upper()
 		end
 	end
 
+	---@return string?, string?
 	function U.pending_input()
-		for code, _ in pairs(U.keycodes) do
-			if InputIsKeyJustDown(code) then return code end
+		for code, _ in pairs(U.keycodes.kb) do
+			if InputIsKeyJustDown(code) then return code, "kb" end
+		end
+		for code, _ in pairs(U.keycodes.mouse) do
+			if InputIsMouseButtonJustDown(code) then return code, "mouse" end
 		end
 	end
 
@@ -281,13 +291,19 @@ do -- Settings GUI
 	end
 
 	function S.get_input(_, gui, _, _, setting)
-		local current_key = "[" .. U.keycodes[U.get_setting("input_key")] .. "]"
-		if U.waiting_for_input then
+		local setting_id = setting.id
+		local type_string = setting_id .. "_type"
+		local input_type = tostring(U.get_setting(type_string))
+		local key = U.keycodes[input_type][U.get_setting(setting_id)] or "hwuh?"
+		local current_key = "[" .. key .. "]"
+		if U.waiting_for_input == setting.id then
 			current_key = GameTextGetTranslatedOrNot("$menuoptions_configurecontrols_pressakey")
-			local new_key = U.pending_input()
-			if new_key then
-				U.set_setting("input_key", new_key)
-				U.waiting_for_input = false
+			local new_key, new_type = U.pending_input()
+			if new_key and new_type then
+				print(new_key, input_type, new_type)
+				U.set_setting(setting_id, new_key)
+				U.set_setting(type_string, new_type)
+				U.waiting_for_input = ""
 			end
 		end
 
@@ -304,11 +320,12 @@ do -- Settings GUI
 		if hovered then
 			GuiColorSetForNextWidget(gui, 1, 1, 0.7, 1)
 			GuiTooltip(gui, T.Hotkey_d, GameTextGetTranslatedOrNot("$menuoptions_reset_keyboard"))
-			if InputIsMouseButtonJustDown(1) then U.waiting_for_input = true end
+			if InputIsMouseButtonJustDown(1) then U.waiting_for_input = setting_id end
 			if InputIsMouseButtonJustDown(2) then
 				GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
-				U.set_setting("input_key", D.input_key)
-				U.waiting_for_input = false
+				U.set_setting(setting_id, D[setting_id])
+				U.set_setting(type_string, "kb")
+				U.waiting_for_input = ""
 			end
 		end
 		GuiText(gui, 0, 0, current_key)
@@ -332,8 +349,10 @@ end
 
 local translations = {
 	["English"] = {
-		Hotkey = "Hotkey",
+		Hotkey = "Overlay",
 		Hotkey_d = "Hotkey to enable overlay",
+		checker_hey = "Sampler",
+		checker_hey_d = "Hotkey to sample a material from the world",
 		overlay_enabled = "Overlay",
 		overlay_enabled_d = "Should the overlay be enabled on spawn",
 		menu_enabled = "Menu",
@@ -348,8 +367,10 @@ local translations = {
 		generate_icons = "Generate icons",
 	},
 	["русский"] = {
-		Hotkey = "Горячая клавиша",
+		Hotkey = "Оверлей",
 		Hotkey_d = "Горячая клавиша для включения оверлея",
+		checker_hey = "Пробник",
+		checker_hey_d = "Горячая клавиша для взятия материала из мира",
 		overlay_enabled = "Оверлей",
 		overlay_enabled_d = "Настройки оверлея",
 		menu_enabled = "Меню",
@@ -364,8 +385,10 @@ local translations = {
 		generate_icons = "Генерировать значки",
 	},
 	["日本語"] = {
-		Hotkey = "ホットキー",
+		Hotkey = "オーバーレイ",
 		Hotkey_d = "オーバーレイを有効にするホットキー",
+		checker_hey = "スポイト",
+		checker_hey_d = "世界から素材を吸い取るホットキー",
 		overlay_enabled = "オーバーレイ",
 		overlay_enabled_d = "オーバーレイ設定",
 		menu_enabled = "メニュー",
@@ -400,6 +423,9 @@ setmetatable(T, mt)
 
 D = {
 	input_key = "60",
+	input_key_type = "kb",
+	checker_hey = "11",
+	checker_hey_type = "kb",
 	overlay_enabled = true,
 	menu_enabled = false,
 	overlay_x = 13,
@@ -435,6 +461,14 @@ local function build_settings()
 			ui_name = T.Hotkey,
 			ui_description = T.HotkeyDesc,
 			value_default = D.input_key,
+			ui_fn = S.get_input,
+		},
+		{
+			id = "checker_hey",
+			not_setting = true,
+			ui_name = T.checker_hey,
+			ui_description = T.checker_hey_d,
+			value_default = D.checker_hey,
 			ui_fn = S.get_input,
 		},
 		{
