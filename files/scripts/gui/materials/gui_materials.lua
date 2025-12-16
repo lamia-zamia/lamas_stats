@@ -616,7 +616,7 @@ local checker_spawned = false
 ---Spawns an entity with material checkers
 function materials:spawn_getter()
 	checker_spawned = true
-	local x, y = self:get_mouse_world_pos()
+	local x, y = DEBUG_GetMouseWorld()
 	local parent = EntityCreateNew()
 	EntitySetTransform(parent, x, y)
 	EntityAddComponent2(parent, "LifetimeComponent", {
@@ -635,7 +635,7 @@ function materials:spawn_getter()
 			count_min = 1,
 			update_every_x_frame = 1,
 		})
-		ComponentSetValue2(maac, "area_aabb", 0, 0, 0, 0)
+		ComponentSetValue2(maac, "area_aabb", 0, 0, 0.1, 0.1)
 		EntityAddChild(parent, entity)
 	end
 end
