@@ -75,6 +75,7 @@ end
 ---Fetches settings
 ---@param did_language_changed boolean
 function gui:GetSettings(did_language_changed)
+	self:fetch_config()
 	self.hotkey = self.mod:get_hotkey("input_key")
 	self.sampler = self.mod:get_hotkey("checker_hey")
 	self.stats.position_pw_west = self.mod:GetGlobalNumber("lamas_stats_farthest_west")

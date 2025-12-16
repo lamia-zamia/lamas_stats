@@ -1,4 +1,4 @@
---- @enum ui_options
+---@enum ui_options
 local options = {
 	ForceFocusable = 7,
 	NonInteractive = 2,
@@ -7,11 +7,11 @@ local options = {
 	Layout_NextSameLine = 14,
 }
 
---- @class UI_const
---- @field empty string empty png, 20x20
---- @field default_9piece string default 9piece
---- @field px string white pixel, 1x1
---- @field codes keycodes
+---@class UI_const
+---@field empty string empty png, 20x20
+---@field default_9piece string default 9piece
+---@field px string white pixel, 1x1
+---@field codes keycodes
 local const = {
 	empty = "data/ui_gfx/empty.png",
 	default_9piece = "data/ui_gfx/decorations/9piece0_gray.png",
@@ -20,41 +20,41 @@ local const = {
 	options = options,
 }
 
---- @class (exact) UI_dimensions
---- @field x number
---- @field y number
+---@class (exact) UI_dimensions
+---@field x number
+---@field y number
 
---- @class (exact) gui_tooltip_size_cache
---- @field width number
---- @field height number
---- @field x_offset number
---- @field y_offset number
+---@class (exact) gui_tooltip_size_cache
+---@field width number
+---@field height number
+---@field x_offset number
+---@field y_offset number
 
 ---@class scrollbox_vars
 ---@field scroll_img string
 ---@field scroll_img_hl string
 ---@field y number
 
---- @class UI_class
---- @field protected gui gui
---- @field private gui_tooltip gui
---- @field protected gui_id number
---- @field private gui_longest_string_cache table
---- @field private __index UI_class
---- @field private gui_tooltip_size_cache gui_tooltip_size_cache
---- @field private tooltip_z number
---- @field private tooltip_gui_id number
---- @field private animation_id number
---- @field private tooltip_animation_id number
---- @field public tooltip_margin number
---- @field public tooltip_img string
---- @field protected tooltip_reset boolean
---- @field private tooltip_previous? table
---- @field protected c UI_const constants
---- @field protected dim UI_dimensions
---- @field protected scroll scrollbox_vars
---- @field protected buttons {img:string, img_hl:string}
---- @field private scrollboxes {[string]:ui_fake_scroll}
+---@class UI_class
+---@field protected gui gui
+---@field private gui_tooltip gui
+---@field protected gui_id number
+---@field private gui_longest_string_cache table
+---@field private __index UI_class
+---@field private gui_tooltip_size_cache gui_tooltip_size_cache
+---@field private tooltip_z number
+---@field private tooltip_gui_id number
+---@field private animation_id number
+---@field private tooltip_animation_id number
+---@field public tooltip_margin number
+---@field public tooltip_img string
+---@field protected tooltip_reset boolean
+---@field private tooltip_previous? table
+---@field protected c UI_const constants
+---@field protected dim UI_dimensions
+---@field protected scroll scrollbox_vars
+---@field protected buttons {img:string, img_hl:string}
+---@field private scrollboxes {[string]:ui_fake_scroll}
 local ui_class = {
 	c = const,
 	dim = {
@@ -87,8 +87,8 @@ ui_class.__index = ui_class
 local virt_x, virt_y = 1280, 720
 local vrx, vry = MagicNumbersGetValue("VIRTUAL_RESOLUTION_X"), MagicNumbersGetValue("VIRTUAL_RESOLUTION_Y")
 
---- Creates a new UI instance
---- @return UI_class
+---Creates a new UI instance
+---@return UI_class
 function ui_class:New()
 	local o = {
 		gui = GuiCreate(),
@@ -103,8 +103,8 @@ end
 -- #########		FUNCTIONALS		###########
 -- ############################################
 
---- Creates an invisible scrollbox to block clicks and scrolls
---- @protected
+---Creates an invisible scrollbox to block clicks and scrolls
+---@protected
 function ui_class:BlockInput()
 	GuiIdPushString(self.gui, "STOP_FLICKERING_SCROLLBAR")
 	local m_x, m_y = self:get_mouse_pos()
@@ -117,48 +117,48 @@ function ui_class:BlockInput()
 	GuiIdPop(self.gui)
 end
 
---- Returns true if left mouse was clicked
---- @protected
---- @return boolean
---- @nodiscard
+---Returns true if left mouse was clicked
+---@protected
+---@return boolean
+---@nodiscard
 function ui_class:IsLeftClicked()
 	return InputIsMouseButtonJustDown(self.c.codes.mouse.lc)
 end
 
---- Returns true if right mouse was clicked
---- @protected
---- @return boolean
---- @nodiscard
+---Returns true if right mouse was clicked
+---@protected
+---@return boolean
+---@nodiscard
 function ui_class:IsRightClicked()
 	return InputIsMouseButtonJustDown(self.c.codes.mouse.rc)
 end
 
---- Returns true if right or left mouse was clicked
---- @protected
---- @return boolean
---- @nodiscard
+---Returns true if right or left mouse was clicked
+---@protected
+---@return boolean
+---@nodiscard
 function ui_class:IsMouseClicked()
 	return self:IsLeftClicked() or self:IsRightClicked()
 end
 
---- Returns true if enter, escape or space was pressed
---- @protected
---- @return boolean
---- @nodiscard
+---Returns true if enter, escape or space was pressed
+---@protected
+---@return boolean
+---@nodiscard
 function ui_class:IsControlCharsPressed()
 	return InputIsKeyJustDown(self.c.codes.keyboard.enter)
 		or InputIsKeyDown(self.c.codes.keyboard.escape)
 		or InputIsKeyDown(self.c.codes.keyboard.space)
 end
 
---- Draws a button with text
---- @param x number
---- @param y number
---- @param z number
---- @param text string
---- @param tooltip_text string
---- @return boolean
---- @nodiscard
+---Draws a button with text
+---@param x number
+---@param y number
+---@param z number
+---@param text string
+---@param tooltip_text string
+---@return boolean
+---@nodiscard
 function ui_class:IsButtonClicked(x, y, z, text, tooltip_text)
 	self:DrawButton(x, y, z, text, true)
 	if self:IsHovered() then
@@ -168,16 +168,16 @@ function ui_class:IsButtonClicked(x, y, z, text, tooltip_text)
 	return false
 end
 
---- Draws a disablable button with text
---- @param x number
---- @param y number
---- @param z number
---- @param text string
---- @param tooltip_text string
---- @param active boolean
---- @param inactive_tooltip_text? string
---- @return boolean
---- @nodiscard
+---Draws a disablable button with text
+---@param x number
+---@param y number
+---@param z number
+---@param text string
+---@param tooltip_text string
+---@param active boolean
+---@param inactive_tooltip_text? string
+---@return boolean
+---@nodiscard
 function ui_class:IsDisablableButtonClicked(x, y, z, text, tooltip_text, active, inactive_tooltip_text)
 	if active then return self:IsButtonClicked(x, y, z, text, tooltip_text) end
 	self:DrawButton(x, y, z, text, false)
@@ -185,24 +185,24 @@ function ui_class:IsDisablableButtonClicked(x, y, z, text, tooltip_text, active,
 	return false
 end
 
---- Returns true if previous widget is hovered
---- @protected
---- @return boolean
---- @nodiscard
+---Returns true if previous widget is hovered
+---@protected
+---@return boolean
+---@nodiscard
 function ui_class:IsHovered()
 	local _, _, hovered = GuiGetPreviousWidgetInfo(self.gui)
 	return hovered
 end
 
---- Draws a invisible nine piece as a hoverbox, returns true if hovered
---- @protected
---- @param x number
---- @param y number
---- @param width number
---- @param height number
---- @param dont_focus? boolean
---- @return boolean
---- @nodiscard
+---Draws a invisible nine piece as a hoverbox, returns true if hovered
+---@protected
+---@param x number
+---@param y number
+---@param width number
+---@param height number
+---@param dont_focus? boolean
+---@return boolean
+---@nodiscard
 function ui_class:IsHoverBoxHovered(x, y, width, height, dont_focus)
 	if not dont_focus then self:AddOptionForNext(self.c.options.ForceFocusable) end
 	self:Draw9Piece(x, y, -10000, width, height, self.c.empty, self.c.empty)
@@ -213,11 +213,11 @@ end
 -- #########		TOOLTIPS		###########
 -- ############################################
 
---- Calculate y offset needed to not go over the screen
---- @private
---- @param y number
---- @param h number
---- @return number
+---Calculate y offset needed to not go over the screen
+---@private
+---@param y number
+---@param h number
+---@return number
 function ui_class:GetOffsetY(y, h)
 	local y_offset = 0
 	-- Move the tooltip up if it overflows the bottom edge
@@ -230,11 +230,11 @@ function ui_class:GetOffsetY(y, h)
 	return y_offset
 end
 
---- Calculate x offset needed to not go over the screen
---- @private
---- @param x number The x-coordinate of the tooltip
---- @param w number The width of the tooltip
---- @return number x_offset The offset to apply to keep the tooltip within screen bounds
+---Calculate x offset needed to not go over the screen
+---@private
+---@param x number The x-coordinate of the tooltip
+---@param w number The width of the tooltip
+---@return number x_offset The offset to apply to keep the tooltip within screen bounds
 function ui_class:GetOffsetX(x, w)
 	local min_offset = 38 -- Minimum padding from the screen edge
 	local x_offset = 0
@@ -247,11 +247,11 @@ function ui_class:GetOffsetX(x, w)
 	return x_offset
 end
 
---- Set tooltip cache if not already set
---- @private
---- @param key string
---- @param x number
---- @param y number
+---Set tooltip cache if not already set
+---@private
+---@param key string
+---@param x number
+---@param y number
 function ui_class:SetTooltipCache(x, y, key)
 	local prev = self:GetPrevious()
 	self.gui_tooltip_size_cache[key] = {
@@ -262,13 +262,13 @@ function ui_class:SetTooltipCache(x, y, key)
 	}
 end
 
---- Draw tooltip off-screen to measure its size
---- @private
---- @param x number
---- @param y number
---- @param ui_fn function
---- @param key string
---- @param ... any
+---Draw tooltip off-screen to measure its size
+---@private
+---@param x number
+---@param y number
+---@param ui_fn function
+---@param key string
+---@param ... any
 function ui_class:DrawTooltipOffScreen(x, y, ui_fn, key, ...)
 	local orig_gui, orig_id, anim_id = self.gui, self.gui_id, self.animation_id
 	self.gui, self.gui_id, self.animation_id = self.gui_tooltip, self.tooltip_gui_id, self.tooltip_animation_id
@@ -282,25 +282,25 @@ function ui_class:DrawTooltipOffScreen(x, y, ui_fn, key, ...)
 	self.gui, self.gui_id, self.animation_id = orig_gui, orig_id, anim_id
 end
 
---- Retrieves a tooltip data, drawing it off-screen if necessary
---- @param x number
---- @param y number
---- @param ui_fn function
---- @param ... any
---- @return gui_tooltip_size_cache
+---Retrieves a tooltip data, drawing it off-screen if necessary
+---@param x number
+---@param y number
+---@param ui_fn function
+---@param ... any
+---@return gui_tooltip_size_cache
 function ui_class:GetTooltipData(x, y, ui_fn, ...)
 	local key = self:GetKey(x, y, ui_fn, ...)
 	if not self.gui_tooltip_size_cache[key] then self:DrawTooltipOffScreen(x, y, ui_fn, key, ...) end
 	return self.gui_tooltip_size_cache[key]
 end
 
---- Generate a unique key for the tooltip cache
---- @protected
---- @param x number
---- @param y number
---- @param ui_fn function
---- @param ... any
---- @return string
+---Generate a unique key for the tooltip cache
+---@protected
+---@param x number
+---@param y number
+---@param ui_fn function
+---@param ... any
+---@return string
 function ui_class:GetKey(x, y, ui_fn, ...)
 	local key = self:Locale("$current_language") .. tostring(x) .. tostring(y) .. tostring(ui_fn)
 	for _, var in ipairs({ ... }) do
@@ -309,12 +309,12 @@ function ui_class:GetKey(x, y, ui_fn, ...)
 	return key
 end
 
---- Actual function to draw tooltip
---- @private
---- @param x number
---- @param y number
---- @param ui_fn function
---- @param ... any
+---Actual function to draw tooltip
+---@private
+---@param x number
+---@param y number
+---@param ui_fn function
+---@param ... any
 function ui_class:DrawToolTip(x, y, ui_fn, ...)
 	local orig_gui, orig_id, anim_id = self.gui, self.gui_id, self.animation_id
 	self.gui, self.gui_id, self.animation_id = self.gui_tooltip, self.tooltip_gui_id, self.tooltip_animation_id
@@ -339,12 +339,12 @@ function ui_class:DrawToolTip(x, y, ui_fn, ...)
 	self.gui, self.gui_id, self.animation_id = orig_gui, orig_id, anim_id
 end
 
---- Custom tooltip.
---- @protected
---- @param x number position of x.
---- @param y number position of y.
---- @param draw function|string function to render in tooltip.
---- @param ... any optional parameter to pass to ui function.
+---Custom tooltip.
+---@protected
+---@param x number position of x.
+---@param y number position of y.
+---@param draw function|string function to render in tooltip.
+---@param ... any optional parameter to pass to ui function.
 function ui_class:ShowTooltip(x, y, draw, ...)
 	local fn_type = type(draw)
 	if fn_type == "string" then
@@ -354,12 +354,12 @@ function ui_class:ShowTooltip(x, y, draw, ...)
 	end
 end
 
---- Adds a tooltip that centered around previous widget
---- @protected
---- @param x number offset
---- @param y number offset
---- @param draw function function to render in tooltip.
---- @param ... any optional parameter to pass to ui function.
+---Adds a tooltip that centered around previous widget
+---@protected
+---@param x number offset
+---@param y number offset
+---@param draw function function to render in tooltip.
+---@param ... any optional parameter to pass to ui function.
 function ui_class:ShowTooltipCenteredX(x, y, draw, ...)
 	local prev = self:GetPrevious()
 	local cache = self:GetTooltipData(0, 0, draw, ...)
@@ -367,29 +367,29 @@ function ui_class:ShowTooltipCenteredX(x, y, draw, ...)
 	self:DrawToolTip(center + x, prev.y + y, draw, ...)
 end
 
---- Adds a text tooltip that centered around previous widget
---- @protected
---- @param x number offset
---- @param y number offset
---- @param text string text to show
+---Adds a text tooltip that centered around previous widget
+---@protected
+---@param x number offset
+---@param y number offset
+---@param text string text to show
 function ui_class:ShowTooltipTextCenteredX(x, y, text)
 	self:ShowTooltipCenteredX(x, y, self.TooltipText, text)
 end
 
---- Custom tooltip with hovered check.
---- @protected
---- @param x number offset x.
---- @param y number offset y.
---- @param draw function|string function to render in tooltip.
---- @param ... any optional parameter to pass to ui function.
+---Custom tooltip with hovered check.
+---@protected
+---@param x number offset x.
+---@param y number offset y.
+---@param draw function|string function to render in tooltip.
+---@param ... any optional parameter to pass to ui function.
 function ui_class:AddTooltip(x, y, draw, ...)
 	local prev = self:GetPrevious()
 	if prev.hovered then self:ShowTooltip(prev.x + x, prev.y + y, draw, ...) end
 end
 
---- draw text at 0
---- @private
---- @param text string
+---draw text at 0
+---@private
+---@param text string
 function ui_class:TooltipText(text)
 	self:Text(0, 0, text)
 end
@@ -573,7 +573,7 @@ function ui_class:ScrollBox(x, y, z, width, height_max, sprite, margin_x, margin
 	local box_height = scroll.height + margin_y * 2
 	self:Draw9Piece(box_x, box_y, z, box_width, box_height, sprite)
 
-	--- phantom 9piece with corrent hitbox
+	---phantom 9piece with corrent hitbox
 	local hovered = self:IsHoverBoxHovered(
 		box_x - scroll.sprite_dim / 3,
 		box_y - scroll.sprite_dim / 3,
@@ -610,10 +610,10 @@ end
 -- #############		TEXT		###########
 -- ############################################
 
---- Returns translated text from $string
---- @protected
---- @param string string should be in $string format
---- @return string
+---Returns translated text from $string
+---@protected
+---@param string string should be in $string format
+---@return string
 function ui_class:Locale(string)
 	local pattern = "%$%w[%w_]+"
 	string = string:gsub(pattern, GameTextGetTranslatedOrNot, 1)
@@ -624,20 +624,20 @@ function ui_class:Locale(string)
 	end
 end
 
---- get text dimensions
---- @protected
---- @param text string
---- @param font? string
---- @return number, number
+---get text dimensions
+---@protected
+---@param text string
+---@param font? string
+---@return number, number
 function ui_class:GetTextDimension(text, font)
 	return GuiGetTextDimensions(self.gui, text, 1, 2, font or "")
 end
 
---- Function to calculate the longest string in array
---- @private
---- @param array table strings
---- @param key string cache key
---- @return number
+---Function to calculate the longest string in array
+---@private
+---@param array table strings
+---@param key string cache key
+---@return number
 function ui_class:CalculateLongestText(array, key)
 	local longest = 0
 	for _, text in ipairs(array) do
@@ -648,47 +648,47 @@ function ui_class:CalculateLongestText(array, key)
 	return self.gui_longest_string_cache[key]
 end
 
---- Get the longest string length from array
---- @protected
---- @param array table table to look through
---- @param key string cache key, should be static enough
---- @return number
+---Get the longest string length from array
+---@protected
+---@param array table table to look through
+---@param key string cache key, should be static enough
+---@return number
 function ui_class:GetLongestText(array, key)
 	key = self:Locale("$current_language") .. key
 	return self.gui_longest_string_cache[key] or self:CalculateLongestText(array, key)
 end
 
---- GuiText but centered
---- @protected
---- @param x number
---- @param y number
---- @param text string
---- @param longest number longest string length
---- @param font? string
+---GuiText but centered
+---@protected
+---@param x number
+---@param y number
+---@param text string
+---@param longest number longest string length
+---@param font? string
 function ui_class:TextCentered(x, y, text, longest, font)
 	font = font or ""
 	local x_offset = (longest - self:GetTextDimension(text, font)) / 2
 	GuiText(self.gui, x + x_offset, y, text, 1, font)
 end
 
---- GuiText
---- @protected
---- @param text string
---- @param font? string
---- @param x number
---- @param y number
+---GuiText
+---@protected
+---@param text string
+---@param font? string
+---@param x number
+---@param y number
 function ui_class:Text(x, y, text, font)
 	GuiText(self.gui, x, y, text, 1, font or "")
 end
 
---- GuiText with borders
---- @param x number
---- @param y number
---- @param z number
---- @param text string
---- @param active boolean
---- @param sprite? string
---- @param sprite_hl? string
+---GuiText with borders
+---@param x number
+---@param y number
+---@param z number
+---@param text string
+---@param active boolean
+---@param sprite? string
+---@param sprite_hl? string
 function ui_class:DrawButton(x, y, z, text, active, sprite, sprite_hl)
 	sprite = sprite or self.buttons.img
 	sprite_hl = sprite_hl or active and self.buttons.img_hl or self.buttons.img
@@ -703,65 +703,40 @@ end
 -- #########		VARIABLES		###########
 -- ############################################
 
---- update dimensions
---- @protected
-function ui_class:UpdateDimensions()
-	GuiStartFrame(self.gui)
-	self.dim.x, self.dim.y = GuiGetScreenDimensions(self.gui)
-end
-
----Returns world x, y for mouse position
----@return number x, number y
-function ui_class:get_mouse_world_pos()
-	local msx, msy = InputGetMousePosOnScreen()
-	local nx = msx / virt_x
-	local ny = msy / virt_y
-
-	local vx = nx * vrx
-	local vy = ny * vry
-
-	local _, _, cam_w, cam_h = GameGetCameraBounds()
-	local cx, cy = GameGetCameraPos()
-
-	cx = cx - cam_w * 0.5
-	cy = cy - cam_h * 0.5
-
-	return cx + vx, cy + vy
-end
-
---- return x and y of mouse pos
---- @protected
---- @return number mouse_x, number mouse_y
+---return x and y of mouse pos
+---@protected
+---@return number mouse_x, number mouse_y
 function ui_class:get_mouse_pos()
 	local mouse_screen_x, mouse_screen_y = InputGetMousePosOnScreen()
-	local mx_p, my_p = mouse_screen_x / virt_x, mouse_screen_y / virt_y
-	return mx_p * self.dim.x, my_p * self.dim.y
+	local ratio_x, ratio_y = self.dim.x / virt_x, self.dim.y / virt_y
+	local mx_p, my_p = mouse_screen_x * ratio_x, mouse_screen_y * ratio_y
+	return mx_p, my_p
 end
 
---- get center of screen
---- @protected
---- @param width number
---- @param height number
---- @return number x, number y
+---get center of screen
+---@protected
+---@param width number
+---@param height number
+---@return number x, number y
 function ui_class:CalculateCenterInScreen(width, height)
 	local x = (self.dim.x - width) / 2
 	local y = (self.dim.y - height) / 2
 	return x, y
 end
 
---- @class PreviousInfo
---- @field lc boolean left click
---- @field rc boolean right click
---- @field hovered boolean hovered
---- @field x number
---- @field y number
---- @field w number
---- @field h number
+---@class PreviousInfo
+---@field lc boolean left click
+---@field rc boolean right click
+---@field hovered boolean hovered
+---@field x number
+---@field y number
+---@field w number
+---@field h number
 
---- Returns a previous widget info
---- @return PreviousInfo return hover, x, y, w, h
---- @protected
---- @nodiscard
+---Returns a previous widget info
+---@return PreviousInfo return hover, x, y, w, h
+---@protected
+---@nodiscard
 function ui_class:GetPrevious()
 	local lc, rc, prev_hovered, x, y, width, height = GuiGetPreviousWidgetInfo(self.gui)
 	return {
@@ -779,46 +754,46 @@ end
 -- #########		GUI OPTIONS		###########
 -- ############################################
 
---- Set Z for next widget
---- @protected
---- @param number number
+---Set Z for next widget
+---@protected
+---@param number number
 function ui_class:SetZ(number)
 	GuiZSetForNextWidget(self.gui, number)
 end
 
---- set color for next widget
---- @protected
---- @param r integer
---- @param g integer
---- @param b integer
---- @param a? integer
+---set color for next widget
+---@protected
+---@param r integer
+---@param g integer
+---@param b integer
+---@param a? integer
 function ui_class:Color(r, g, b, a)
 	a = a or 1
 	GuiColorSetForNextWidget(self.gui, r, g, b, a)
 end
 
---- @protected
+---@protected
 function ui_class:ColorGray()
 	self:Color(0.6, 0.6, 0.6)
 end
 
---- set option for all next widgets
---- @protected
---- @param option ui_options
+---set option for all next widgets
+---@protected
+---@param option ui_options
 function ui_class:AddOption(option)
 	GuiOptionsAdd(self.gui, option)
 end
 
---- set option for next widget
---- @protected
---- @param option ui_options
+---set option for next widget
+---@protected
+---@param option ui_options
 function ui_class:AddOptionForNext(option)
 	GuiOptionsAddForNextWidget(self.gui, option)
 end
 
---- remove option for all next widgets
---- @protected
---- @param option gui_options_number
+---remove option for all next widgets
+---@protected
+---@param option gui_options_number
 function ui_class:RemoveOption(option)
 	GuiOptionsRemove(self.gui, option)
 end
@@ -827,9 +802,9 @@ end
 -- ############		IMAGES		###############
 -- ############################################
 
---- for debugging
---- @protected
---- @debug
+---for debugging
+---@protected
+---@debug
 function ui_class:DebugDrawGrid()
 	for i = 0, 640, 10 do
 		if i % 16 == 0 then GuiColorSetForNextWidget(self.gui, 1, 0, 0, 1) end
@@ -843,27 +818,27 @@ function ui_class:DebugDrawGrid()
 	end
 end
 
---- add image
---- @protected
---- @param x number
---- @param y number
---- @param sprite string
---- @param alpha? number
---- @param scale_x? number
---- @param scale_y? number
+---add image
+---@protected
+---@param x number
+---@param y number
+---@param sprite string
+---@param alpha? number
+---@param scale_x? number
+---@param scale_y? number
 function ui_class:Image(x, y, sprite, alpha, scale_x, scale_y)
 	GuiImage(self.gui, self:id(), x, y, sprite, alpha or 1, scale_x or 1, scale_y or scale_x or 1, 0, 2)
 end
 
---- draw 9piece
---- @protected
---- @param x number
---- @param y number
---- @param z number
---- @param width number
---- @param height number
---- @param sprite? string
---- @param highlight? string
+---draw 9piece
+---@protected
+---@param x number
+---@param y number
+---@param z number
+---@param width number
+---@param height number
+---@param sprite? string
+---@param highlight? string
 function ui_class:Draw9Piece(x, y, z, width, height, sprite, highlight)
 	sprite = sprite or self.c.default_9piece
 	highlight = highlight or sprite
@@ -875,33 +850,33 @@ end
 -- #########		ANIMATIONS		###########
 -- ############################################
 
---- Adds alpha to animation
---- @protected
---- @param speed integer
---- @param step integer
---- @param reset boolean
+---Adds alpha to animation
+---@protected
+---@param speed integer
+---@param step integer
+---@param reset boolean
 function ui_class:AnimateAlpha(speed, step, reset)
 	GuiAnimateAlphaFadeIn(self.gui, self.animation_id, speed, step, reset)
 	self.animation_id = self.animation_id + 1
 end
 
---- Adds scale to animation
---- @protected
---- @param acceleration number
---- @param reset boolean
+---Adds scale to animation
+---@protected
+---@param acceleration number
+---@param reset boolean
 function ui_class:AnimateScale(acceleration, reset)
 	GuiAnimateScaleIn(self.gui, self.animation_id, acceleration, reset)
 	self.animation_id = self.animation_id + 1
 end
 
---- Ends an animation
---- @protected
+---Ends an animation
+---@protected
 function ui_class:AnimateE()
 	GuiAnimateEnd(self.gui)
 end
 
---- Begins an animation
---- @protected
+---Begins an animation
+---@protected
 function ui_class:AnimateB()
 	GuiAnimateBegin(self.gui)
 end
@@ -910,8 +885,8 @@ end
 -- #############		MISC		###########
 -- ############################################
 
---- Resets a gui id
---- @protected
+---Resets a gui id
+---@protected
 function ui_class:id_reset()
 	self.gui_id = 100000
 	self.tooltip_gui_id = 1000
@@ -919,21 +894,26 @@ function ui_class:id_reset()
 	self.tooltip_animation_id = 100
 end
 
---- Returns an id with increment
---- @private
---- @return number gui_id
+---Returns an id with increment
+---@private
+---@return number gui_id
 function ui_class:id()
 	self.gui_id = self.gui_id + 1
 	return self.gui_id
 end
 
---- start frame
---- @protected
+---start frame
+---@protected
 function ui_class:StartFrame()
 	self:id_reset()
 	self.tooltip_reset = true
 	if self.gui then GuiStartFrame(self.gui) end
 	if self.gui_tooltip then GuiStartFrame(self.gui_tooltip) end
+end
+
+function ui_class:fetch_config()
+	GuiStartFrame(self.gui)
+	self.dim.x, self.dim.y = GuiGetScreenDimensions(self.gui)
 end
 
 return ui_class:New()
