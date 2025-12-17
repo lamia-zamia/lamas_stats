@@ -55,6 +55,7 @@ local const = {
 ---@field protected scroll scrollbox_vars
 ---@field protected buttons {img:string, img_hl:string}
 ---@field private scrollboxes {[string]:ui_fake_scroll}
+---@field protected mouse {x:number, y:number}
 local ui_class = {
 	c = const,
 	dim = {
@@ -81,11 +82,14 @@ local ui_class = {
 		img = "data/ui_gfx/decorations/9piece0_gray.png",
 		img_hl = "data/ui_gfx/decorations/9piece0.png",
 	},
+	mouse = {
+		x = 0,
+		y = 0,
+	},
 }
 ui_class.__index = ui_class
 
 local virt_x, virt_y = 1280, 720
-local vrx, vry = MagicNumbersGetValue("VIRTUAL_RESOLUTION_X"), MagicNumbersGetValue("VIRTUAL_RESOLUTION_Y")
 
 ---Creates a new UI instance
 ---@return UI_class
@@ -107,11 +111,10 @@ end
 ---@protected
 function ui_class:BlockInput()
 	GuiIdPushString(self.gui, "STOP_FLICKERING_SCROLLBAR")
-	local m_x, m_y = self:get_mouse_pos()
 	GuiAnimateBegin(self.gui)
 	GuiAnimateAlphaFadeIn(self.gui, 2, 0, 0, true)
 	GuiOptionsAddForNextWidget(self.gui, self.c.options.AlwaysClickable)
-	GuiBeginScrollContainer(self.gui, 2, m_x - 25, m_y - 25, 50, 50, false, 0, 0)
+	GuiBeginScrollContainer(self.gui, 2, self.mouse.x - 25, self.mouse.y - 25, 50, 50, false, 0, 0)
 	GuiAnimateEnd(self.gui)
 	GuiEndScrollContainer(self.gui)
 	GuiIdPop(self.gui)
@@ -141,16 +144,6 @@ function ui_class:IsMouseClicked()
 	return self:IsLeftClicked() or self:IsRightClicked()
 end
 
----Returns true if enter, escape or space was pressed
----@protected
----@return boolean
----@nodiscard
-function ui_class:IsControlCharsPressed()
-	return InputIsKeyJustDown(self.c.codes.keyboard.enter)
-		or InputIsKeyDown(self.c.codes.keyboard.escape)
-		or InputIsKeyDown(self.c.codes.keyboard.space)
-end
-
 ---Draws a button with text
 ---@param x number
 ---@param y number
@@ -168,23 +161,6 @@ function ui_class:IsButtonClicked(x, y, z, text, tooltip_text)
 	return false
 end
 
----Draws a disablable button with text
----@param x number
----@param y number
----@param z number
----@param text string
----@param tooltip_text string
----@param active boolean
----@param inactive_tooltip_text? string
----@return boolean
----@nodiscard
-function ui_class:IsDisablableButtonClicked(x, y, z, text, tooltip_text, active, inactive_tooltip_text)
-	if active then return self:IsButtonClicked(x, y, z, text, tooltip_text) end
-	self:DrawButton(x, y, z, text, false)
-	if inactive_tooltip_text and self:IsHovered() then self:ShowTooltipTextCenteredX(1, 20, inactive_tooltip_text) end
-	return false
-end
-
 ---Returns true if previous widget is hovered
 ---@protected
 ---@return boolean
@@ -193,6 +169,8 @@ function ui_class:IsHovered()
 	local _, _, hovered = GuiGetPreviousWidgetInfo(self.gui)
 	return hovered
 end
+
+local last_hovered_id = 0
 
 ---Draws a invisible nine piece as a hoverbox, returns true if hovered
 ---@protected
@@ -204,9 +182,17 @@ end
 ---@return boolean
 ---@nodiscard
 function ui_class:IsHoverBoxHovered(x, y, width, height, dont_focus)
-	if not dont_focus then self:AddOptionForNext(self.c.options.ForceFocusable) end
-	self:Draw9Piece(x, y, -10000, width, height, self.c.empty, self.c.empty)
-	return self:IsHovered()
+	local mx, my = self.mouse.x, self.mouse.y
+	if mx < x or mx > x + width then return false end
+	if my < y or my > y + height then return false end
+	if not dont_focus then
+		local id = self:id()
+		if id ~= last_hovered_id then
+			last_hovered_id = id
+			GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_select", 0, 0)
+		end
+	end
+	return true
 end
 
 -- ############################################
@@ -476,7 +462,7 @@ end
 ---@param height number height of scrollbox
 ---@param scroll ui_fake_scroll
 function ui_class:ScrollBoxHandleClick(y, height, scroll)
-	local _, mouse_y = self:get_mouse_pos()
+	local mouse_y = self.mouse.y
 	if self:ScrollBoxClickedOnScrollBarThumb(mouse_y, y, scroll) then
 		local scroll_target = self:ScrollBoxCalculateTargetScroll(mouse_y, y, height, scroll.scrollbar_height / 2, scroll)
 		scroll.scrollbar_pos = self:ScrollBoxCalculateScrollbarPos(scroll_target, height, scroll)
@@ -515,8 +501,7 @@ function ui_class:ScrollBoxMouseDrag(y, scroll)
 	if self:IsHovered() and self:IsLeftClicked() then self:ScrollBoxHandleClick(y, scroll.height, scroll) end
 	if not InputIsMouseButtonDown(self.c.codes.mouse.lc) then scroll.move_triggered = false end
 	if scroll.move_triggered then
-		local _, mouse_y = self:get_mouse_pos()
-		scroll.target_y = self:ScrollBoxCalculateTargetScroll(mouse_y, y, scroll.height, scroll.click_offset, scroll)
+		scroll.target_y = self:ScrollBoxCalculateTargetScroll(self.mouse.y, y, scroll.height, scroll.click_offset, scroll)
 	end
 end
 
@@ -909,6 +894,7 @@ function ui_class:StartFrame()
 	self.tooltip_reset = true
 	if self.gui then GuiStartFrame(self.gui) end
 	if self.gui_tooltip then GuiStartFrame(self.gui_tooltip) end
+	self.mouse.x, self.mouse.y = self:get_mouse_pos()
 end
 
 function ui_class:fetch_config()
