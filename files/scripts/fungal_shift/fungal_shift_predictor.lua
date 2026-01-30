@@ -15,13 +15,13 @@ local nest, gold, grass
 ---@field max_shifts integer
 ---@field shifts shift[]
 ---@field private current_predict_iter number
----@field is_using_new_shift boolean
+---@field is_using_pouch_shift boolean
+---@field is_single_pass boolean
 local shift_predictor = {
 	cooldown = 0,
 	max_shifts = 20,
 	current_predict_iter = 1,
 	shifts = {},
-	is_using_new_shift = false,
 }
 
 local last_shift_result
@@ -70,6 +70,14 @@ local function redefine_functions()
 		return cell_factory_get_type(material)
 	end
 
+	-- Anti-NT sync
+	local game_has_flag_run_old = GameHasFlagRun
+	local game_has_flag_run = function(flag)
+		if flag == "NT_sync_shift" then return false end
+		return game_has_flag_run_old(flag)
+	end
+	GameHasFlagRun = game_has_flag_run
+
 	dofile_once = dofile
 end
 
@@ -106,6 +114,28 @@ local function determine_cooldown()
 	end
 	-- Failover, wtf happened?
 	shift_predictor.cooldown = 0
+end
+
+local function detect_single_pass_deterministic()
+	local converted = false
+	local convertMaterial = function()
+		converted = true
+	end
+	ConvertMaterialEverywhere = convertMaterial
+
+	local pick_random_from_table_weighted_old = pick_random_from_table_weighted
+	local pick_random = function()
+		return {
+			materials = { "water" },
+			material = "water",
+		}
+	end
+	pick_random_from_table_weighted = pick_random
+
+	fungal_shift(1, 0, 0, true)
+
+	pick_random_from_table_weighted = pick_random_from_table_weighted_old
+	return converted == false
 end
 
 ---Bruteforce max shift count
@@ -315,6 +345,7 @@ function shift_predictor:parse()
 
 	-- Gets max shift
 	determine_max_shift()
+	self.is_single_pass = detect_single_pass_deterministic()
 
 	-- Starting to parse materials, overriding convertMaterial function so it would return what was converted
 	local convertMaterialEverywhere = function(material_from_type, material_to_type)
@@ -335,9 +366,9 @@ function shift_predictor:parse()
 		shift_predictor.shifts[i] = get_shift_materials()
 	end
 
-	self.is_using_new_shift = is_pouch_shift_possible()
+	self.is_using_pouch_shift = is_pouch_shift_possible()
 
-	if self.is_using_new_shift then
+	if self.is_using_pouch_shift then
 		for i = 1, 200 do
 			get_greedy_shift_results(i)
 		end

@@ -105,13 +105,14 @@ function future:FungalDrawFutureTooltip(shift, i)
 	self:FungalDrawFutureTooltipShift(y, shift, offset_from)
 	y = y + 10 * self.fungal.row_count
 
-	if self.fs.predictor.is_using_new_shift then
+	if self.fs.predictor.is_using_pouch_shift then
 		if shift.greedy and self.alt then
 			self:FungalDrawFutureTooltipGreedy(y, shift.greedy, offset_from)
 			y = y + 30
 		end
 		y = y + 5
-
+	end
+	if not self.fs.predictor.is_single_pass then
 		if shift.failed then
 			self:FungalDrawFutureTooltipShiftFailed(y, shift, offset_from)
 			y = y + 10 * self.fungal.row_count + 15

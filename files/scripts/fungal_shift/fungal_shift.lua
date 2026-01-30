@@ -38,6 +38,7 @@ local fs = {
 ---@return boolean
 ---@nodiscard
 function fs:IsShiftIdenticalToFailed(shift)
+	if #shift == 0 then return false end
 	for i = 1, #shift.from do
 		local index = self.shift_indexed + i - 1
 		local shifted_materials = self.shifted.materials[index]

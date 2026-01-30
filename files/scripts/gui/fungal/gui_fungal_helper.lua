@@ -192,7 +192,7 @@ end
 ---@param flask string|false
 ---@return integer
 function helper:FungalCalculateRowCount(from, to, flask)
-	local rows = from and #from or 1
+	local rows = from and math.max(#from, 1) or 1
 	if from and flask == "from" then
 		rows = rows + 1
 	elseif rows == 1 and flask == "to" and to then
