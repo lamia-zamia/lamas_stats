@@ -69,6 +69,7 @@ local translations = {
 		reaction_window_d = "Left click to open the reaction window, right click to close the reaction window",
 		speed = "Speed",
 		req_text = "This reaction only happens if requirements are not met",
+		always_show_always_cast = "Always show always cast result",
 	},
 	["русский"] = {
 		lamas_stat_current = "Текущие",
@@ -141,6 +142,7 @@ local translations = {
 		reaction_window_d = "Щелкните левой кнопкой чтобы открыть, правой кнопкой мыши, чтобы закрыть окно реакции.",
 		speed = "Скорость",
 		req_text = "Эта реакция происходит только если требования не соблюдены",
+		always_show_always_cast = "Всегда показывать результат постоянного заклинания",
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -212,6 +214,7 @@ local translations = {
 		reaction_window_d = "左クリックで反応ウィンドウを開く、右クリックで反応ウィンドウを閉じる",
 		speed = "速度",
 		req_text = "この反応は要件が満たされない場合にのみ発生する",
+		always_show_always_cast = "常時キャストの結果を常に表示",
 	},
 }
 

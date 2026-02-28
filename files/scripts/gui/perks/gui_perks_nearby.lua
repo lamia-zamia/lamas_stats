@@ -11,8 +11,9 @@ function pg:PerksNearbyTooltip(nearby_perk)
 	local picked_count = T.PerkCount .. ": " .. perk.picked_count
 	local id = self.alt and string.format("(%s)", perk.id) or ""
 	local reminder = self.alt and "" or T.PressShiftToSeeMore
-	local always_cast = nearby_perk.cast and T.lamas_stats_perks_always_cast .. ":" or ""
-	local longest = self:GetLongestText({ ui_name, id, reminder, always_cast }, perk.id .. id)
+	local always_cast_result = nearby_perk.cast or self.perks.nearby:PredictAlwaysCast(nearby_perk.x, nearby_perk.y)
+	local always_cast_text = always_cast_result and T.lamas_stats_perks_always_cast .. ":" or nil
+	local longest = self:GetLongestText({ ui_name, id, reminder, always_cast_text }, perk.id .. id)
 	longest = math.max(longest, self:GetLongestText(description_lines, perk.ui_description))
 	local name_pos = (longest - self:GetTextDimension(ui_name)) / 2
 	self:AddOptionForNext(self.c.options.Layout_NextSameLine)
@@ -31,17 +32,18 @@ function pg:PerksNearbyTooltip(nearby_perk)
 		self:TextCentered(0, 0, description_lines[i], longest)
 	end
 
-	if nearby_perk.cast and self.config.enable_nearby_always_cast then
-		local cast_length = self:GetTextDimension(always_cast)
+	if self.config.enable_nearby_always_cast and always_cast_text then
+		local cast_length = self:GetTextDimension(always_cast_text)
 		local cast_pos = (longest - cast_length) / 2 - 6
-		local cast_data = self.actions:get_data(nearby_perk.cast)
+		local cast_data = self.actions:get_data(always_cast_result)
+		self:TextCentered(0, 3, "$perk_always_cast", longest)
 		self:AddOptionForNext(self.c.options.Layout_NextSameLine)
-		self:Text(cast_pos, 3, always_cast)
-		self:Image(cast_pos + cast_length + 3, 3, cast_data.sprite, 1, 0.625)
+		self:Text(cast_pos, 0, always_cast_text)
+		self:Image(cast_pos + cast_length + 3, 0, cast_data.sprite, 1, 0.625)
 		if self.alt then
 			self:TextCentered(0, 5, self:Locale(cast_data.name), longest)
 			self:ColorGray()
-			self:TextCentered(0, 0, "(" .. nearby_perk.cast .. ")", longest)
+			self:TextCentered(0, 0, "(" .. always_cast_result .. ")", longest)
 			local cast_description = self:SplitString(self:Locale(cast_data.description), longest)
 			for i = 1, #cast_description do
 				self:Color(0.8, 0.8, 0.8)

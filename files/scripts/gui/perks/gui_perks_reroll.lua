@@ -16,6 +16,8 @@ function pg:PerksDrawRerollPerks()
 				local nearby_data = self.perks.nearby.data[j] ---@type nearby_perks_data
 				local perk_id = perks[nearby_data.spawn_order]
 				local this_data = {
+					x = nearby_data.x,
+					y = nearby_data.y,
 					id = perk_id,
 					cast = perk_id == "ALWAYS_CAST" and self.perks.nearby:PredictAlwaysCast(nearby_data.x, nearby_data.y) or nil,
 				}

@@ -33,6 +33,7 @@ local config = {
 				"enable_nearby_perks",
 				"enable_nearby_lottery",
 				"enable_nearby_always_cast",
+				"always_show_always_cast",
 			},
 		},
 		unfolded = {

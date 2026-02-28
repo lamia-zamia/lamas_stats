@@ -4,3 +4,4 @@ ENTITY_GET_WITH_TAG = EntityGetWithTag
 ENTITY_GET_TRANSFORM = EntityGetTransform
 ENTITY_KILL = EntityKill
 GET_RANDOM_ACTION_WITH_TYPE = GetRandomActionWithType
+ENTITY_GET_FIRST_COMPONENT_INCLUDING_DISABLED = EntityGetFirstComponentIncludingDisabled

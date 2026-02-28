@@ -23,7 +23,7 @@ function kys:KysDraw()
 	if self:IsHovered() and self:IsLeftClicked() then
 		ModSettingSetNextValue("lamas_stats.show_kys_menu", false, false)
 		ModSettingSet("lamas_stats.show_kys_menu", false)
-		local gsc_id = EntityGetFirstComponentIncludingDisabled(self.player, "GameStatsComponent")
+		local gsc_id = ENTITY_GET_FIRST_COMPONENT_INCLUDING_DISABLED(self.player, "GameStatsComponent")
 		if not gsc_id then return end
 		ComponentSetValue2(gsc_id, "extra_death_msg", T.KYS_Suicide)
 		ENTITY_KILL(self.player)
