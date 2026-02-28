@@ -78,18 +78,31 @@ function scanner:PredictAlwaysCast(x, y)
 		return x, y, 0, 0, 0
 	end
 
-	local always_cast
-	function GetRandomActionWithType(...)
-		local result = GET_RANDOM_ACTION_WITH_TYPE(...)
-		always_cast = result
-		return result
+	function EntityGetFirstComponentIncludingDisabled()
+		return 90
 	end
 
 	function find_the_wand_held()
-		return 0
+		return 1
 	end
 
+	function ComponentObjectGetValue()
+		return 1
+	end
+
+	function EntityGetWandCapacity()
+		return 20
+	end
+
+	local always_cast
+	function AddGunActionPermanent(wand, card)
+		always_cast = card
+	end
+
+	function GamePrintImportant() end
+
 	self.always_cast()
+	-- print("always_cast (" .. tostring(always_cast) .. ":" .. type(always_cast) .. ")")
 	return always_cast
 	-- self.perks.
 	-- local good_cards = { "DAMAGE", "CRITICAL_HIT", "HOMING", "SPEED", "ACID_TRAIL", "SINEWAVE" }
