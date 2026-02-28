@@ -12,10 +12,22 @@ function pg:PerksDrawRerollPerks()
 				self.perk.x = 0
 				self.perk.y = self.perk.y + 17
 			end
-			local perk_id = self.perks.nearby.entities[j] and perks[self.perks.nearby.data[j].spawn_order] or perks[j]
-			local perk_data = self.perks.data:get_data(perk_id)
-			local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
-			self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk_data, self.PerksCurrentPerkTooltip, perk_data, self.alt)
+			if i == 1 and self.perks.nearby.entities[j] then -- first reroll row can accurately show always cast
+				local nearby_data = self.perks.nearby.data[j] ---@type nearby_perks_data
+				local perk_id = perks[nearby_data.spawn_order]
+				local this_data = {
+					id = perk_id,
+					cast = perk_id == "ALWAYS_CAST" and self.perks.nearby:PredictAlwaysCast(nearby_data.x, nearby_data.y) or nil,
+				}
+				local perk_data = self.perks.data:get_data(perk_id)
+				local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
+				self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk_data, self.PerksNearbyTooltip, this_data, self.alt)
+			else -- everything below is impossible to predict (perk spawn ordering issue), so just show raw perk data
+				local perk_id = perks[j]
+				local perk_data = self.perks.data:get_data(perk_id)
+				local hovered = self:PerksIsHoverBoxHovered(self.perk.x, self.perk.y)
+				self:PerksDrawPerk(self.perk.x, self.perk.y, hovered, perk_data, self.PerksCurrentPerkTooltip, perk_data, self.alt)
+			end
 			self.perk.x = self.perk.x + 17
 		end
 

@@ -9,6 +9,7 @@
 ---@class perks_parser
 ---@field perks {[string]:perk_data}
 ---@field list string[]
+---@field always_cast fun():string
 local perks = {
 	perks = {},
 	list = {},
@@ -40,6 +41,7 @@ function perks:parse()
 
 	for i = 1, #perk_list do
 		local perk = perk_list[i]
+		if perk.id == "ALWAYS_CAST" then perks.always_cast = perk.func end
 		add_perk(perk)
 	end
 

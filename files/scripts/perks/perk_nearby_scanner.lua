@@ -1,13 +1,16 @@
+---@diagnostic disable: missing-global-doc, missing-return, lowercase-global
 ---@class nearby_perks_data
 ---@field id string
 ---@field lottery? boolean
 ---@field cast? string
 ---@field x number x position of perk to sort them how they appears in game
+---@field y number y position
 ---@field spawn_order number used to determine reroll position more accurately
 
 ---@class perk_scanner
 ---@field entities entity_id[]
 ---@field data nearby_perks_data
+---@field always_cast fun():string
 local scanner = {
 	entities = {},
 	data = {}, ---@diagnostic disable-line: missing-fields
@@ -18,7 +21,7 @@ function scanner:Scan()
 	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
 	if not player then return end
 	local x, y = ENTITY_GET_TRANSFORM(player)
-	self.entities = EntityGetInRadiusWithTag(x, y, 250, "item_perk")
+	self.entities = ENTITY_GET_WITH_TAG("perk")
 end
 
 ---Parses entities found nearby
@@ -30,6 +33,7 @@ function scanner:ParseEntities()
 		local id = self:GetPerkId(entity_id)
 		parsed[#parsed + 1] = {
 			x = x or i,
+			y = y or 0,
 			id = id,
 			lottery = self:IsLotteryWon(x, y, id),
 			cast = id == "ALWAYS_CAST" and self:PredictAlwaysCast(x, y) or nil,
@@ -43,7 +47,6 @@ function scanner:ParseEntities()
 end
 
 ---Predicts perk lottery result
----@private
 ---@param x number
 ---@param y number
 ---@param id string
@@ -67,31 +70,48 @@ function scanner:GetPerkId(entity_id)
 end
 
 ---Returns an action id that always cast will grant
----@private
 ---@param x number
 ---@param y number
 ---@return string
 function scanner:PredictAlwaysCast(x, y)
-	local good_cards = { "DAMAGE", "CRITICAL_HIT", "HOMING", "SPEED", "ACID_TRAIL", "SINEWAVE" }
-	SetRandomSeed(x, y)
-	local card = good_cards[Random(1, #good_cards)]
-
-	local r = Random(1, 100)
-	local level = 6
-
-	if r <= 50 then
-		local p = Random(1, 100)
-		if p <= 86 then
-			card = GetRandomActionWithType(x, y, level, 2, 666)
-		elseif p <= 93 then
-			card = GetRandomActionWithType(x, y, level, 1, 666)
-		elseif p < 100 then
-			card = GetRandomActionWithType(x, y, level, 0, 666)
-		else
-			card = GetRandomActionWithType(x, y, level, 6, 666)
-		end
+	function EntityGetTransform()
+		return x, y, 0, 0, 0
 	end
-	return card
+
+	local always_cast
+	function GetRandomActionWithType(...)
+		local result = GET_RANDOM_ACTION_WITH_TYPE(...)
+		always_cast = result
+		return result
+	end
+
+	function find_the_wand_held()
+		return 0
+	end
+
+	self.always_cast()
+	return always_cast
+	-- self.perks.
+	-- local good_cards = { "DAMAGE", "CRITICAL_HIT", "HOMING", "SPEED", "ACID_TRAIL", "SINEWAVE" }
+	-- SetRandomSeed(x, y)
+	-- local card = good_cards[Random(1, #good_cards)]
+
+	-- local r = Random(1, 100)
+	-- local level = 6
+
+	-- if r <= 50 then
+	-- 	local p = Random(1, 100)
+	-- 	if p <= 86 then
+	-- 		card = GetRandomActionWithType(x, y, level, 2, 666)
+	-- 	elseif p <= 93 then
+	-- 		card = GetRandomActionWithType(x, y, level, 1, 666)
+	-- 	elseif p < 100 then
+	-- 		card = GetRandomActionWithType(x, y, level, 0, 666)
+	-- 	else
+	-- 		card = GetRandomActionWithType(x, y, level, 6, 666)
+	-- 	end
+	-- end
+	-- return card
 end
 
 return scanner

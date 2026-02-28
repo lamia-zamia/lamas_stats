@@ -3,3 +3,4 @@ GLOBALS_SET_VALUE = GlobalsSetValue
 ENTITY_GET_WITH_TAG = EntityGetWithTag
 ENTITY_GET_TRANSFORM = EntityGetTransform
 ENTITY_KILL = EntityKill
+GET_RANDOM_ACTION_WITH_TYPE = GetRandomActionWithType

@@ -24,6 +24,7 @@ end
 
 function perk:Init()
 	self.data:parse()
+	self.nearby.always_cast = self.data.always_cast
 	self.predict:Init()
 end
 
