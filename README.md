@@ -26,7 +26,7 @@ Alternatively, subscribe to the mod on the [Steam Workshop](https://steamcommuni
 * Show perks in next holy mountain
 * Show perks reroll results
 * Show perk lottery result
-* Show result of an always-cast perk
+* Show result of an always-cast perk (can only be seen on current row and next reroll)
 ## Compatibility
 * Should be compatible with most mods that adds perks or materials
 * Should be loaded last (this mod only reads data from game)
