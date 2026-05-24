@@ -38,7 +38,7 @@ local fs = {
 ---@return boolean
 ---@nodiscard
 function fs:IsShiftIdenticalToFailed(shift)
-	if #shift == 0 then return false end
+	if not shift.from or #shift.from == 0 then return false end
 	for i = 1, #shift.from do
 		local index = self.shift_indexed + i - 1
 		local shifted_materials = self.shifted.materials[index]
@@ -114,6 +114,18 @@ function fs:AnalysePastShift(shift_number)
 		return
 	end
 
+	-- Flask-from shift where "from" is the real flask material (unknown at predict time).
+	-- Read the actual from material directly from the game's shift record.
+	if not seed_shift.from then
+		local entry = self.shifted.materials[self.shift_indexed]
+		if entry then
+			past_shift.from = { entry.from }
+			self.shift_indexed = self.shift_indexed + 1
+		end
+		past_shift.flask = "from"
+		return
+	end
+
 	-- Excluding same materials from "from" as "to" (in case with group shifts such as toxic, poison -> toxic would have only poison -> toxic)
 	local unique_from = self:SanitizeFromMaterials(seed_shift.from, past_shift.to)
 
@@ -128,7 +140,9 @@ function fs:AnalysePastShift(shift_number)
 	-- Checking if shifted from is different from seed
 	for j = 1, #unique_from do
 		local material_type = unique_from[j]
-		local shifted_from = self.shifted.materials[self.shift_indexed].from
+		local entry = self.shifted.materials[self.shift_indexed]
+		if not entry then break end
+		local shifted_from = entry.from
 
 		if shifted_from ~= material_type then
 			if seed_shift.flask == "from" then
