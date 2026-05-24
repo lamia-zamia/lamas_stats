@@ -19,7 +19,7 @@ local reaction_index = {
 }
 
 local tagged_materials = {} ---@type {[string]:string[]}
-local partial_matches = {} ---@type {[string]:{original:string, match:string}}
+local partial_matches = {} ---@type {[string]:{[string]:string}}
 local generate_icons = ModSettingGet("lamas_stats.generate_icons")
 
 ---@alias material_tags {[string]:boolean}
@@ -135,8 +135,9 @@ end
 
 ---Gets material type
 ---@param attributes table
+---@param is_child boolean
 ---@return material_types
-local function get_material_type(attributes)
+local function get_material_type(attributes, is_child)
 	local cell_type = attributes.cell_type
 	if cell_type and mat.material_types[cell_type] then
 		-- is it solid
@@ -153,7 +154,7 @@ local function get_material_type(attributes)
 		if is_liquid and attributes.liquid_sand == "1" then return mat.material_types.sand end
 		return mat.material_types[cell_type]
 	end
-	if attributes._parent and full_data[attributes._parent] then return get_material_type(full_data[attributes._parent].attr) end
+	if is_child and attributes._parent and full_data[attributes._parent] then return get_material_type(full_data[attributes._parent].attr, false) end
 	return mat.material_types.liquid
 end
 
@@ -172,15 +173,16 @@ end
 ---Gets material tags
 ---@param attributes table
 ---@param material_type material_types
+---@param is_child boolean
 ---@return material_tags
-local function get_material_tags(attributes, material_type)
+local function get_material_tags(attributes, material_type, is_child)
 	local tags_table = {
 		["[*]"] = true,
 	}
 	local magic_tag = magic_tags[material_type]
 	if magic_tag then tags_table[magic_tag] = true end
 
-	local tags = attributes.tags or (attributes._parent and full_data[attributes._parent] and full_data[attributes._parent].attr.tags)
+	local tags = attributes.tags or (is_child and attributes._parent and full_data[attributes._parent] and full_data[attributes._parent].attr.tags)
 	if not tags then return tags_table end
 
 	for tag in tags:gmatch("([^,]+)") do
@@ -192,12 +194,13 @@ end
 
 ---Parses an xml material element
 ---@param element element
-local function parse_material(element)
+---@param is_child boolean
+local function parse_material(element, is_child)
 	local attributes = element.attr
 	local material_id = attributes.name
 	if not material_id then return end
 
-	local type = get_material_type(attributes)
+	local type = get_material_type(attributes, is_child)
 
 	local material_icon, material_color = get_icon(element, type)
 	mat.buffer[material_id] = {
@@ -206,9 +209,9 @@ local function parse_material(element)
 		icon = material_icon,
 		color = material_color,
 		static = not not material_id:find("_static$"),
-		parent = attributes._parent,
+		parent = is_child and attributes._parent or nil,
 		type = type,
-		tags = get_material_tags(attributes, type),
+		tags = get_material_tags(attributes, type, is_child),
 	}
 end
 
@@ -232,7 +235,8 @@ local function expand_partial_tag(tag, suffix, base_table, index)
 		local generated = base .. suffix
 		if full_data[generated] then
 			insert_to_index(base_table, generated, index)
-			insert_to_index(partial_matches, tag, { original = base, match = generated })
+			partial_matches[tag] = partial_matches[tag] or {}
+			partial_matches[tag][generated] = base
 			insert_to_index(tagged_materials, tag .. suffix, generated)
 		end
 	end
@@ -309,18 +313,25 @@ function mat:post_biome_init()
 		if parse_result then parsed_files[#parsed_files + 1] = parse_result end
 	end
 
-	-- parsing materials and writing them all to temporary table (children bad)
+	-- populate full_data and parse base materials in one pass
+	-- CellDataChild must wait until full_data is complete (cross-file parent refs)
+	local inherit_children = {} ---@type {[string]:string}
 	for _, parsed_file in ipairs(parsed_files) do
-		for _, element_name in ipairs({ "CellData", "CellDataChild" }) do
-			for elem in parsed_file:each_of(element_name) do
-				full_data[elem:get("name")] = elem
-			end
+		for elem in parsed_file:each_of("CellData") do
+			full_data[elem.attr.name] = elem
+			parse_material(elem, false)
+		end
+		for elem in parsed_file:each_of("CellDataChild") do
+			full_data[elem.attr.name] = elem
 		end
 	end
-
-	-- parsing materials
-	for _, v in pairs(full_data) do
-		parse_material(v)
+	for _, parsed_file in ipairs(parsed_files) do
+		for elem in parsed_file:each_of("CellDataChild") do
+			parse_material(elem, true)
+			if elem.attr._inherit_reactions == "1" and elem.attr._parent then
+				inherit_children[elem.attr.name] = elem.attr._parent
+			end
+		end
 	end
 
 	-- this is liquid, but not liquid? wtf nolla
@@ -338,6 +349,15 @@ function mat:post_biome_init()
 		end
 		for elem in parsed_file:each_of("ReqReaction") do
 			parse_reaction(elem, true)
+		end
+	end
+
+	for material_id, parent_id in pairs(inherit_children) do
+		for _, reaction_id in ipairs(reaction_index.input[parent_id] or {}) do
+			insert_to_index(reaction_index.input, material_id, reaction_id)
+		end
+		for _, reaction_id in ipairs(reaction_index.output[parent_id] or {}) do
+			insert_to_index(reaction_index.output, material_id, reaction_id)
 		end
 	end
 
@@ -475,9 +495,7 @@ end
 ---@param material_name string
 ---@return string?
 function mat.is_partial_match(tag, material_name)
-	for _, result in ipairs(partial_matches[tag] or {}) do
-		if result.match == material_name then return result.original end
-	end
+	return partial_matches[tag] and partial_matches[tag][material_name]
 end
 
 ---Returns list of materials with tag
