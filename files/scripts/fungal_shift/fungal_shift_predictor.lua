@@ -118,24 +118,34 @@ end
 
 local function detect_single_pass_deterministic()
 	local converted = false
-	local convertMaterial = function()
-		converted = true
-	end
-	ConvertMaterialEverywhere = convertMaterial
+	ConvertMaterialEverywhere = function() converted = true end
 
+	-- get_held_item_material is not yet mocked here; neutralise it so flask
+	-- logic cannot override from/to and corrupt the detection.
+	local old_get_held = get_held_item_material
+	get_held_item_material = function() return 0 end
+
+	-- Strategy: force the first while-loop iteration to fail (from == to → no
+	-- conversion), then force the second iteration to succeed (from ~= to).
+	-- If converted == true after the run, the implementation retried, meaning
+	-- it is NOT single-pass deterministic.
 	local pick_random_from_table_weighted_old = pick_random_from_table_weighted
-	local pick_random = function()
-		return {
-			materials = { "water" },
-			material = "water",
-		}
+	local call_count = 0
+	pick_random_from_table_weighted = function()
+		call_count = call_count + 1
+		-- call 3 is the "from" pick of the second iteration; use a material
+		-- that differs from water so the conversion check passes on retry.
+		if call_count == 3 then
+			return { materials = { "lava" }, material = "lava" }
+		end
+		return { materials = { "water" }, material = "water" }
 	end
-	pick_random_from_table_weighted = pick_random
 
 	fungal_shift(1, 0, 0, true)
 
 	pick_random_from_table_weighted = pick_random_from_table_weighted_old
-	return converted == false
+	get_held_item_material = old_get_held
+	return not converted
 end
 
 ---Bruteforce max shift count
@@ -215,8 +225,8 @@ local function check_for_failed_shift_with_flask_to(last_shift_without_flask)
 
 	-- If there's 2 or more from materials - shift can not fail
 	if from_count > 1 then
-		-- Chosing longest "from" list, otherwise it could exclude some results from group (for example toxic sludge, poison - > toxic sludge)
-		last_shift_without_flask.from = from_count > #last_shift_result.from and last_shift_without_flask.from or last_shift_result.from
+		-- Choose longest "from" list, otherwise it could exclude some results from group (for example toxic sludge, poison -> toxic sludge)
+		last_shift_without_flask.from = #last_shift_without_flask.from > from_count and last_shift_without_flask.from or last_shift_result.from
 		last_shift_without_flask.flask = "to"
 		return last_shift_without_flask
 
