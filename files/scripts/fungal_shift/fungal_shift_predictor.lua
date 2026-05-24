@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global, missing-global-doc
 local old_print = print
 local old_game_print = GamePrint
 local function report(text)
@@ -118,12 +119,16 @@ end
 
 local function detect_single_pass_deterministic()
 	local converted = false
-	ConvertMaterialEverywhere = function() converted = true end
+	ConvertMaterialEverywhere = function()
+		converted = true
+	end
 
 	-- get_held_item_material is not yet mocked here; neutralise it so flask
 	-- logic cannot override from/to and corrupt the detection.
 	local old_get_held = get_held_item_material
-	get_held_item_material = function() return 0 end
+	get_held_item_material = function()
+		return 0
+	end
 
 	-- Strategy: force the first while-loop iteration to fail (from == to → no
 	-- conversion), then force the second iteration to succeed (from ~= to).
@@ -135,9 +140,7 @@ local function detect_single_pass_deterministic()
 		call_count = call_count + 1
 		-- call 3 is the "from" pick of the second iteration; use a material
 		-- that differs from water so the conversion check passes on retry.
-		if call_count == 3 then
-			return { materials = { "lava" }, material = "lava" }
-		end
+		if call_count == 3 then return { materials = { "lava" }, material = "lava" } end
 		return { materials = { "water" }, material = "water" }
 	end
 
