@@ -73,7 +73,7 @@
 ---@field private _anim {[string]: {start:integer, frame:integer, w:number?, h:number?}} per-key animation + smoothed window size
 ---@field private _frame integer frame counter (for animation-state cleanup)
 ---@field private _window_index integer draw-order counter so each window gets its own z layer
----@field private _groups {[string]: {target_w: number}} per-group width state (natural max from last frame)
+---@field private _groups {[string]: {target_w: number, frame: integer}} per-group width state (natural max from last frame)
 ---@field private _active_group_target number? prev-frame group target width; nil = not inside a window_group
 ---@field private _active_group_accum number? running max of natural widths contributed this group pass
 ---@field private _window_fill_w number? available inner width set by the enclosing window before its fn runs
@@ -93,15 +93,25 @@ ui.OPT_ALWAYS_CLICKABLE = 3
 ui.OPT_FORCE_FOCUSABLE = 7
 ui.OPT_SAME_LINE = 14 -- Layout_NextSameLine
 
--- module-level caches, survive across frames
+-- module-level caches, survive across frames and are shared across all ui instances.
+-- clear_cache() on any instance flushes them for all; this is intentional (saves memory,
+-- avoids redundant entries for the same text rendered by different instances).
 local _text_dim_cache = {} ---@type {[string]:{[number]:{[string]:dimensions}}}
-local _text_dim_count = 0  -- unique-entry counter; flushed when it exceeds _TEXT_DIM_LIMIT
-local _TEXT_DIM_LIMIT = 4096
+local _text_dim_count = 0 -- unique-entry counter; flushed when it exceeds _TEXT_DIM_LIMIT
+local _TEXT_DIM_LIMIT = 16384
 local _image_dim_cache = {} ---@type {[number]:{[string]:dimensions}}
 local _longest_text_cache = {} ---@type {[string]:number}
+local _longest_text_count = 0
+local _LONGEST_TEXT_LIMIT = 512
 local _measure_cache = {} ---@type {[string]:dimensions}
+local _measure_count = 0
+local _MEASURE_LIMIT = 512
 local _split_cache = {} ---@type {[string]:{[number]:{[number]:{[string]:string[]}}}}
+local _split_count = 0
+local _SPLIT_LIMIT = 4096
 
+-- Module-level because GuiGetScreenDimensions returns the game's virtual resolution
+-- (a game constant, not per-instance). Set once on first ui:new(); all instances share it.
 local virtual_width, virtual_height = 1280, 720
 
 ---Creates a new UI instance. Call once and reuse across frames.
@@ -198,9 +208,22 @@ function ui:start_frame()
 	self._window_index = 0
 	self._frame = self._frame + 1
 	self:_prune_anim()
+	self:_prune_groups()
 	if _text_dim_count > _TEXT_DIM_LIMIT then
 		_text_dim_cache = {}
 		_text_dim_count = 0
+	end
+	if _split_count > _SPLIT_LIMIT then
+		_split_cache = {}
+		_split_count = 0
+	end
+	if _measure_count > _MEASURE_LIMIT then
+		_measure_cache = {}
+		_measure_count = 0
+	end
+	if _longest_text_count > _LONGEST_TEXT_LIMIT then
+		_longest_text_cache = {}
+		_longest_text_count = 0
 	end
 end
 
@@ -219,8 +242,11 @@ function ui:clear_cache()
 	_text_dim_count = 0
 	_image_dim_cache = {}
 	_longest_text_cache = {}
+	_longest_text_count = 0
 	_measure_cache = {}
+	_measure_count = 0
 	_split_cache = {}
+	_split_count = 0
 end
 
 ---Returns the raw Noita gui handle.
@@ -482,9 +508,7 @@ function ui:_window_at(x, y, fn, opts)
 	self._window_fill_w = saved_fill_w
 	-- Report the natural (uninflated) content width so the group target reflects
 	-- actual content size, not fill expansion.
-	if self._active_group_accum ~= nil then
-		self._active_group_accum = math.max(self._active_group_accum, natural_w or content_w)
-	end
+	if self._active_group_accum ~= nil then self._active_group_accum = math.max(self._active_group_accum, natural_w or content_w) end
 
 	-- Smooth the *drawn* frame toward the real size so width/height changes
 	-- (e.g. the bar matching an opened window) glide instead of snapping. Layout
@@ -576,26 +600,25 @@ end
 function ui:window_group(id, fn)
 	local state = self._groups[id]
 	if not state then
-		state = { target_w = 0 }
+		state = { target_w = 0, frame = 0 }
 		self._groups[id] = state
 	end
+	state.frame = self._frame
 	local saved_target = self._active_group_target
-	local saved_accum  = self._active_group_accum
+	local saved_accum = self._active_group_accum
 	self._active_group_target = state.target_w
-	self._active_group_accum  = 0
+	self._active_group_accum = 0
 	fn()
-	state.target_w            = self._active_group_accum
+	state.target_w = self._active_group_accum
 	self._active_group_target = saved_target
-	self._active_group_accum  = saved_accum
+	self._active_group_accum = saved_accum
 end
 
 ---Contributes width to the active window_group accumulator (for self-framed windows outside window()).
 ---No-op when called outside a window_group.
 ---@param width number
 function ui:window_group_contribute(width)
-	if self._active_group_accum ~= nil then
-		self._active_group_accum = math.max(self._active_group_accum, width)
-	end
+	if self._active_group_accum ~= nil then self._active_group_accum = math.max(self._active_group_accum, width) end
 end
 
 ---Returns the group's shared-width target from the previous frame (0 if unknown).
@@ -679,6 +702,7 @@ function ui:get_longest_text(array, key)
 		if width > longest then longest = width end
 	end
 	_longest_text_cache[key] = longest
+	_longest_text_count = _longest_text_count + 1
 	return longest
 end
 
@@ -713,7 +737,7 @@ function ui:split_string(text, max_width, scale, font)
 	for word in text:gmatch("%S+") do
 		local test_line = (current_line == "") and word or (current_line .. " " .. word)
 		if self:get_text_dim(test_line, scale, font) > max_width then
-			lines[#lines + 1] = current_line
+			if current_line ~= "" then lines[#lines + 1] = current_line end
 			current_line = word
 		else
 			current_line = test_line
@@ -721,6 +745,7 @@ function ui:split_string(text, max_width, scale, font)
 	end
 	if current_line ~= "" then lines[#lines + 1] = current_line end
 	width_cache[text] = lines
+	_split_count = _split_count + 1
 	return lines
 end
 
@@ -747,6 +772,7 @@ function ui:measure_cached(key, fn)
 	if cached then return cached.w, cached.h end
 	local width, height = self:measure(fn)
 	_measure_cache[key] = { w = width, h = height }
+	_measure_count = _measure_count + 1
 	return width, height
 end
 
@@ -1001,6 +1027,8 @@ function ui:is_hovered_at(x, y, width, height, play_hover_sound)
 	if clip then
 		local mouse_x, mouse_y = self.mouse.x, self.mouse.y
 		local clip_x, clip_y = self._clip_origin_x, self._clip_origin_y
+		-- > not >= intentionally: a mouse on the exact border pixel is still inside,
+		-- so widgets flush with the clip edge remain hoverable without a 1px dead zone.
 		if mouse_x < clip_x or mouse_x > clip_x + clip.w or mouse_y < clip_y or mouse_y > clip_y + clip.h then return false end
 	end
 	if play_hover_sound then self._hovered_id_this_frame = self:id() end
@@ -1173,6 +1201,14 @@ function ui:_prune_anim()
 	end
 end
 
+---Drops window_group state not touched last frame (prevents unbounded growth with dynamic ids).
+---@private
+function ui:_prune_groups()
+	for key, state in pairs(self._groups) do
+		if state.frame < self._frame - 1 then self._groups[key] = nil end
+	end
+end
+
 ---Translates every $key in a string, re-running so a translation that itself
 ---contains $keys is expanded too. Bounded passes guard against a malformed or
 ---self-referential translation looping forever.
@@ -1197,6 +1233,8 @@ end
 ---@param height number
 function ui:block_input(x, y, width, height)
 	if not self:_mouse_in_rect(x, y, width, height) then return end
+	-- ID 2 is stable by design: GuiAnimateAlphaFadeIn suppresses Noita's scroll-
+	-- container white-flash, and the animation id must not change frame to frame.
 	local id = 2
 	GuiAnimateBegin(self.gui)
 	GuiAnimateAlphaFadeIn(self.gui, id, 0, 0, true)
@@ -1220,7 +1258,9 @@ function ui:begin_clip_at(x, y, width, height, fn)
 
 	self._clip_stack[#self._clip_stack + 1] = { w = width, h = height }
 
-	-- Visual clip via Noita's scroll container (with scroll disabled)
+	-- Visual clip via Noita's scroll container (with scroll disabled).
+	-- ID 10 is stable by design (same reason as block_input's ID 2).
+	-- Nesting begin_clip_at inside begin_clip_at is not supported.
 	GuiAnimateBegin(self.gui)
 	GuiAnimateAlphaFadeIn(self.gui, 10, 0, 0, true)
 	GuiBeginAutoBox(self.gui)
