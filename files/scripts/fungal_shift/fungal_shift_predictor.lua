@@ -78,8 +78,6 @@ local function redefine_functions()
 		return game_has_flag_run_old(flag)
 	end
 	GameHasFlagRun = game_has_flag_run
-
-	dofile_once = dofile
 end
 
 ---Bruteforce cooldown value
@@ -330,7 +328,7 @@ end
 ---Parses data from fungal_shift.lua
 function shift_predictor:parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
+	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
 
 	nest = CellFactory_GetType("nest_static")

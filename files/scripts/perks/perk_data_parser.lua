@@ -31,13 +31,13 @@ end
 ---Parse perks in sandbox
 function perks:parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
+	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
 
 	-- Redefining some functions so fungal shift would do nothing
 	-- dofile_once = dofile
 	perk_list = {}
-	dofile("data/scripts/perks/perk_list.lua")
+	dofile_once("data/scripts/perks/perk_list.lua")
 
 	for i = 1, #perk_list do
 		local perk = perk_list[i]

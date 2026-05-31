@@ -264,9 +264,7 @@ function pg:perks_draw_window()
 			-- On the switch frame, fill_width() is still inflated by the previous panel's
 			-- group target. Reusing the previous stable content_w prevents per_row from
 			-- jumping to a wide value and reflowing icons for one frame.
-			local inner_w = (m._just_switched and self.perk.content_w > 0)
-				and self.perk.content_w
-				or math.max(PERK_PITCH, self:fill_width())
+			local inner_w = (m._just_switched and self.perk.content_w > 0) and self.perk.content_w or math.max(PERK_PITCH, self:fill_width())
 			local scrollbar = (self.perk.scroll_h > scrollbox_cap) and (self.options.scrollbar_width or 0) or 0
 			self.perk.content_w = inner_w
 			self.perk.per_row = math.max(1, math.floor((inner_w - scrollbar) / PERK_PITCH))
@@ -392,7 +390,7 @@ end
 function pg:perks_group_stripe(shade, row_count)
 	self:overlay(function()
 		self:color(shade, shade, shade)
-		self:set_z_for_next(self.z + 4)
+		self:set_z_for_next(self.z_index + 4)
 		self:image(self.c.px, { alpha = 0.1, scale_x = self.perk.content_w, scale_y = PERK_PITCH * row_count + GROUP_PAD, dy = -GROUP_PAD })
 	end)
 end

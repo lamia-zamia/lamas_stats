@@ -21,11 +21,11 @@ end
 ---Parse perks in sandbox
 function actions_data:parse()
 	-- Starting sandbox to not load any globals
-	local sandbox = dofile("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
+	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
 
 	actions = {}
-	dofile("data/scripts/gun/gun_actions.lua")
+	dofile_once("data/scripts/gun/gun_actions.lua")
 
 	for i = 1, #actions do
 		local action = actions[i]

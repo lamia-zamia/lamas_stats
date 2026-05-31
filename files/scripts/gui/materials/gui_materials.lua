@@ -587,7 +587,7 @@ function materials:fungal_ap_lc_draw()
 			if lc_icon.color then self:color(lc_icon.color.r, lc_icon.color.g, lc_icon.color.b, lc_icon.color.a) end
 			self:image(lc_icon.icon, { dy = 1 })
 		end)
-		self:ninepiece(W, H, { z = self.z + 5, sprite = spr, margin = 2.5, dx = -1 })
+		self:ninepiece(W, H, { z = self.z_index + 5, sprite = spr, margin = 2.5, dx = -1 })
 	end)
 	if hovered and self:tooltip(true, { sprite = TOOLTIP_DARKER, border = 0 }) then
 		self:fungal_ap_lc_tooltip()
@@ -608,7 +608,7 @@ function materials:fungal_apo_elixir_draw()
 			if elixir.color then self:color(elixir.color.r, elixir.color.g, elixir.color.b, elixir.color.a) end
 			self:image(elixir.icon, { dy = 1 })
 		end)
-		self:ninepiece(W, H, { z = self.z + 5, sprite = spr, margin = 1 })
+		self:ninepiece(W, H, { z = self.z_index + 5, sprite = spr, margin = 1 })
 	end)
 	if hovered and self:tooltip(true, { sprite = TOOLTIP_DARKER, border = 0 }) then
 		self:fungal_apo_elixir_tooltip()
@@ -674,7 +674,7 @@ function materials:materials_draw_window()
 			local tx, ty = self:cursor_screen()
 			self:leaf(100, 9, function()
 				if not self:is_measuring() then
-					local new_filter = self.textbox:draw_textbox(tx, ty, self.z + 1, 100, 9, self.materials.filter)
+					local new_filter = self.textbox:draw_textbox(tx, ty, self.z_index + 1, 100, 9, self.materials.filter)
 					if new_filter ~= self.materials.filter then
 						self.materials.filter = new_filter
 						filtered_materials = nil
@@ -724,14 +724,8 @@ function materials:materials_draw_overlays()
 	if not self.materials.current_recipe then return end
 	local m = self.menu
 	local scrollbox_cap = math.max(20, self.max_height - self.materials.main_header_h + 1)
-	local list_box_h = self.materials.scroll_h > 0
-		and math.min(self.materials.scroll_h, scrollbox_cap)
-		or scrollbox_cap
-	self:materials_draw_right_panel(
-		m.start_x + self.materials.header_width + 2,
-		self.materials.panel_start_y,
-		list_box_h
-	)
+	local list_box_h = self.materials.scroll_h > 0 and math.min(self.materials.scroll_h, scrollbox_cap) or scrollbox_cap
+	self:materials_draw_right_panel(m.start_x + self.materials.header_width + 2, self.materials.panel_start_y, list_box_h)
 end
 
 local checker_spawned = false

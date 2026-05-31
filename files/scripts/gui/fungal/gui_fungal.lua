@@ -301,13 +301,13 @@ function fg:fungal_draw_shift_row(i, shift, is_past)
 	if is_past and not hovered then
 		self:overlay(function()
 			self:color(0, 0, 0)
-			self:set_z_for_next(self.z - 101)
+			self:set_z_for_next(self.z_index - 101)
 			self:image(self.c.px, { alpha = 0.2, scale_x = content_w, scale_y = row_h })
 		end)
 	end
 	self:overlay(function()
 		self:fungal_decide_row_color(hovered, i, is_past, shift.greedy)
-		self:set_z_for_next(self.z + 4)
+		self:set_z_for_next(self.z_index + 4)
 		self:image(self.c.px, { alpha = 0.2, scale_x = content_w, scale_y = row_h })
 	end)
 

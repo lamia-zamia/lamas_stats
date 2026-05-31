@@ -115,7 +115,7 @@ function pg:perks_draw_nearby()
 				local hovered = self:is_hovered_cursor(16, 16)
 				if nearby_perk.lottery and self.config.enable_nearby_lottery then
 					self:overlay(function()
-						self:set_z_for_next(self.z - 50)
+						self:set_z_for_next(self.z_index - 50)
 						self:image("mods/lamas_stats/files/gfx/lottery_glow.png")
 					end)
 				end
