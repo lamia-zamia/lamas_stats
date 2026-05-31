@@ -5,6 +5,7 @@ local sandbox = {
 }
 
 function sandbox:start_sandbox()
+	self.old = {}
 	for key, value in pairs(_G) do
 		self.old[key] = value
 	end
@@ -12,6 +13,7 @@ function sandbox:start_sandbox()
 	for k, v in pairs(__loadonce) do
 		self.dofile[k] = v
 	end
+	__loadonce = {}
 end
 
 function sandbox:end_sandbox()
