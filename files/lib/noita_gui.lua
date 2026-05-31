@@ -530,7 +530,7 @@ function ui:_window_at(x, y, fn, opts)
 	-- later window sits above an earlier one.
 	local depth = self._window_index
 	self._window_index = depth + 1
-	local frame_z = self.options.z_index + 100 - depth
+	local frame_z = self.z_index + 100 - depth
 
 	-- Background frame scales in from its centre (only the nine-piece scales,
 	-- matching vanilla); scale is eased, alpha stays linear.
@@ -944,7 +944,7 @@ end
 function ui:ninepiece_at(x, y, width, height, opts)
 	local sprite = self.options.ninepiece_sprite
 	local highlight_sprite = nil
-	local widget_z = self.options.z_index + 100
+	local widget_z = self.z_index + 100
 	local alpha = 1
 	local margin = 0
 	local border
@@ -1155,6 +1155,7 @@ function ui:set_z_for_next(z_value)
 end
 function ui:set_z(z_value)
 	if self._rec then return end
+	self.z_index = z_value
 	GuiZSet(self.gui, z_value)
 end
 
@@ -1720,11 +1721,8 @@ function ui:button(text, active, opts)
 	if clicked and not silent then GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0) end
 
 	self:leaf(button_width, 12, function()
-		-- NON_INTERACTIVE: we hit-test ourselves, so Noita must not also focus
-		-- the widget (which would play its own sound every frame). Text gets a
-		-- more-front z so the caller's global GuiZSet can't bury it.
+		-- Text gets amore-front z so the caller's global GuiZSet can't bury it.
 		local background_sprite = (hovered and active) and highlight_sprite or sprite
-		self:add_option_for_next(ui.OPT_NON_INTERACTIVE)
 		self:ninepiece(button_width, 12, { z = self.z_index, sprite = background_sprite, margin = 1, dy = -1 })
 		if not active then self:color(0.6, 0.6, 0.6) end
 		self:set_z_for_next(self.z_index - 1)

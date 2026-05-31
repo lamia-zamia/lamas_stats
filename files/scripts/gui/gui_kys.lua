@@ -16,7 +16,7 @@ function kys:kys_draw()
 	local btn_w = self:get_text_dim(btn)
 
 	local x, y = self:calculate_center(warn_w + 8, 34)
-	self:set_z(self.z + 55)
+	self:set_z(self.z_index + 55)
 	self:begin_window(x, y, function()
 		self:color(1, 1, 0)
 		self:text(warn)
