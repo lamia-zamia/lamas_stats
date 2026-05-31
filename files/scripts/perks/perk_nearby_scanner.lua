@@ -21,7 +21,7 @@ function scanner:Scan()
 	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
 	if not player then return end
 	local x, y = ENTITY_GET_TRANSFORM(player)
-	self.entities = ENTITY_GET_WITH_TAG("perk")
+	self.entities = EntityGetInRadiusWithTag(x, y, 350, "perk")
 end
 
 ---Parses entities found nearby
@@ -102,29 +102,8 @@ function scanner:PredictAlwaysCast(x, y)
 	function GamePrintImportant() end
 
 	self.always_cast()
-	-- print("always_cast (" .. tostring(always_cast) .. ":" .. type(always_cast) .. ")")
+
 	return always_cast
-	-- self.perks.
-	-- local good_cards = { "DAMAGE", "CRITICAL_HIT", "HOMING", "SPEED", "ACID_TRAIL", "SINEWAVE" }
-	-- SetRandomSeed(x, y)
-	-- local card = good_cards[Random(1, #good_cards)]
-
-	-- local r = Random(1, 100)
-	-- local level = 6
-
-	-- if r <= 50 then
-	-- 	local p = Random(1, 100)
-	-- 	if p <= 86 then
-	-- 		card = GetRandomActionWithType(x, y, level, 2, 666)
-	-- 	elseif p <= 93 then
-	-- 		card = GetRandomActionWithType(x, y, level, 1, 666)
-	-- 	elseif p < 100 then
-	-- 		card = GetRandomActionWithType(x, y, level, 0, 666)
-	-- 	else
-	-- 		card = GetRandomActionWithType(x, y, level, 6, 666)
-	-- 	end
-	-- end
-	-- return card
 end
 
 return scanner
