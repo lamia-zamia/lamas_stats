@@ -1,4 +1,4 @@
----@class (exact) LS_Gui
+﻿---@class (exact) LS_Gui
 ---@field private header {pos_x: number, pos_y: number}
 local header = {
 	header = {
@@ -7,22 +7,22 @@ local header = {
 	},
 }
 
----Draws a header
+---Draws the [L]/[*] toggle button that opens and closes the menu.
 ---@private
-function header:HeaderDraw()
-	if self:IsTextButtonClicked(self.header.pos_x, self.header.pos_y, self.menu.opened and "*" or "L") then
+function header:header_draw()
+	if self:is_text_button_clicked(self.header.pos_x, self.header.pos_y, self.menu.opened and "*" or "L") then
 		self.menu.opened = not self.menu.opened
 
 		if self.menu.opened then
-			self:CheckForUpdates(-1)
-			self:FungalShiftListChanged()
+			self:check_for_updates(-1)
+			self:fungal_shift_list_changed()
 		end
 	end
 end
 
----Fetches settings
+---Loads header overlay position from mod settings.
 ---@private
-function header:HeaderGetSettings()
+function header:header_get_settings()
 	self.header.pos_x = self.mod:GetSettingNumber("overlay_x")
 	self.header.pos_y = self.mod:GetSettingNumber("overlay_y")
 end

@@ -1,84 +1,47 @@
-local helper = {} ---@class (exact) LS_Gui
+﻿local helper = {} ---@class (exact) LS_Gui
 
----Starts animation
+local material_name_cache = {}
+
+---Sets a soft yellow color for the next widget.
 ---@private
----@param reset boolean
-function helper:AnimateStart(reset)
-	self:AnimateB()
-	self:AnimateAlpha(0.1, 0.1, reset)
-	self:AnimateScale(0.1, reset)
+function helper:color_yellow()
+	self:color(1, 1, 0.7)
 end
 
----Sets yellow color for next widget
+---Sets a gray color for the next widget.
 ---@private
-function helper:ColorYellow()
-	self:Color(1, 1, 0.7)
+function helper:color_gray()
+	self:color(0.6, 0.6, 0.6)
 end
 
----Splits string and returns lines
+---Draws the "press shift to see more" hint, but only when shift-alt mode is off.
+---Standard trailer for all tooltips that show extra content in alt mode.
 ---@private
----@param text string
----@param length number
----@return string[]
----@nodiscard
-function helper:SplitString(text, length)
-	local lines = {}
-	local current_line = ""
-	for word in text:gmatch("%S+") do
-		local test_line = (current_line == "") and word or current_line .. " " .. word
-		local width = self:GetTextDimension(test_line)
-		if width > length then
-			lines[#lines + 1] = current_line
-			current_line = word
-		else
-			current_line = test_line
-		end
+function helper:alt_hint()
+	if not self.alt then
+		self:spacing(4)
+		self:color_gray()
+		self:text(T.PressShiftToSeeMore)
 	end
-
-	-- Add the last line if it's not empty
-	if current_line ~= "" then lines[#lines + 1] = current_line end
-
-	return lines
 end
 
----Draws checbox
----@param x number
----@param y number
----@param text string
----@param value boolean
----@return boolean hovered
-function helper:IsDrawCheckbox(x, y, text, value)
-	local text_dim = self:GetTextDimension(text)
-	local hovered = self:IsHoverBoxHovered(x, y + 1, text_dim + 13, 9)
-	if hovered then self:ColorYellow() end
-	self:Text(x, y, text)
-	self:Draw9Piece(x + text_dim + 4, y + 2, self.z, 6, 6, hovered and self.buttons.img_hl or self.buttons.img)
-	if value then
-		self:Color(0, 0.8, 0)
-		self:Text(x + text_dim + 5, y, "V")
-	else
-		self:Color(0.8, 0, 0)
-		self:Text(x + text_dim + 5, y, "X")
-	end
-	return hovered
-end
-
----Draws text button
+---Draws a clickable "[text]" button at an absolute position.
 ---@private
 ---@param x number
 ---@param y number
 ---@param text string
 ---@return boolean
 ---@nodiscard
-function helper:IsTextButtonClicked(x, y, text)
+function helper:is_text_button_clicked(x, y, text)
 	text = "[" .. text .. "]"
-	local width = self:GetTextDimension(text)
+	local width = self:get_text_dim(text)
 	local clicked = false
-	if self:IsHoverBoxHovered(x - 1, y, width + 1.5, 11) then
-		self:ColorYellow()
-		clicked = self:IsLeftClicked()
+	if self:is_hovered_at(x - 1, y, width + 1.5, 11, true) then
+		self:block_input(x - 1, y, width + 1.5, 11)
+		self:color_yellow()
+		clicked = self:is_left_clicked()
 	end
-	self:Text(x, y, text)
+	self:text_at(x, y, text)
 	return clicked
 end
 
@@ -86,7 +49,7 @@ end
 ---@private
 ---@return number
 ---@nodiscard
-function helper:GetFungalShiftCooldown()
+function helper:get_fungal_shift_cooldown()
 	if not self.fs.current_shift or self.fs.current_shift > self.fs.max_shifts then return 0 end
 
 	local last_frame = self.mod:GetGlobalNumber("fungal_shift_last_frame", -1)
@@ -97,9 +60,9 @@ function helper:GetFungalShiftCooldown()
 	return math.max(math.floor((self.fs.cooldown - (frame - last_frame)) / 60), 0)
 end
 
----Sets max parallel positions
+---Updates and persists farthest east/west parallel-world positions.
 ---@private
-function helper:ScanPWPosition()
+function helper:scan_pw_position()
 	local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
 	if player_par_x < self.stats.position_pw_west then
 		self.stats.position_pw_west = player_par_x
@@ -109,6 +72,53 @@ function helper:ScanPWPosition()
 		self.stats.position_pw_east = player_par_x
 		GLOBALS_SET_VALUE("lamas_stats_farthest_east", tostring(player_par_x))
 	end
+end
+
+---Returns translated + title-cased material name (cached per material id per language).
+---@private
+---@param material_data material_data
+---@return string
+function helper:get_material_name(material_data)
+	local cached = material_name_cache[material_data.id]
+	if cached then return cached end
+	local locale = self:locale(material_data.ui_name)
+	local name = string.gsub(" " .. locale, "%W%l", string.upper):sub(2)
+	material_name_cache[material_data.id] = name
+	return name
+end
+
+---Clears the material name translation cache. Call on language change.
+---@private
+function helper:clear_material_name_cache()
+	material_name_cache = {}
+end
+
+---Draws icon + name [+ id] in the current DIR_H context without an outer begin_row.
+---Use inside a begin_row where material is one of several horizontal items.
+---@private
+---@param mat_type integer
+---@param draw_id boolean?
+function helper:material_inline_content(mat_type, draw_id)
+	local mat = self.mat:get_data(mat_type)
+	if mat.color then self:color(mat.color.r, mat.color.g, mat.color.b, mat.color.a) end
+	self:image(mat.icon, { dy = 1 })
+	self:spacing(1)
+	self:text(self:get_material_name(mat))
+	if draw_id then
+		self:spacing(3)
+		self:color_gray()
+		self:text("(" .. mat.id .. ")")
+	end
+end
+
+---Draws one material row (icon + name) advancing parent DOWN. Use inside begin_column.
+---@private
+---@param mat_type integer
+---@param draw_id boolean?
+function helper:material_row(mat_type, draw_id)
+	self:begin_row(function()
+		self:material_inline_content(mat_type, draw_id)
+	end)
 end
 
 return helper

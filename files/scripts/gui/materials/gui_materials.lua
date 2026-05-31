@@ -1,39 +1,51 @@
----@class (exact) LS_Gui_materials
----@field y number
----@field reaction_y number
+﻿---@class (exact) LS_Gui_materials
 ---@field visible_types { [number]:boolean}
 ---@field current_recipe integer?
----@field filter string
----@field width number
----@field width_reaction number
----@field reaction_show_output boolean
----@field scroll_height number
 ---@field current_tag string?
+---@field filter string
+---@field width_reaction number   reaction panel width (computed from max material name length)
+---@field reaction_show_output boolean
 ---@field reaction_scroll_height number
----@field tag_height number
----@field reaction_box_last_pos number
+---@field tag_height number          tag scrollbox height (previous frame; drives the tag body window)
+---@field header_width number   main panel header width from last frame (drives reaction x + shared_width)
+---@field tip_x number          screen x for material tooltips (right of the rightmost visible panel)
+---@field tip_y number          screen y for material tooltips (level with menu header)
+---@field scroll_h number            list scrollbox content height (previous frame; drives self-sizing)
+---@field panel_start_y number      cursor y at the start of the main draw (drives reaction panel avail_h)
+---@field main_header_h number      height of the main header window (drives reaction scroll height)
+---@field reaction_header_h number  height of the reaction header window (previous frame)
+---@field actual_reaction_w number  actual reaction header window width (previous frame; keeps body >= header)
+---@field tag_header_h number       height of the tag viewer header window (previous frame)
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
 local materials = {
 	materials = {
-		y = 0,
 		visible_types = {},
 		current_recipe = nil,
 		current_tag = nil,
-		reaction_y = 0,
 		filter = "",
-		width = 200,
-		width_reaction = 256,
+		width_reaction = 200,
 		reaction_show_output = false,
-		scroll_height = 100,
+		scroll_h = 0,
+		panel_start_y = 0,
 		reaction_scroll_height = 100,
 		tag_height = 10,
-		reaction_box_last_pos = 10,
+		header_width = 200,
+		tip_x = 0,
+		tip_y = 0,
+		main_header_h = 0,
+		reaction_header_h = 0,
+		actual_reaction_w = 0,
+		tag_header_h = 18,
 	},
 }
 
-local margin = 3
+local ARROW_SPRITE = "mods/lamas_stats/files/gfx/arrow.png"
+local ARROW_COL_WIDTH = 15 -- width reserved for the arrow + left/right margin
+local TOOLTIP_SPRITE = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
+local TOOLTIP_DARKER = "mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png"
+
 local material_types_enum = dofile_once("mods/lamas_stats/files/scripts/material_types.lua") ---@type material_types_enum
 local material_types = {}
 for k, v in pairs(material_types_enum) do
@@ -46,10 +58,10 @@ end
 ---@field producing reactions_data[]
 ---@field max_length number
 
-local reactions_data = setmetatable({}, { __mode = "k" }) ---@type {[string]:gui_reaction_data}
+local reactions_data = {} ---@type {[string]:gui_reaction_data}
 local filtered_materials = nil
 
----Returns true if passed name contains tag
+---Returns true if the name is a tag reference like "[tag]".
 ---@param name string
 ---@return boolean
 local function is_tag(name)
@@ -64,31 +76,29 @@ end
 local function truncate(str, max_len, suffix)
 	max_len = max_len or 32
 	if #str <= max_len then return str end
-
 	suffix = suffix or ".."
 	local cut_len = max_len - #suffix
 	if cut_len < 0 then cut_len = 0 end
-
 	return string.sub(str, 1, cut_len) .. suffix
 end
 
----Returns longest material name from an array of reaction datas
+---Returns longest material name from an array of reaction datas.
 ---@private
 ---@param reaction_datas reactions_data[]
 ---@return number
 function materials:reaction_datas_get_longest_name(reaction_datas)
 	local max = 0
 	for _, material_name, _ in self.mat.each_reaction_material_names(reaction_datas) do
-		max = math.max(max, self:GetTextDimension(truncate(material_name)))
+		max = math.max(max, self:get_text_dim(truncate(material_name)))
 		if not is_tag(material_name) then
 			local material_data = self.mat:get_data_by_id(material_name)
-			max = math.max(max, self:GetTextDimension(self:FungalGetName(material_data)))
+			max = math.max(max, self:get_text_dim(self:get_material_name(material_data)))
 		end
 	end
 	return max
 end
 
----Replaces partial reactions with the material itself
+---Replaces partial reactions with the material itself.
 ---@private
 ---@param material_id string
 ---@param material_name string
@@ -101,24 +111,20 @@ function materials:reaction_replace_tags(material_id, material_name, list, i)
 	local has_tag = self.mat:material_has_tag(material_id, tag)
 
 	if not suffix or suffix == "" then
-		-- plain tag [tag]
 		if has_tag then
 			list[i] = material_id
 			return
 		end
-		-- partial match (e.g., material_name maps to something with suffix)
 		local partial_match = self.mat.is_partial_match(material_name, material_id)
 		if partial_match then
 			list[i] = partial_match
 			return
 		end
 	else
-		-- tag + suffix
 		if has_tag then
 			local replace_name = material_id .. suffix
 			if self.mat:does_material_exist(replace_name) then list[i] = replace_name end
 			return
-		-- reverse: material_id already has suffix
 		elseif material_id:sub(-#suffix) == suffix then
 			local base = material_id:sub(1, #material_id - #suffix)
 			if base ~= "" and self.mat:material_has_tag(base, tag) then list[i] = material_id end
@@ -126,7 +132,7 @@ function materials:reaction_replace_tags(material_id, material_name, list, i)
 	end
 end
 
----Gets reaction data and replaces tag if its the material itself
+---Gets reaction data and replaces tag if its the material itself.
 ---@private
 ---@param material_id string
 ---@param fn fun(self, string):reactions_data[]
@@ -150,9 +156,9 @@ function materials:get_reaction_replace_tags(material_id, fn)
 	return data
 end
 
----Gathers reaction data and whats not
----@param material_id string
+---Gathers reaction data for a material.
 ---@private
+---@param material_id string
 function materials:gather_reaction_data(material_id)
 	local using = self:get_reaction_replace_tags(material_id, self.mat.get_reactions_using)
 	local producing = self:get_reaction_replace_tags(material_id, self.mat.get_reactions_producing)
@@ -167,7 +173,7 @@ function materials:gather_reaction_data(material_id)
 	}
 end
 
----Gets reaction data
+---Gets (and lazily computes) reaction data for a material.
 ---@param material_id string
 ---@return gui_reaction_data
 function materials:get_reaction_data(material_id)
@@ -175,344 +181,19 @@ function materials:get_reaction_data(material_id)
 	return reactions_data[material_id]
 end
 
----Draws material centered
----@param x number
----@param y number
----@param material_data material_data
----@param width number
----@param alt boolean?
-function materials:draw_material_centered(x, y, material_data, width, alt)
-	local material_name = alt and truncate(material_data.id) or self:FungalGetName(material_data)
-	local name_offset = (width - self:GetTextDimension(material_name)) / 2
-	self:FungalDrawIcon(x + name_offset - 9, y, material_data)
-	self:Text(x + name_offset, y, material_name)
-end
-
----Draws material row in reaction
----@param x number
----@param y number
----@param material string
----@param width number
-function materials:draw_reaction_row(x, y, material, width)
-	if is_tag(material) then
-		local text_width = self:GetTextDimension(material)
-		local text_x = x + (width - text_width) / 2
-		if self:reactions_is_hoverbox_hovered(text_x, y, text_width, 10) then
-			self:ColorYellow()
-			if self:IsLeftClicked() then
-				self.materials.current_tag = material
-				GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
-			end
-		end
-		self:Text(text_x, y, material)
-	else
-		self:draw_material_centered(x, y, self.mat:get_data_by_id(material), width, self.alt)
-	end
-end
-
----Checks if this element is within reactions window
----@private
----@param y number
----@param height number
----@return boolean
-function materials:is_this_within_reaction_window(y, height)
-	return y + height > 0 and y < self.materials.reaction_scroll_height
-end
-
----Returns true if hovered
----@param x number
----@param y number
----@param width number
----@param height number
----@return boolean?
-function materials:reactions_is_hoverbox_hovered(x, y, width, height)
-	if y + height / 2 > 0 and y + height / 2 < self.materials.reaction_scroll_height then
-		local box_x = self.menu.start_x + self.menu.width + 15 + x + margin
-		local box_y = self.menu.start_y + 37.5 + y + margin
-		-- self:Draw9Piece(box_x, box_y, -999999999, width, height)
-		return self:IsHoverBoxHovered(box_x, box_y, width, height, true)
-	end
-end
-
----Shows probability and isreq
----@param probability number
----@param is_req boolean?
-function materials:show_probability(probability, is_req)
-	local speed_text = string.format("%s: %d", T.speed, probability)
-	local speed_w = self:GetTextDimension(speed_text)
-	local req_text = T.req_text
-	local req_w = self:GetTextDimension(req_text)
-
-	local x = is_req and (req_w - speed_w) / 2 or 0
-
-	self:Text(x, 0, speed_text)
-
-	if is_req then
-		self:Color(1, 0.5, 0)
-		self:Text(0, 0, req_text)
-	end
-end
-
----@param reaction reactions_data
-function materials:show_reaction(reaction)
-	local y = self.materials.reaction_y
-	local rows = #reaction.inputs
-	local height = 11 * rows
-	self.materials.reaction_y = self.materials.reaction_y + height
-	if not self:is_this_within_reaction_window(y, height) then return end
-
-	local x = 0
-	local gap = 15
-	local arrow_w = 8
-	local width = (self.materials.width_reaction - gap) / 2
-
-	local horizontal_center = 10 * (rows - 1) / 2
-
-	-- left column
-	for i, input in ipairs(reaction.inputs) do
-		self:draw_reaction_row(x, y + 10 * (i - 1), input, width)
-	end
-
-	-- gap
-	x = x + width - margin
-	local arrow_x = x + (gap - arrow_w) / 2
-	if reaction.is_req then self:Color(1, 0.5, 0) end
-	self:Image(arrow_x, y + horizontal_center, "mods/lamas_stats/files/gfx/arrow.png")
-	if self:reactions_is_hoverbox_hovered(arrow_x, y + horizontal_center, arrow_w, arrow_w) then
-		self:ShowTooltipCenteredX(0, 15, self.show_probability, reaction.probability, reaction.is_req)
-	end
-
-	-- right column
-	x = x + gap
-	for i, output in ipairs(reaction.outputs) do
-		self:draw_reaction_row(x, y + 10 * (i - 1), output, width)
-	end
-end
-
----Draws a separator line
----@private
-function materials:draw_reaction_separator()
-	local y = self.materials.reaction_y - 1
-	if self:is_this_within_reaction_window(y, 1) then self:Image(0, y, self.c.px, 0.4, self.materials.width_reaction - margin * 3, 1) end
-end
-
----Draws reactions
----@private
-function materials:show_reactions()
-	self.materials.reaction_y = 1 - self.scroll.y
-	local material = self.mat:get_data(self.materials.current_recipe)
-	local reaction_data = self:get_reaction_data(material.id)
-	local reactions = self.materials.reaction_show_output and reaction_data.producing or reaction_data.using
-	self.materials.width_reaction = math.max(200, math.min(reaction_data.max_length * 2 + 50, 400))
-
-	if #reactions > 0 then
-		self:draw_reaction_separator()
-		for _, reaction in ipairs(reactions) do
-			self:show_reaction(reaction)
-			self:draw_reaction_separator()
-		end
-	else
-		self:Text(0, self.materials.reaction_y, "None")
-		self.materials.reaction_y = self.materials.reaction_y + 11
-	end
-
-	self:Text(0, self.materials.reaction_y + self.scroll.y, "")
-end
-
----Draws material tags, tooltip
----@private
----@param tags material_tags
-function materials:draw_material_tags(tags)
-	for tag, _ in pairs(tags) do
-		self:Text(0, 0, tag)
-	end
-end
-
----Draws output/input button
----@private
----@param x number
----@param y number
----@param width number
----@param label string
----@param is_active boolean
----@param on_click boolean
-function materials:draw_reaction_toggle_button(x, y, width, label, is_active, on_click)
-	local text_width = self:GetTextDimension(label)
-	local text_offset = (width - text_width) / 2
-
-	if not is_active then self:AddOptionForNext(self.c.options.ForceFocusable) end
-	self:Draw9Piece(x, y + 2, self.z + 4, width, 8, self.buttons.img)
-
-	if is_active then
-		self:ColorYellow()
-	elseif self:IsHovered() and self:IsLeftClicked() then
-		self.materials.reaction_show_output = on_click
-		self.materials.current_tag = nil
-		GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
-	end
-
-	self:Text(x + text_offset, y + 1, label)
-end
-
----Draws reaction window
----@private
-function materials:draw_reaction_window()
-	local material_type = self.materials.current_recipe
-	if not material_type then return end
-
-	local x = self.menu.start_x + self.menu.width + 15
-	local y = self.menu.start_y - 1
-	local width = self.materials.width_reaction
-	self:Draw9Piece(x, y, self.z + 5, width, 32)
-	if self:IsHovered() then self:BlockInput() end
-
-	local material_data = self.mat:get_data(material_type)
-
-	local close_text = T.close
-	local close_width = self:GetTextDimension(close_text)
-	local close_x = x + width - close_width - 3
-	local close_y = y + 3
-	if self:IsButtonClicked(close_x, close_y, self.z + 4, close_text, T.close_d) then
-		GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
-		self.materials.current_recipe = nil
-		self.materials.current_tag = nil
-		return
-	end
-
-	-- draw tags?
-	if material_data.tags then
-		local tags_text = "[tags]"
-		local tags_width = self:GetTextDimension(tags_text)
-		local pos_x = close_x - tags_width - 5
-		if self:IsHoverBoxHovered(pos_x, y, tags_width, 10) then
-			self:ShowTooltipCenteredX(0, 20, self.draw_material_tags, material_data.tags)
-			self:ColorYellow()
-		end
-		self:Text(pos_x, y, tags_text)
-	end
-
-	-- draw material name
-	self:draw_material_centered(x, y, material_data, width)
-	y = y + 10
-
-	-- draw material id
-	local material_id = string.format("(%s)", material_data.id)
-	local id_offset = (width - self:GetTextDimension(material_id)) / 2
-	self:ColorGray()
-	self:Text(x + id_offset, y, material_id)
-	y = y + 10
-
-	local reaction_data = self:get_reaction_data(material_data.id)
-
-	-- buttons
-	local buttons_width = width / 2 - margin * 2
-	local is_output = self.materials.reaction_show_output
-	local using_string = string.format("%s (%d)", T.using, #reaction_data.using)
-	self:draw_reaction_toggle_button(x + margin, y, buttons_width, using_string, not is_output, false)
-	local producing_string = string.format("%s (%d)", T.producing, #reaction_data.producing)
-	self:draw_reaction_toggle_button(x + margin * 3 + buttons_width, y, buttons_width, producing_string, is_output, true)
-
-	self:ScrollBox(
-		x + margin,
-		y + 20,
-		self.z + 5,
-		width - margin * 2,
-		self.materials.reaction_scroll_height,
-		self.c.default_9piece,
-		margin,
-		margin,
-		self.show_reactions
-	)
-	self.materials.reaction_box_last_pos = self:GetPrevious().y
-end
-
----Checks if material should be shown
+---Returns true if the material passes the current type filter and text filter.
 ---@param material_index integer
 ---@return boolean?
 function materials:is_material_in_filter(material_index)
 	local material = self.mat:get_data(material_index)
 	if not self.materials.visible_types[material.type] then return end
-	local filter = self.materials.filter
-	for _, name in ipairs({ material.id, material.ui_name, self:Locale(material.ui_name) }) do
-		if name:lower():find(filter) then return true end
+	local filter = self.materials.filter:lower()
+	for _, name in ipairs({ material.id, material.ui_name, self:locale(material.ui_name) }) do
+		if name:lower():find(filter, 1, true) then return true end
 	end
 end
 
----Shows material tooltip on hover
----@private
----@param material_index integer
-function materials:show_material_tooltip(material_index)
-	if material_index == self.materials.current_recipe then return end
-	local y = 0
-	self:AddOption(self.c.options.Layout_NextSameLine)
-
-	local material = self.mat:get_data(material_index)
-	local reaction_data = self:get_reaction_data(material.id)
-	self:FungalDrawSingleMaterial(0, y, material_index, true)
-	y = y + 10
-	self:Text(0, y, string.format("%s: %d, %s: %d", T.using, #reaction_data.using, T.producing, #reaction_data.producing))
-	y = y + 10
-	if not self.materials.current_recipe then
-		self:ColorGray()
-		self:Text(0, y, T.reaction_window_d)
-		y = y + 10
-
-		self:ColorGray()
-		self:Text(0, y, T.PressShiftToSeeMore)
-	end
-	self:RemoveOption(self.c.options.Layout_NextSameLine)
-end
-
----Draws single material
----@param y number
----@param material_index integer
-function materials:materials_draw_material(y, material_index)
-	if not self:fungal_is_element_visible(y, 10) then
-		self.materials.y = self.materials.y + 10
-		return
-	end
-
-	local hoverbox_visible = y + 5 > 0 and y + 10 < self.max_height
-	local hovered = hoverbox_visible and self:IsHoverBoxHovered(self.menu.start_x - 6, self.menu.pos_y + y + 7, self.fungal.width - 20, 9.9)
-
-	local material_data = self.mat:get_data(material_index)
-	self:FungalDrawIcon(0, y, material_data)
-	local material_name = self:FungalGetName(material_data)
-
-	if self.materials.current_recipe == material_index then
-		if hovered then
-			self:Color(0.6, 1, 0.4)
-		else
-			self:Color(0.4, 1, 0.6)
-		end
-	elseif hovered then
-		self:ColorYellow()
-	end
-	self:Text(9, y, material_name)
-	self:ColorGray()
-	self:Text(12 + self:GetTextDimension(material_name), y, "(" .. material_data.id .. ")")
-
-	if hovered then
-		local tooltip_y = self.materials.current_recipe and 10 or self.menu.start_y + 3
-		local tooltip_x = self.menu.start_x + self.menu.width + 18
-		self.tooltip_img = "mods/lamas_stats/files/gfx/ui_9piece_tooltip.png"
-		self.tooltip_reset = false
-		self:ShowTooltip(tooltip_x, tooltip_y, self.show_material_tooltip, material_index, self.materials.current_recipe)
-		self.tooltip_img = self.default_tooltip
-		if self:IsLeftClicked() then
-			self.materials.current_recipe = material_index
-			self.materials.current_tag = nil
-		end
-		if self:IsRightClicked() then
-			self.materials.current_recipe = nil
-			self.materials.current_tag = nil
-		end
-	end
-
-	self.materials.y = self.materials.y + 10
-end
-
----Gets filtered material list
+---Returns (and lazily builds) the filtered material list.
 ---@private
 ---@return integer[]
 function materials:get_filtered_materials()
@@ -526,94 +207,536 @@ function materials:get_filtered_materials()
 	return filtered_materials
 end
 
----Draws materials list
+---Tooltip anchor: right of the rightmost visible panel.
 ---@private
-function materials:materials_draw_list()
-	self.materials.y = 1 - self.scroll.y
-
-	for _, material_index in ipairs(self:get_filtered_materials()) do
-		self:materials_draw_material(self.materials.y, material_index)
-	end
-
-	self:Text(0, self.materials.y + self.scroll.y, "")
+---@return number x, number y
+function materials:materials_tip_anchor()
+	return self.materials.tip_x, self.materials.tip_y
 end
 
----Draws filter checkboxes
+---Draws a material icon at cursor position with the material's tint color.
 ---@private
-function materials:materials_draw_checkboxes()
-	local x = self.menu.pos_x
-	for material_type, type_name in ipairs(material_types) do
-		if self:IsDrawCheckbox(x, self.menu.pos_y - 1, type_name, self.materials.visible_types[material_type]) and self:IsMouseClicked() then
-			self.materials.visible_types[material_type] = not self.materials.visible_types[material_type]
-			filtered_materials = nil
+---@param mat material_data
+function materials:materials_draw_icon(mat)
+	if mat.color then self:color(mat.color.r, mat.color.g, mat.color.b, mat.color.a) end
+	self:image(mat.icon, { dy = 1 })
+end
+
+---Material row; hover coloring: yellow = hovered, green = selected, bright green = selected+hovered.
+---@private
+---@param material_index integer
+---@param content_w number  full row width (for hover rect)
+function materials:materials_draw_material(material_index, content_w)
+	local mat = self.mat:get_data(material_index)
+	local is_current = self.materials.current_recipe == material_index
+	local hovered = self:is_hovered_cursor(content_w, 10)
+
+	self:leaf(content_w, 10, function()
+		self:begin_row(function()
+			self:materials_draw_icon(mat)
+			self:spacing(1)
+			local mat_name = self:get_material_name(mat)
+			if is_current and hovered then
+				self:color(0.6, 1, 0.4)
+			elseif is_current then
+				self:color(0.4, 1, 0.6)
+			elseif hovered then
+				self:color_yellow()
+			end
+			self:text(mat_name)
+			self:spacing(3)
+			self:color_gray()
+			self:text("(" .. mat.id .. ")")
+		end)
+	end)
+
+	if not self:is_measuring() and hovered then
+		if self:is_left_clicked() then
+			self.materials.current_recipe = material_index
+			self.materials.current_tag = nil
+			self:reset_scroll("materials_reactions")
+			self.materials.actual_reaction_w = 0
+		elseif self:is_right_clicked() then
+			self.materials.current_recipe = nil
+			self.materials.current_tag = nil
 		end
-		x = x + self:GetTextDimension(type_name) + 18
+
+		-- Tooltip only when this item is NOT the open recipe.
+		-- Re-read current_recipe: left-click may have just set it to material_index.
+		-- When the reaction viewer is open, use the default darkest tooltip sprite so
+		-- the popup is readable over the reaction panel; otherwise use the lighter custom one.
+		local tip_sprite = self.materials.current_recipe and nil or TOOLTIP_SPRITE
+		if self.materials.current_recipe ~= material_index and self:tooltip(true, { id = material_index, sprite = tip_sprite, border = 0 }) then
+			local reaction_data = self:get_reaction_data(mat.id)
+			self:material_row(material_index, true)
+			self:text(string.format("%s: %d, %s: %d", T.using, #reaction_data.using, T.producing, #reaction_data.producing))
+			if not self.materials.current_recipe then
+				self:color_gray()
+				self:text(T.reaction_window_d)
+				self:color_gray()
+				self:text(T.PressShiftToSeeMore)
+			end
+			local ax, ay = self:materials_tip_anchor()
+			self:tooltip_end(ax, ay, false)
+		end
 	end
 end
 
----Draws searchbox
+---Draws all filtered materials inside the main scrollbox.
 ---@private
-function materials:materials_textbox()
-	local text = string.format("%s:", T.search)
-	local text_width = self:GetTextDimension(text)
-	self:Text(self.menu.pos_x, self.menu.pos_y, text)
-	local new_text = self.textbox:draw_textbox(self.menu.pos_x + text_width + 5, self.menu.pos_y, self.z + 1, 100, 9, self.materials.filter)
-	if new_text ~= self.materials.filter then
-		self.materials.filter = new_text
-		filtered_materials = nil
+---@param content_w number
+function materials:materials_draw_list(content_w)
+	for _, material_index in ipairs(self:get_filtered_materials()) do
+		self:materials_draw_material(material_index, content_w)
 	end
 end
 
+---Draws one reaction item (tag link or material icon+name) centered in col_w.
+---@private
+---@param material string  material id or "[tag]" name
+---@param col_w number     column pixel width (for centering)
+function materials:materials_draw_reaction_item(material, col_w)
+	if is_tag(material) then
+		local text_w = self:get_text_dim(material)
+		local hovered = false
+		self:begin_row(function()
+			self:spacing(math.max(0, (col_w - text_w) / 2))
+			hovered = self:is_hovered_cursor(text_w, 10)
+			if hovered then self:color_yellow() end
+			self:text(material)
+		end)
+		if not self:is_measuring() and hovered and self:is_left_clicked() then
+			self.materials.current_tag = material
+			self:reset_scroll("materials_tags")
+			GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
+		end
+	else
+		local mat = self.mat:get_data_by_id(material)
+		local mat_name = self.alt and truncate(mat.id) or self:get_material_name(mat)
+		local text_w = self:get_text_dim(mat_name)
+		self:begin_row(function()
+			self:spacing(math.max(0, (col_w - text_w) / 2 - 9)) -- center text; 9 = icon(8)+gap(1)
+			self:materials_draw_icon(mat)
+			self:spacing(1)
+			self:text(mat_name)
+		end)
+	end
+end
+
+---Reaction row (inputs -> arrow -> outputs); fixed-width leaves keep columns aligned.
+---@private
+---@param reaction reactions_data
+---@param col_w number  width of each input/output column leaf
+function materials:materials_draw_reaction(reaction, col_w)
+	local rows = math.max(#reaction.inputs, #reaction.outputs)
+	local row_h = rows * 10
+	local arrow_center_dy = 10 * (rows - 1) / 2
+
+	self:begin_row(function()
+		-- Input column
+		self:leaf(col_w, row_h, function()
+			self:begin_column(function()
+				for _, input in ipairs(reaction.inputs) do
+					self:materials_draw_reaction_item(input, col_w)
+				end
+			end)
+		end)
+
+		-- Arrow column (vertically centered)
+		self:leaf(ARROW_COL_WIDTH, row_h, function()
+			self:begin_column(function()
+				self:spacing(arrow_center_dy)
+				if reaction.is_req then self:color(1, 0.5, 0) end
+				local arrow_hovered = self:is_hovered_cursor(8, 8)
+				self:image(ARROW_SPRITE)
+				if not self:is_measuring() and arrow_hovered and self:tooltip(true) then
+					self:text(string.format("%s: %d", T.speed, reaction.probability))
+					if reaction.is_req then
+						self:color(1, 0.5, 0)
+						self:text(T.req_text)
+					end
+					local ax, ay = self:cursor_screen()
+					self:tooltip_end(ax, ay, true)
+				end
+			end)
+		end)
+
+		-- Output column
+		self:leaf(col_w, row_h, function()
+			self:begin_column(function()
+				for _, output in ipairs(reaction.outputs) do
+					self:materials_draw_reaction_item(output, col_w)
+				end
+			end)
+		end)
+	end)
+end
+
+---1px separator line; drawn via overlay so it doesn't inflate row height.
+---@private
+---@param width number
+function materials:materials_separator(width)
+	self:overlay(function()
+		self:image(self.c.px, { alpha = 0.4, scale_x = width, scale_y = 1 })
+	end)
+	self:spacing(1)
+end
+
+---Reactions list; uses pre-captured data so state can change safely mid-frame.
+---@private
+---@param reaction_data gui_reaction_data
+---@param reactions reactions_data[]
+---@param scrollbox_w number  inner width of the scrollbox (for separator scaling)
+function materials:materials_draw_reactions_content(reaction_data, reactions, scrollbox_w)
+	local col_w = (scrollbox_w - ARROW_COL_WIDTH) / 2
+
+	if #reactions > 0 then
+		for i, reaction in ipairs(reactions) do
+			self:materials_draw_reaction(reaction, col_w)
+			if i < #reactions then
+				self:spacing(1)
+				self:materials_separator(scrollbox_w)
+			end
+		end
+	else
+		self:text("None")
+	end
+end
+
+---Draws tagged materials list inside the tag scrollbox.
+---@private
 function materials:materials_draw_tagged_materials()
 	local material_list = self.mat.get_tagged_materials(self.materials.current_tag)
-	local y = 1 - self.scroll.y
 	for _, material_name in ipairs(material_list) do
-		if y + 10 > 0 and y < self.materials.tag_height then self:FungalDrawSingleMaterial(0, y, CellFactory_GetType(material_name), true) end
-		y = y + 10
+		self:material_row(CellFactory_GetType(material_name), true)
 	end
-	self:Text(0, y + self.scroll.y, "")
 end
 
-function materials:materials_show_tagged_materials()
-	if not self.materials.current_tag then return end
-	local x = self.menu.start_x + self.menu.width + 15
-	local y = self.menu.start_y + self.materials.reaction_scroll_height + 41 + margin * 2
-	y = math.min(y, self.materials.reaction_box_last_pos + margin * 2 + 2)
-	self:Draw9Piece(x, y, self.z + 5, self.materials.width_reaction, 10)
-	if self:IsHovered() then self:BlockInput() end
-	local text_width = self:GetTextDimension(self.materials.current_tag)
-	self:Text(x + (self.materials.width_reaction - text_width) / 2, y, self.materials.current_tag)
+---Right-side reaction and tag panels; layout state captured at call time to isolate button interactions.
+---@private
+---@param panel_right_x number  screen x where the right panels start
+---@param panel_start_y number  screen y shared with the main panel top edge
+---@param list_box_h number     actual list scrollbox height this frame (drives avail_h for alignment)
+function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list_box_h)
+	-- Capture everything we need for this frame's draw now, before any button interactions.
+	local recipe_index = self.materials.current_recipe --[[@as integer]]
+	local current_tag = self.materials.current_tag
+	local reaction_show_output = self.materials.reaction_show_output
+	local mat = self.mat:get_data(recipe_index)
+	local reaction_data = self:get_reaction_data(mat.id)
 
-	local close_text = "[X]"
-	local close_width = self:GetTextDimension(close_text)
-	local close_x = x + self.materials.width_reaction - close_width
-	if self:IsHoverBoxHovered(close_x, y, close_width, 10) then
-		self:ColorYellow()
-		if self:IsLeftClicked() then
-			GamePlaySound("data/audio/Desktop/ui.bank", "ui/button_click", 0, 0)
-			self.materials.current_tag = nil
-			return
-		end
+	-- Reaction panel width: use the previous frame's actual header width so the body
+	-- always matches even when name+buttons overflow the estimated reaction_w.
+	self.materials.width_reaction = math.max(200, math.min(reaction_data.max_length * 2 + 50, 400))
+	local reaction_w = math.max(self.materials.width_reaction, self.materials.actual_reaction_w)
+	local scrollbox_w = reaction_w - self.options.window_padding * 2
+
+	-- Reaction scrollbox height: cap at content height so the panel doesn't stretch
+	-- unnecessarily; but allow up to avail_h so it matches the main panel when full.
+	-- panel_start_y is where materials content starts (after menu bar + spacing(-1)).
+	-- The reaction panel starts at m.start_y, so it has that extra offset available.
+	local bar_offset = panel_start_y - self.menu.start_y
+	local avail_h = math.max(20, bar_offset + self.materials.main_header_h + list_box_h - self.materials.reaction_header_h)
+	local reactions = reaction_show_output and reaction_data.producing or reaction_data.using
+	local _, content_h = self:measure(function()
+		self:materials_draw_reactions_content(reaction_data, reactions, scrollbox_w)
+	end)
+	local reaction_scroll_h
+	if current_tag then
+		-- When a tag panel is open, both scrollboxes together must fill avail_h so
+		-- the combined bottom aligns with the main window.
+		-- Per-window overhead added by the tag panel:
+		--   two spacing(-1) overlaps cancel 2px, tag header window adds thh + 2*pad.
+		-- Net budget for the two scrollboxes: avail_h - thh - 2*pad + 2.
+		local thh = self.materials.tag_header_h
+		local total_split = math.max(30, avail_h - thh - 2 * self.options.window_padding + 2)
+		local tag_list = self.mat.get_tagged_materials(current_tag)
+		local _, tag_content_h = self:measure(function()
+			for _, material_name in ipairs(tag_list) do
+				self:material_row(CellFactory_GetType(material_name), true)
+			end
+		end)
+		local tag_scroll_h = math.max(10, math.min(tag_content_h, math.floor(total_split * 0.45)))
+		self.materials.tag_height = tag_scroll_h
+		reaction_scroll_h = math.max(1, math.min(content_h, total_split - tag_scroll_h))
+	else
+		reaction_scroll_h = math.max(1, math.min(avail_h, content_h))
 	end
-	self:Text(close_x, y, close_text)
+	self.materials.reaction_scroll_height = reaction_scroll_h
 
-	self:ScrollBox(
-		x + margin,
-		y + 12 + margin * 2,
-		self.z + 5,
-		self.materials.width_reaction - margin * 2,
-		self.materials.tag_height - 11 - margin * 5,
-		self.c.default_9piece,
-		margin,
-		margin,
-		self.materials_draw_tagged_materials
+	local mat_name = self.alt and truncate(mat.id) or self:get_material_name(mat)
+
+	self:layout_at(panel_right_x, self.menu.start_y, function()
+		self:begin_column(function()
+			local actual_reaction_w, rxh = self:window(function()
+				local text_w = self:get_text_dim(mat_name)
+				self:begin_row(function()
+					self:spacing(math.max(0, (scrollbox_w - text_w) / 2 - 9)) -- 9 = icon(8)+gap(1)
+					self:materials_draw_icon(mat)
+					self:spacing(1)
+					self:text(mat_name)
+					self:row_fill_right(scrollbox_w, function()
+						if mat.tags then
+							-- Plain hoverable text for tags (no ninepiece button frame)
+							local tags_text = "[tags]"
+							local tags_w = self:get_text_dim(tags_text)
+							local tags_hovered = self:is_hovered_cursor(tags_w, 9)
+							if tags_hovered then self:color_yellow() end
+							self:text(tags_text)
+							if tags_hovered and self:tooltip(true) then
+								for tag, _ in pairs(mat.tags) do
+									self:text(tag)
+								end
+								self:tooltip_end(nil, nil, true)
+							end
+							self:spacing(2)
+						end
+						local close_clicked = self:button(T.close, true)
+						if close_clicked then
+							self.materials.current_recipe = nil
+							self.materials.current_tag = nil
+						end
+					end)
+				end)
+
+				self:spacing(-3)
+				local id_text = "(" .. mat.id .. ")"
+				self:color_gray()
+				self:text_centered(id_text, scrollbox_w)
+
+				-- active=true -> normal (not selected); active=false -> gray (selected)
+				local using_text = string.format("%s (%d)", T.using, #reaction_data.using)
+				local producing_text = string.format("%s (%d)", T.producing, #reaction_data.producing)
+				local gap = 3
+				local btn_w = math.max(1, math.floor((scrollbox_w - gap * 3) / 2))
+				self:begin_row(function()
+					self:spacing(gap)
+					local using_clicked = self:button(using_text, reaction_show_output, { min_width = btn_w })
+					if using_clicked then
+						self.materials.reaction_show_output = false
+						self.materials.current_tag = nil
+					end
+					self:spacing(gap)
+					local producing_clicked = self:button(producing_text, not reaction_show_output, { min_width = btn_w })
+					if producing_clicked then
+						self.materials.reaction_show_output = true
+						self.materials.current_tag = nil
+					end
+				end)
+				self:spacing(-2)
+			end, { id = "materials_reaction_header", min_width = reaction_w })
+			self.materials.actual_reaction_w = actual_reaction_w
+			self.materials.reaction_header_h = rxh
+
+			self:window_join()
+
+			-- Use actual_reaction_w so the body always matches the header width.
+			local body_scrollbox_w = actual_reaction_w - self.options.window_padding * 2
+			self:window(function()
+				self:begin_scrollbox("materials_reactions", body_scrollbox_w, reaction_scroll_h, function()
+					-- Use captured reaction data: current_recipe may have been cleared above.
+					self:materials_draw_reactions_content(reaction_data, reactions, body_scrollbox_w)
+				end)
+			end, { id = "materials_reaction_body", min_width = actual_reaction_w })
+
+			if current_tag then
+				self:window_join()
+
+				local _, tag_hdr_h = self:window(function()
+					self:begin_row(function()
+						self:spacing(math.max(0, (scrollbox_w - self:get_text_dim(current_tag)) / 2))
+						self:text(current_tag)
+						self:row_fill_right(scrollbox_w, function()
+							local close_tag = self:button(T.close, true)
+							if close_tag then self.materials.current_tag = nil end
+						end)
+					end)
+					self:spacing(-2)
+				end, { id = "materials_tags_header", min_width = actual_reaction_w })
+				self.materials.tag_header_h = tag_hdr_h
+
+				self:window_join()
+
+				local tag_scroll_h = self.materials.tag_height
+				self:window(function()
+					self:begin_scrollbox("materials_tags", scrollbox_w, tag_scroll_h, function()
+						-- Use captured current_tag: state may have changed above.
+						local tag_list = self.mat.get_tagged_materials(current_tag)
+						for _, material_name in ipairs(tag_list) do
+							self:material_row(CellFactory_GetType(material_name), true)
+						end
+					end)
+				end, { id = "materials_tags_body", min_width = actual_reaction_w })
+			end
+		end)
+	end)
+end
+
+---AP + LC icon pair with hover highlight and tooltip.
+---@private
+function materials:fungal_ap_lc_draw()
+	local ap_icon = self.mat:get_data(self.fs.aplc.ap.result)
+	local lc_icon = self.mat:get_data(self.fs.aplc.lc.result)
+	local W, H = 18, 9
+	local hovered = self:is_hovered_cursor(W, H)
+	local spr = hovered and self.options.button_sprite_hl or self.options.button_sprite
+	self:leaf(W, H, function()
+		self:overlay(function()
+			if ap_icon.color then self:color(ap_icon.color.r, ap_icon.color.g, ap_icon.color.b, ap_icon.color.a) end
+			self:image(ap_icon.icon, { dy = 1 })
+			if lc_icon.color then self:color(lc_icon.color.r, lc_icon.color.g, lc_icon.color.b, lc_icon.color.a) end
+			self:image(lc_icon.icon, { dy = 1 })
+		end)
+		self:ninepiece(W, H, { z = self.z + 5, sprite = spr, margin = 2.5, dx = -1 })
+	end)
+	if hovered and self:tooltip(true, { sprite = TOOLTIP_DARKER, border = 0 }) then
+		self:fungal_ap_lc_tooltip()
+		local ax, ay = self:materials_tip_anchor()
+		self:tooltip_end(ax, ay, false)
+	end
+end
+
+---Apothecary-elixir icon with hover highlight and tooltip.
+---@private
+function materials:fungal_apo_elixir_draw()
+	local elixir = self.mat:get_data(self.fs.apo_elixir.result)
+	local W, H = 9, 9
+	local hovered = self:is_hovered_cursor(W, H)
+	local spr = hovered and self.options.button_sprite_hl or self.options.button_sprite
+	self:leaf(W, H, function()
+		self:overlay(function()
+			if elixir.color then self:color(elixir.color.r, elixir.color.g, elixir.color.b, elixir.color.a) end
+			self:image(elixir.icon, { dy = 1 })
+		end)
+		self:ninepiece(W, H, { z = self.z + 5, sprite = spr, margin = 1 })
+	end)
+	if hovered and self:tooltip(true, { sprite = TOOLTIP_DARKER, border = 0 }) then
+		self:fungal_apo_elixir_tooltip()
+		local ax, ay = self:materials_tip_anchor()
+		self:tooltip_end(ax, ay, false)
+	end
+end
+
+---Draws the materials panel.
+function materials:materials_draw_window()
+	local m = self.menu
+	-- Cursor y here is where materials content starts (after menu bar + spacing(-1)).
+	-- Pass it to the reaction panel so both columns share the same top edge.
+	local _, panel_start_y = self:cursor_local()
+	self.materials.panel_start_y = panel_start_y
+
+	-- On the frame a window opens, don't enforce shared_width (content hasn't measured yet).
+	local min_w = m._just_switched and 0 or (m.shared_width or 0)
+	local padding = self.options.window_padding
+
+	-- Compute icon row width before the window: measure() uses DIR_H, so each stacked
+	-- row must be measured individually (can't measure multiple begin_rows together).
+	local icon_inner_w
+	if self.fs.apo_elixir or self.fs.aplc then
+		local checkboxes_w = self:measure(function()
+			for material_type, type_name in ipairs(material_types) do
+				self:checkbox(type_name, self.materials.visible_types[material_type])
+				self:spacing(2)
+			end
+		end)
+		local search_w = self:measure(function()
+			self:text(T.search .. ":")
+			self:spacing(5)
+			self:leaf(100, 9, function() end)
+		end)
+		local icons_w = self:measure(function()
+			if self.fs.apo_elixir then
+				self:fungal_apo_elixir_draw()
+				self:spacing(4)
+			end
+			if self.fs.aplc then self:fungal_ap_lc_draw() end
+		end)
+		icon_inner_w = math.max(math.max(checkboxes_w, search_w + icons_w), math.max(0, min_w - padding * 2))
+	end
+
+	local header_width, main_header_h = self:window(function()
+		self:begin_row(function()
+			for material_type, type_name in ipairs(material_types) do
+				local clicked = self:checkbox(type_name, self.materials.visible_types[material_type])
+				if clicked then
+					self.materials.visible_types[material_type] = not self.materials.visible_types[material_type]
+					filtered_materials = nil
+				end
+				self:spacing(2)
+			end
+		end)
+		self:spacing(2)
+
+		self:begin_row(function()
+			self:text(T.search .. ":")
+			self:spacing(5)
+			-- cursor_screen() gives the absolute screen position the textbox needs.
+			local tx, ty = self:cursor_screen()
+			self:leaf(100, 9, function()
+				if not self:is_measuring() then
+					local new_filter = self.textbox:draw_textbox(tx, ty, self.z + 1, 100, 9, self.materials.filter)
+					if new_filter ~= self.materials.filter then
+						self.materials.filter = new_filter
+						filtered_materials = nil
+					end
+				end
+			end)
+			if self.fs.apo_elixir or self.fs.aplc then
+				self:row_fill_right(icon_inner_w, function()
+					if self.fs.apo_elixir then
+						self:fungal_apo_elixir_draw()
+						self:spacing(4)
+					end
+					if self.fs.aplc then self:fungal_ap_lc_draw() end
+				end)
+			end
+		end)
+	end, { id = "materials_header", min_width = min_w })
+
+	self.materials.header_width = header_width
+	self.materials.main_header_h = main_header_h
+
+	self:window_join()
+
+	-- Scrollbox cap: max_height is the total budget for the whole panel (header + list).
+	-- Subtract the header window height so all panels bottom-align at the same screen y.
+	local scrollbox_cap = math.max(20, self.max_height - main_header_h + 1)
+	local list_box_h = self.materials.scroll_h > 0 and math.min(self.materials.scroll_h, scrollbox_cap) or scrollbox_cap
+	self:window(function()
+		-- fill_width() = 0 during the group's natural-width pass, so the group
+		-- accumulates the true content width rather than locking to the previous
+		-- panel's inflated width.
+		local inner_w = math.max(1, self:fill_width())
+		local _, content_h = self:begin_scrollbox("materials_list", inner_w, list_box_h, function()
+			self:materials_draw_list(inner_w)
+		end)
+		self.materials.scroll_h = content_h
+	end, { id = "materials_window", min_width = header_width })
+
+	-- Tooltip anchor: always right of the main panel so it doesn't jump when the reaction panel opens.
+	self.materials.tip_x = m.start_x + header_width + 2
+	self.materials.tip_y = m.start_y
+end
+
+---Draws reaction/tag overlay panels; called outside window_group so they don't affect shared width.
+---@private
+function materials:materials_draw_overlays()
+	if not self.materials.current_recipe then return end
+	local m = self.menu
+	local scrollbox_cap = math.max(20, self.max_height - self.materials.main_header_h + 1)
+	local list_box_h = self.materials.scroll_h > 0
+		and math.min(self.materials.scroll_h, scrollbox_cap)
+		or scrollbox_cap
+	self:materials_draw_right_panel(
+		m.start_x + self.materials.header_width + 2,
+		self.materials.panel_start_y,
+		list_box_h
 	)
 end
 
--- ui/item_move_denied
 local checker_spawned = false
 
----Spawns an entity with material checkers
+---Spawns an entity with material area checkers (bound to hotkey in gui_main.lua).
 function materials:spawn_getter()
 	checker_spawned = true
 	local x, y = DEBUG_GetMouseWorld()
@@ -640,14 +763,14 @@ function materials:spawn_getter()
 	end
 end
 
----Checks if material checkers found anything
+---Checks if material checkers found anything and opens the materials window on a match.
 function materials:check_for_checkers()
 	local detector = GLOBALS_GET_VALUE("LAMAS_STATS_DETECTOR", "")
 	local is_found = detector ~= ""
 	if is_found then
 		self.show = true
 		self.menu.opened = true
-		self.menu.current_window = self.materials_draw_window
+		self.menu.current = "materials"
 		self.materials.current_recipe = tonumber(detector)
 		GLOBALS_SET_VALUE("LAMAS_STATS_DETECTOR", "")
 	end
@@ -655,51 +778,10 @@ function materials:check_for_checkers()
 	checker_spawned = false
 end
 
----Draws materials window
-function materials:materials_draw_window()
-	self:materials_draw_checkboxes()
-	self.menu.pos_y = self.menu.pos_y + 12
-	local header_start = self.menu.pos_y
-	self:materials_textbox()
-	self.menu.pos_y = self.menu.pos_y + 12
-	self:MenuSetWidth(self.materials.width)
-	self:AddOption(self.c.options.NonInteractive)
-
-	local pos_x = self.menu.start_x - 3
-	local pos_y = self.menu.pos_y + 7
-	local header_height = self.menu.pos_y - header_start
-
-	self.materials.scroll_height = self.max_height - header_height
-	self.materials.reaction_scroll_height = self.max_height + 12
-	if self.materials.current_tag then
-		local list = self.mat.get_tagged_materials(self.materials.current_tag)
-		local desired = #list * 10 + 27
-		local limit = self.materials.reaction_scroll_height * 0.6
-		self.materials.tag_height = math.max(37, math.min(desired, limit))
-		self.materials.reaction_scroll_height = self.materials.reaction_scroll_height - self.materials.tag_height
-	end
-
-	self:ScrollBox(
-		pos_x,
-		pos_y,
-		self.z + 5,
-		self.materials.width + 6,
-		self.materials.scroll_height,
-		self.c.default_9piece,
-		margin,
-		margin,
-		self.materials_draw_list
-	)
-
-	self:draw_reaction_window()
-	self:materials_show_tagged_materials()
-	self:RemoveOption(self.c.options.NonInteractive)
-end
-
----Updates materials gui stuff
+---Clears reaction data cache on language change.
 ---@param did_language_changed boolean
 function materials:materials_update(did_language_changed)
-	if did_language_changed then reactions_data = setmetatable({}, { __mode = "k" }) end
+	if did_language_changed then reactions_data = {} end
 end
 
 return materials

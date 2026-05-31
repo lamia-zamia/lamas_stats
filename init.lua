@@ -7,17 +7,17 @@ imgui = load_imgui and load_imgui({ mod = "lamas_stats", version = "1.0.0" })
 
 ---After OnModPostInit
 function OnMagicNumbersAndWorldSeedInitialized()
-	gui:PostBiomeInit()
+	gui:post_biome_init()
 end
 
 ---Idk why it's called before initialized
 function OnWorldPostUpdate()
-	gui:Loop()
+	gui:loop()
 end
 
 ---?
 function OnPlayerSpawned()
-	gui:PostWorldInit()
+	gui:post_world_init()
 end
 
 ---Fetch settings
@@ -27,5 +27,5 @@ function OnPausedChanged(is_paused)
 	local language = GameTextGetTranslatedOrNot("$current_language")
 	local did_language_changed = current_language ~= language
 	if did_language_changed then current_language = language end
-	gui:GetSettings(did_language_changed)
+	gui:get_settings(did_language_changed)
 end

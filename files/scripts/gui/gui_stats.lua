@@ -1,4 +1,4 @@
----@class (exact) LS_Gui_stats
+﻿---@class (exact) LS_Gui_stats
 ---@field time boolean
 ---@field kills boolean
 ---@field position boolean
@@ -8,8 +8,6 @@
 ---@field position_pw_east number
 ---@field biome boolean
 ---@field shift_cd boolean
----@field x number
----@field y number
 ---@field enabled boolean
 ---@field fps number
 ---@field fps_last_update_time number
@@ -31,8 +29,6 @@ local stats = {
 		position_pw_east = 0,
 		biome = false,
 		shift_cd = false,
-		x = 0,
-		y = 0,
 		enabled = false,
 		fps = 0,
 		fps_last_update_time = 0,
@@ -44,46 +40,96 @@ local stats = {
 	},
 }
 
----Shows tooltip and colors text to gray
+-- Widest glyph among the characters a number can contain. Lazily measured and
+-- cached (font/glyph metrics don't change with language).
+local number_glyph_width
+
+---Measures and caches the widest digit glyph width.
 ---@private
----@param width number
----@param tooltip fun(self:table)
-function stats:IfStatEntryHovered(width, tooltip)
-	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, width, 11, true) then self:ShowTooltipCenteredX(0, 20, tooltip) end
+---@return number
+function stats:number_glyph_width()
+	if number_glyph_width then return number_glyph_width end
+	local widest = 0
+	for char in ("-0123456789"):gmatch(".") do
+		local glyph = self:get_text_dim(char)
+		if glyph > widest then widest = glyph end
+	end
+	number_glyph_width = widest
+	return widest
+end
+
+---Width a numeric string occupies once placed in a fixed digit-grid cell, so
+---its rendered width never changes unless the digit count changes.
+---@private
+---@param str string
+---@return number
+function stats:number_cell_width(str)
+	return #str * self:number_glyph_width()
+end
+
+---Draws a number left-aligned in a fixed-width cell (see number_cell_width) so the
+---text after it doesn't shift as the player moves.
+---@private
+---@param str string
+function stats:number_cell(str)
+	local cell = self:number_cell_width(str)
+	local natural = self:get_text_dim(str)
+	self:text(str)
+	if cell > natural then self:spacing(cell - natural) end
+end
+
+---Draws one stat entry at the cursor, reserving at least `reserved` px of width
+---so a changing value doesn't shove later entries around. Returns whether the
+---slot is hovered and the screen-space anchor for a centered tooltip.
+---@private
+---@param text string
+---@param reserved number
+---@return boolean hovered, number tooltip_center_x, number tooltip_y
+function stats:entry(text, reserved)
+	local natural = self:get_text_dim(text)
+	local width = math.max(reserved, natural)
+	local screen_x, screen_y = self:cursor_screen()
+	-- Hover/anchor use the visible text width; `reserved` is only layout padding.
+	local hovered = self:is_hovered_cursor(natural, 11)
+	self:text(text)
+	if width > natural then self:spacing(width - natural) end
+	return hovered, screen_x + natural / 2, screen_y + 20
 end
 
 ---Draws fungal cooldown if in cooldown
 ---@private
 ---@return boolean
-function stats:StatsFungal()
+function stats:stats_fungal()
 	if not self.config.stats_show_fungal_cooldown or self.fungal_cd <= 0 then return false end
-	self:AddOptionForNext(self.c.options.NonInteractive)
-	self:Image(self.stats.x - 3, self.stats.y - 3, "data/ui_gfx/status_indicators/fungal_shift.png")
-	if self:IsHoverBoxHovered(self.stats.x - 3, self.stats.y - 3, 13, 13, true) then
-		self.tooltip_reset = false
-		self:ShowTooltipTextCenteredX(0, 23, T.lamas_stats_fungal_cooldown .. " " .. self.fungal_cd)
+	self:spacing(1)
+	local screen_x, screen_y = self:cursor_screen()
+	local hovered = self:is_hovered_cursor(9, 11)
+	self:leaf(9, 11, function()
+		self:add_option_for_next(self.OPT_NON_INTERACTIVE)
+		self:image("data/ui_gfx/status_indicators/fungal_shift.png", { dy = -3, dx = -5 })
+	end)
+	if self:tooltip(hovered, { id = "stats_fungal" }) then
+		self:text(T.lamas_stats_fungal_cooldown .. " " .. self.fungal_cd)
+		self:tooltip_end(screen_x + 6.5, screen_y + 20, true)
 	end
-	self.stats.x = self.stats.x + 15
 	return true
 end
 
 ---Draws biome stat
 ---@private
 ---@return boolean
-function stats:StatsBiome()
+function stats:stats_biome()
 	if not self.config.stats_show_player_biome then return false end
 	local biome = BiomeMapGetName(self.player_x, self.player_y)
 	if biome == "_EMPTY_" then biome = T.lamas_stats_unknown end
-	local text = T.lamas_stats_location .. ": " .. self:Locale(biome)
-	local text_width = self:GetTextDimension(text)
-	self:Text(self.stats.x, self.stats.y, text)
-	self.stats.x = self.stats.x + text_width + 10
+	local text = T.lamas_stats_location .. ": " .. self:locale(biome)
+	self:entry(text, self:get_text_dim(text))
 	return true
 end
 
 ---Draws position stat tooltip
 ---@private
-function stats:StatsPositionTooltip()
+function stats:stats_position_tooltip()
 	local world_string = T.lamas_stats_stats_pw
 	local position_string = T.lamas_stats_stats_pw_main
 	local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
@@ -92,117 +138,138 @@ function stats:StatsPositionTooltip()
 	elseif player_par_x < 0 then
 		position_string = T.lamas_stats_stats_pw_west .. " " .. -player_par_x
 	end
-	self:ColorGray()
-	self:Text(0, 0, T.lamas_stats_position_toggle)
+	self:color_gray()
+	self:text(T.lamas_stats_position_toggle)
 
 	if not self.config.stats_position_expanded then
-		self:Text(0, 0, "X: " .. tostring(math.floor(self.player_x)))
-		self:Text(0, 0, "Y: " .. tostring(math.floor(self.player_y)))
+		self:text("X: " .. tostring(math.floor(self.player_x)))
+		self:text("Y: " .. tostring(math.floor(self.player_y)))
 	end
 
-	self:Text(0, 0, world_string .. " - " .. position_string)
+	self:text(world_string .. " - " .. position_string)
 
 	if self.stats.position_pw_east > 0 or self.stats.position_pw_west < 0 then
-		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. -self.stats.position_pw_west)
-		self:Text(0, 0, T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. self.stats.position_pw_east)
+		self:text(T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_west .. ": " .. -self.stats.position_pw_west)
+		self:text(T.lamas_stats_farthest .. " " .. T.lamas_stats_stats_pw_east .. ": " .. self.stats.position_pw_east)
 	end
 end
 
 ---Draws position stat
 ---@private
 ---@return boolean
-function stats:StatsPosition()
+function stats:stats_position()
 	if not self.config.stats_show_player_pos then return false end
 	local position_string = T.lamas_stats_position
-	local position_string_width = self:GetTextDimension(position_string)
-	local offset = position_string_width + 5
-	self:Text(self.stats.x, self.stats.y, position_string)
+	local expanded = self.config.stats_position_expanded
 
-	if self.config.stats_position_expanded then
-		local x = tostring(math.floor(self.player_x))
-		local y = tostring(math.floor(self.player_y))
-		local stat_max = math.max(#x, #y) * 8
-		self:Text(self.stats.x + offset, self.stats.y, "X:" .. x .. ",")
-		offset = offset + stat_max + 5
-		self:Text(self.stats.x + offset, self.stats.y, "Y:" .. y)
-		offset = offset + stat_max
+	-- Total width is computed up-front so hover/click/tooltip use one stable
+	-- rect, and each coordinate gets its own fixed cell (no jitter on move).
+	local x = tostring(math.floor(self.player_x))
+	local y = tostring(math.floor(self.player_y))
+	local x_label_w = self:get_text_dim("  X:")
+	local y_label_w = self:get_text_dim(", Y:")
+	local total = self:get_text_dim(position_string)
+	if expanded then
+		total = total + x_label_w + self:number_cell_width(x) + y_label_w + self:number_cell_width(y)
+	else
+		total = total + 5
 	end
 
-	if self:IsHoverBoxHovered(self.stats.x, self.stats.y, offset, 11) and self:IsLeftClicked() then
-		self.config.stats_position_expanded = not self.config.stats_position_expanded
-		self.mod:SetModSetting("stats_position_expanded", self.config.stats_position_expanded)
+	local screen_x, screen_y = self:cursor_screen()
+	local hovered = self:is_hovered_cursor(total, 11)
+
+	if hovered then
+		-- Absorb the click so it doesn't fall through to the game (shooting).
+		self:block_input(screen_x, screen_y, total, 11)
+		if self:is_left_clicked() then
+			self.config.stats_position_expanded = not expanded
+			self.mod:SetModSetting("stats_position_expanded", self.config.stats_position_expanded)
+		end
 	end
 
-	self:IfStatEntryHovered(offset, self.StatsPositionTooltip)
+	self:text(position_string)
+	if expanded then
+		self:text("  X:")
+		self:number_cell(x)
+		self:text(", Y:")
+		self:number_cell(y)
+	else
+		self:spacing(5)
+	end
 
-	self.stats.x = self.stats.x + offset
+	if self:tooltip(hovered, { id = "stats_pos" }) then
+		self:stats_position_tooltip()
+		self:tooltip_end(screen_x + total / 2, screen_y + 20, true)
+	end
 	return true
 end
 
 ---Draws kills stat tooltip
 ---@private
-function stats:StatsKillTooltip()
-	self:Text(0, 0, T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
-	self:Text(0, 0, T.lamas_stats_progress_kills_innocent .. " " .. GLOBALS_GET_VALUE("HELPLESS_KILLS", "0"))
+function stats:stats_kill_tooltip()
+	self:text(T.lamas_stats_progress_kills .. " " .. StatsGetValue("enemies_killed"))
+	self:text(T.lamas_stats_progress_kills_innocent .. " " .. GLOBALS_GET_VALUE("HELPLESS_KILLS", "0"))
 end
 
 ---Draws kills stat
 ---@private
 ---@return boolean
-function stats:StatsKills()
+function stats:stats_kills()
 	if not self.config.stats_showkills then return false end
 	local kill_string = T.lamas_stats_progress_kills
-	local kill_string_width = self:GetTextDimension(kill_string)
 	local kills = StatsGetValue("enemies_killed") or "0"
-	local kills_width = self:GetTextDimension(kills)
-	local offset = kill_string_width + math.min(kills_width, 18) + 6
-	self:IfStatEntryHovered(offset, self.StatsKillTooltip)
-	self:Text(self.stats.x, self.stats.y, kill_string .. " " .. kills)
-
-	self.stats.x = self.stats.x + offset
+	local reserved = self:get_text_dim(kill_string) + math.min(self:get_text_dim(kills), 18) + 6
+	local hovered, tooltip_x, tooltip_y = self:entry(kill_string .. " " .. kills, reserved)
+	if self:tooltip(hovered, { id = "stats_kills" }) then
+		self:stats_kill_tooltip()
+		self:tooltip_end(tooltip_x, tooltip_y, true)
+	end
 	return true
 end
 
 ---Draws time stat tooltip
 ---@private
-function stats:StatsTimeTooltip()
+function stats:stats_time_tooltip()
 	local stats_list = {
-		self:Locale("$menu_stats"),
-		self:Locale("$stat_time ") .. StatsGetValue("playtime_str"),
-		self:Locale("$stat_places_visited ") .. StatsGetValue("places_visited"),
-		self:Locale("$stat_gold ") .. StatsGetValue("gold_all"),
-		self:Locale("$stat_items_found ") .. StatsGetValue("items"),
+		self:locale("$menu_stats"),
+		self:locale("$stat_time ") .. StatsGetValue("playtime_str"),
+		self:locale("$stat_places_visited ") .. StatsGetValue("places_visited"),
+		self:locale("$stat_gold ") .. StatsGetValue("gold_all"),
+		self:locale("$stat_items_found ") .. StatsGetValue("items"),
 		T.lamas_stats_hearts_find .. " " .. StatsGetValue("heart_containers"),
 		T.lamas_stats_projectiles_shot .. " " .. StatsGetValue("projectiles_shot"),
 		T.lamas_stats_kicks .. " " .. StatsGetValue("kicks"),
 		T.lamas_stats_damage_taken .. " " .. math.ceil(StatsGetValue("damage_taken") * 25),
 	}
-	local longest = self:GetLongestText(stats_list, "stats_list")
-	self:TextCentered(0, 0, stats_list[1], longest)
+	local longest = self:get_longest_text(stats_list, "stats_list")
+	local head_w = self:get_text_dim(stats_list[1])
+	self:text(stats_list[1], { dx = (longest - head_w) / 2 })
 	for i = 2, #stats_list do
-		self:Text(0, 0, stats_list[i])
+		self:text(stats_list[i])
 	end
 end
 
 ---Draws time stat
 ---@private
 ---@return boolean
-function stats:StatsTime()
+function stats:stats_time()
 	if not self.config.stats_showtime then return false end
-	local time_string = self:Locale("$stat_time ")
-	local time_string_width = self:GetTextDimension(time_string)
+	local time_string = self:locale("$stat_time ")
+	local reserved = self:get_text_dim(time_string) + 44
 	local time = StatsGetValue("playtime_str")
-	local offset = time_string_width + 44
-	self:IfStatEntryHovered(offset, self.StatsTimeTooltip)
-	self:Text(self.stats.x, self.stats.y, time_string .. time)
-	self.stats.x = self.stats.x + offset
+	local hovered, tooltip_x, tooltip_y = self:entry(time_string .. time, reserved)
+	if self:tooltip(hovered, { id = "stats_time" }) then
+		self:stats_time_tooltip()
+		self:tooltip_end(tooltip_x, tooltip_y, true)
+	end
 	return true
 end
 
 ---Draws FPS
 ---@private
----@return boolean+
-function stats:FPS()
+---@return boolean
+function stats:stats_fps()
+	if not self.config.stats_fps then return false end
 	local current_frame = GameGetFrameNum()
 	if current_frame % 30 == 0 then
 		local current_time = GameGetRealWorldTimeSinceStarted()
@@ -211,9 +278,7 @@ function stats:FPS()
 		self.stats.fps_last_frame = current_frame
 		self.stats.fps_last_update_time = current_time
 	end
-	if not self.config.stats_fps then return false end
-	self:Text(self.stats.x, self.stats.y, "FPS: " .. self.stats.fps)
-	self.stats.x = self.stats.x + 30
+	self:entry("FPS: " .. self.stats.fps, self:get_text_dim("FPS: 60"))
 	return true
 end
 
@@ -222,7 +287,7 @@ local display_speed = "0"
 ---Draws player speed
 ---@private
 ---@return boolean
-function stats:StatsSpeed()
+function stats:stats_speed()
 	if not self.config.stats_show_speed then return false end
 	local px, py = self.player_x, self.player_y
 	local dx = px - self.stats.speed_last_x
@@ -234,45 +299,42 @@ function stats:StatsSpeed()
 	self.stats.speed_last_x = px
 	self.stats.speed_last_y = py
 
-	local speed_string = self:Locale("$inventory_speed: ")
-	local speed_string_width = self:GetTextDimension(speed_string)
+	local speed_string = self:locale("$inventory_speed: ")
+	local speed_string_width = self:get_text_dim(speed_string)
 
 	local speed_px_per_sec = self.stats.speed * self.stats.fps
 	local interval = math.max(1, math.min(60, math.floor(math.sqrt(speed_px_per_sec) / 8)))
 	-- slower update at high velocity to remove flickering
 	if GameGetFrameNum() % interval == 0 then display_speed = string.format("%.0f", speed_px_per_sec) end
 
-	local display_speed_width = math.min(18, self:GetTextDimension(display_speed)) + 6
-
-	self:Text(self.stats.x, self.stats.y, speed_string .. display_speed)
-	self.stats.x = self.stats.x + speed_string_width + display_speed_width
+	local reserved = speed_string_width + math.min(18, self:get_text_dim(display_speed)) + 6
+	self:entry(speed_string .. display_speed, reserved)
 	return true
 end
 
 ---Draws stats
 ---@private
-function stats:StatsDraw()
-	self.stats.x = self.header.pos_x + 20
-	self.stats.y = self.header.pos_y
+function stats:stats_draw()
+	local x = self.header.pos_x + 20
+	local y = self.header.pos_y
 
 	local stat_fns = {
-		self.FPS,
-		self.StatsFungal,
-		self.StatsTime,
-		self.StatsKills,
-		self.StatsPosition,
-		self.StatsSpeed,
-		self.StatsBiome,
+		self.stats_fungal,
+		self.stats_fps,
+		self.stats_time,
+		self.stats_kills,
+		self.stats_position,
+		self.stats_speed,
+		self.stats_biome,
 	}
 
-	local count = #stat_fns
-	for i = 1, count do
-		local shown = stat_fns[i](self)
-		if shown and i < count then
-			-- self:Text(self.stats.x, self.stats.y, "|")
-			self.stats.x = self.stats.x + 7
-		end
-	end
+	self:layout_at(x, y, function()
+		self:begin_row(function()
+			for i = 1, #stat_fns do
+				if stat_fns[i](self) then self:spacing(7) end
+			end
+		end)
+	end)
 end
 
 return stats

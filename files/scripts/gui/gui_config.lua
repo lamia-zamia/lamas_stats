@@ -1,16 +1,18 @@
----@class LS_Gui_config
+﻿---@class LS_Gui_config
+---@field config_order string[]
 ---@field config_list {[string]:string[]}
 ---@field unfolded {[string]:boolean}
----@field y number
 ---@field width number
+---@field scroll_h number
 ---@field [string] boolean
 
 ---@class LS_Gui
 ---@field config LS_Gui_config
 local config = {
 	config = {
-		y = 0,
 		width = 10,
+		scroll_h = 0,
+		config_order = { "Menu", "Stats", "Perks" },
 		config_list = {
 			Menu = {
 				"show_fungal_menu",
@@ -44,104 +46,90 @@ local config = {
 	},
 }
 
-function config:ConfigIsHovered()
-	return self:IsHoverBoxHovered(self.menu.start_x - 3, self.menu.pos_y + self.config.y + 7, self.menu.width - 6, 9)
-end
-
-function config:ConfigDrawCategory(category)
+---Category header with fold toggle.
+---@private
+---@param category string
+function config:config_draw_category(category)
 	local folded = not self.config.unfolded[category]
-	local img = folded and "data/ui_gfx/button_fold_close.png" or "data/ui_gfx/button_fold_open.png"
-	local category_text = T[category]
-	local dim = self:GetTextDimension(category_text)
-	local hovered = self:ConfigIsHovered()
-	if hovered then self:Color(1, 1, 0.7) end
-	self:Text(0, self.config.y, category_text)
-	if hovered then self:Color(1, 1, 0.7) end
-	self:Image(dim, self.config.y, img)
-	if hovered and self:IsLeftClicked() then self.config.unfolded[category] = not self.config.unfolded[category] end
+	local arrow = folded and "data/ui_gfx/button_fold_close.png" or "data/ui_gfx/button_fold_open.png"
+	local hovered = self:is_hovered_cursor(self.config.width, 9)
+
+	self:begin_row(function()
+		if hovered then self:color(1, 1, 0.7) end
+		self:text(T[category])
+		self:spacing(2)
+		self:image(arrow)
+	end)
+
+	if hovered and self:is_left_clicked() then self.config.unfolded[category] = not self.config.unfolded[category] end
+	self:spacing(2)
 end
 
-function config:ConfigDrawConfig(entry)
+---Checkbox row for one boolean setting.
+---@private
+---@param entry string
+function config:config_draw_config(entry)
 	local value = self.mod:GetSettingBoolean(entry)
-	local text = T[entry]
-	local text_dim = self:GetTextDimension(text)
-	local hovered = self:ConfigIsHovered()
-	if hovered then self:ColorYellow() end
-	self:Text(8, self.config.y, text)
-	self:Draw9Piece(
-		self.menu.start_x + text_dim + 9,
-		self.menu.pos_y + self.config.y + 9,
-		self.z,
-		6,
-		6,
-		hovered and self.buttons.img_hl or self.buttons.img
-	)
-	if value then
-		self:Color(0, 0.8, 0)
-		self:Text(text_dim + 13, self.config.y, "V")
-	else
-		self:Color(0.8, 0, 0)
-		self:Text(text_dim + 13, self.config.y, "X")
+	local clicked = false
+	-- A row with a leading gap = the indent (cursor-idiomatic, no dx option).
+	self:begin_row(function()
+		self:spacing(8)
+		clicked = self:checkbox(T[entry], value)
+	end)
+	if clicked then
+		local new_value = not value
+		self.config[entry] = new_value
+		self.mod:SetModSetting(entry, new_value)
 	end
-	if hovered and self:IsMouseClicked() then
-		self.config[entry] = not self.config[entry]
-		self.mod:SetModSetting(entry, self.config[entry])
-	end
+	self:spacing(3)
 end
 
-function config:ConfigDrawConfigs(category)
-	local entries = self.config.config_list[category]
-	for i = 1, #entries do
-		self:ConfigDrawConfig(entries[i])
-		self.config.y = self.config.y + 12
-	end
+---Scrollable settings list.
+---@private
+function config:config_draw_scroll_box()
+	local scrollbox_w = math.max(self.config.width, self:fill_width())
+	local box_h = self.config.scroll_h > 0 and math.min(self.config.scroll_h, self.max_height) or self.max_height
+	local _, content_h = self:begin_scrollbox("config", scrollbox_w, box_h, function()
+		for _, category in ipairs(self.config.config_order) do
+			self:config_draw_category(category)
+			if self.config.unfolded[category] then
+				local entries = self.config.config_list[category]
+				for i = 1, #entries do
+					self:config_draw_config(entries[i])
+				end
+			end
+		end
+	end)
+	self.config.scroll_h = content_h
 end
 
-function config:ConfigDraw()
-	self.config.y = 0 - self.scroll.y
-	for category, _ in pairs(self.config.config_list) do
-		self:ConfigDrawCategory(category)
-		self.config.y = self.config.y + 10
-		if self.config.unfolded[category] then self:ConfigDrawConfigs(category) end
-	end
-
-	self:Text(0, self.config.y + self.scroll.y, "")
-end
-
-function config:ConfigDrawScrollBox()
-	self:MenuSetWidth(self.config.width)
-	self:ScrollBox(
-		self.menu.start_x - 3,
-		self.menu.pos_y + 7,
-		self.z + 5,
-		self.menu.width + 6,
-		self.max_height + 12,
-		self.c.default_9piece,
-		3,
-		3,
-		self.ConfigDraw
-	)
-end
-
----Fetch settings
+---Fetches and caches settings; re-measures text on language change.
 ---@private
 ---@param did_language_changed boolean
-function config:ConfigGetSettings(did_language_changed)
+function config:config_get_settings(did_language_changed)
 	if not did_language_changed then return end
 	local max = 0
-	for category, _ in pairs(self.config.config_list) do
+	for _, category in ipairs(self.config.config_order) do
 		local entries = self.config.config_list[category]
 		for j = 1, #entries do
 			local config_key = entries[j]
 			self.config[config_key] = self.mod:GetSettingBoolean(config_key)
-			max = math.max(max, self:GetTextDimension(T[config_key]) + 25)
+			max = math.max(max, self:get_text_dim(T[config_key]) + 25)
 		end
 	end
 	self.config.width = max
 end
 
-function config:ConfigInit()
-	-- self:ConfigGetSettings()
+---Re-measures all setting label widths; called when the config window is opened.
+---@private
+function config:config_init()
+	local max = 0
+	for _, category in ipairs(self.config.config_order) do
+		for _, key in ipairs(self.config.config_list[category]) do
+			max = math.max(max, self:get_text_dim(T[key]) + 25)
+		end
+	end
+	self.config.width = max
 end
 
 return config
