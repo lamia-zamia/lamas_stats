@@ -1,5 +1,6 @@
 ---@class textbox
 ---@field gui gui
+---@field cursor_pos integer?
 ---@field selection_start integer?
 ---@field selection_end integer?
 local textbox = {
@@ -89,6 +90,7 @@ local controls_comp_fields = {
 local repeat_initial_delay = 20
 local repeat_rate = 2
 
+---Restores player movement controls.
 function textbox:enable_controls()
 	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
 	if not player then return end
@@ -98,6 +100,8 @@ function textbox:enable_controls()
 	self.controls_disabled = false
 end
 
+---Disables player movement controls while text input is active.
+---@private
 function textbox:disable_controls()
 	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
 	if not player then return end
@@ -110,7 +114,7 @@ function textbox:disable_controls()
 	self.controls_disabled = true
 end
 
----function to check repeatable keys
+---True on first press or on each repeat-rate tick while held.
 ---@private
 ---@param frame number
 ---@param key number
@@ -157,7 +161,8 @@ function textbox:delete_selection(text)
 	return text
 end
 
----Moves cursor
+---Moves cursor; extends selection when shift is held.
+---@private
 ---@param new_pos integer
 ---@param shift_held boolean
 function textbox:apply_selection_movement(new_pos, shift_held)
@@ -170,7 +175,7 @@ function textbox:apply_selection_movement(new_pos, shift_held)
 	self.cursor_pos = new_pos
 end
 
----Processes key presses
+---Processes keyboard input and returns the updated text.
 ---@private
 ---@param text string
 ---@return string
@@ -288,6 +293,7 @@ function textbox:draw_selection(x, y, z, text)
 	GuiImage(self.gui, 100, x + before_w, y, "mods/lamas_stats/vfs/white.png", 0.8, selected_w, 10)
 end
 
+---Renders the textbox, handles click-focus and key input, returns updated text.
 ---@param x number
 ---@param y number
 ---@param z number
