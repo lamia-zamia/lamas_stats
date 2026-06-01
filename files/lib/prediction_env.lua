@@ -1,3 +1,4 @@
+---@diagnostic disable: missing-return-value
 ---Returns a fresh isolated environment that inherits real API via __index = _G.
 ---All writes go to the env table, never to _G. dofile/dofile_once are overridden
 ---to propagate the env to any scripts loaded through them.
@@ -7,10 +8,22 @@ local function make_env(overrides)
 	local loaded = {}
 	local env = setmetatable({}, { __index = _G })
 
+	-- Mirrors do_mod_appends: runs each ModLuaFileAppend file in env.
+	local function run_appends(path)
+		local appends = ModLuaFileGetAppends(path)
+		for i = 1, #appends do
+			local append_chunk = assert(loadfile(appends[i]))
+			setfenv(append_chunk, env)
+			append_chunk()
+		end
+	end
+
 	env.dofile = function(path)
 		local chunk = assert(loadfile(path))
 		setfenv(chunk, env)
-		return chunk()
+		local result = chunk()
+		run_appends(path)
+		return result
 	end
 
 	env.dofile_once = function(path)
@@ -19,6 +32,7 @@ local function make_env(overrides)
 		setfenv(chunk, env)
 		local result = chunk()
 		loaded[path] = { result }
+		run_appends(path)
 		return result
 	end
 
