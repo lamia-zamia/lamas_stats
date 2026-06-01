@@ -142,12 +142,7 @@ local function get_material_type(attributes, is_child)
 	if cell_type and mat.material_types[cell_type] then
 		-- is it solid
 		if mat.material_types[cell_type] == mat.material_types.solid then return mat.material_types.solid end
-		if
-			attributes.convert_to_box2d_material
-			or attributes.solid_break_to_type
-			or attributes.solid_static_type == "1"
-			or attributes.platform_type == "1"
-		then
+		if attributes.convert_to_box2d_material or attributes.solid_static_type == "1" or attributes.platform_type == "1" then
 			return mat.material_types.static
 		end
 		local is_liquid = mat.material_types[cell_type] == mat.material_types.liquid
