@@ -2,6 +2,7 @@
 ---@field name string
 ---@field description string
 ---@field sprite string
+---@field type integer  action type (0=projectile, 1=static_proj, 2=modifier, 3=draw_many, 4=material, 5=other, 6=utility, 7=passive)
 
 ---@class action_parser
 ---@field data {[string]:action_data}
@@ -15,6 +16,7 @@ local function add_action(action_data)
 		name = action_data.name or "",
 		description = action_data.description or "",
 		sprite = action_data.sprite,
+		type = action_data.type or 5,
 	}
 end
 
@@ -36,6 +38,7 @@ function actions_data:parse()
 		name = "???",
 		description = "???",
 		sprite = "data/items_gfx/perk.png",
+		type = 5,
 	}
 
 	-- Reverting globals to its formal state

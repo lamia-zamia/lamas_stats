@@ -7,13 +7,13 @@
 ---@field private player_x number
 ---@field private player_y number
 ---@field private fungal_cd number
----@field private z number
 ---@field private fs fungal_shift
 ---@field private alt boolean
 ---@field private shift_hold number
 ---@field private perks perk_helpers
 ---@field private actions action_parser
 ---@field private mat material_parser
+---@field private shop_pred shop_predictor
 ---@field private max_height number
 ---@field private textbox textbox
 ---@field c {codes:keycodes, px:string, empty:string} mod-side constants
@@ -29,14 +29,14 @@ gui.options.tooltip_sprite = "mods/lamas_stats/files/gfx/ui_9piece_tooltip_darke
 gui.options.ninepiece_sprite = "mods/lamas_stats/files/gfx/ui_9piece_main.png"
 gui.options.scrollbar_thumb_sprite = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar.png"
 gui.options.scrollbar_thumb_sprite_hl = "mods/lamas_stats/files/gfx/ui_9piece_scrollbar_hl.png"
-gui.options.z_index = -900
 gui.mod = dofile_once("mods/lamas_stats/files/scripts/mod_util.lua")
 gui.perks = dofile_once("mods/lamas_stats/files/scripts/perks/perk.lua")
 gui.actions = dofile_once("mods/lamas_stats/files/scripts/gun_parser.lua")
 gui.show = false
-gui.z = -900
+gui.options.z_index = -9000
 gui.fs = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift.lua")
 gui.mat = dofile_once("mods/lamas_stats/files/scripts/material_parser.lua")
+gui.shop_pred = dofile_once("mods/lamas_stats/files/scripts/shops/shop_predictor.lua")
 gui.alt = false
 gui.shift_hold = 0
 gui.max_height = 180
@@ -51,6 +51,7 @@ local modules = {
 	"mods/lamas_stats/files/scripts/gui/perks/gui_perks.lua",
 	"mods/lamas_stats/files/scripts/gui/gui_config.lua",
 	"mods/lamas_stats/files/scripts/gui/materials/gui_materials.lua",
+	"mods/lamas_stats/files/scripts/gui/shops/gui_shops.lua",
 }
 
 for i = 1, #modules do
@@ -98,6 +99,7 @@ function gui:post_biome_init()
 	local custom_img_id = ModImageMakeEditable("mods/lamas_stats/vfs/white.png", 1, 1)
 	ModImageSetPixel(custom_img_id, 0, 0, -1) -- white
 	self.mat:post_biome_init()
+	self.shop_pred:scan_map()
 end
 
 ---Initializes parsers, loads settings, and restores saved overlay state.
@@ -106,6 +108,8 @@ function gui:post_world_init()
 	self.actions:parse()
 	self.mat:post_world_init()
 	self.fs:Init()
+	self.shop_pred:predict(0)
+	self.shops.pinned_wand = nil
 	self:get_settings(true)
 	self.show = self.mod:GetSettingBoolean("overlay_enabled")
 	self.menu.opened = self.mod:GetSettingBoolean("menu_enabled")
@@ -146,7 +150,7 @@ function gui:loop()
 	self:fetch_data()
 	self:determine_alt_mode()
 
-	self:set_z(self.z - 100)
+	self:set_z(self.z_index - 100)
 	self:header_draw()
 	if self.config.stats_enable then self:stats_draw() end
 	if self.menu.opened then self:menu_draw() end

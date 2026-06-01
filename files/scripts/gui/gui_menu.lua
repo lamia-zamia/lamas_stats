@@ -56,6 +56,14 @@ local WINDOWS = {
 		self_framed = true,
 	},
 	{
+		id = "shops",
+		label = "Shops",
+		draw = "shops_draw_window",
+		overlay = "shops_draw_overlays",
+		flag = "show_shops_menu",
+		self_framed = true,
+	},
+	{
 		id = "materials",
 		label = "materials",
 		draw = "materials_draw_window",

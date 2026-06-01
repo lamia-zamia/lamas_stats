@@ -17,6 +17,7 @@ local config = {
 			Menu = {
 				"show_fungal_menu",
 				"show_perks_menu",
+				"show_shops_menu",
 				"show_materials",
 				"show_kys_menu",
 			},
