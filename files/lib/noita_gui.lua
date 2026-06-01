@@ -861,10 +861,12 @@ end
 ---@param alpha number?
 ---@param scale_x number?
 ---@param scale_y number?
-function ui:image_at(x, y, sprite, alpha, scale_x, scale_y)
+---@param angle number?  rotation in radians, 0 = no rotation
+function ui:image_at(x, y, sprite, alpha, scale_x, scale_y, angle)
 	alpha = alpha or 1
 	scale_x = scale_x or 1
 	scale_y = scale_y or scale_x
+	angle = angle or 0
 	if self._rec then
 		local width, height = self:get_image_dim(sprite, scale_x)
 		self:_record({
@@ -882,7 +884,7 @@ function ui:image_at(x, y, sprite, alpha, scale_x, scale_y)
 		return
 	end
 	self:_apply_tint()
-	GuiImage(self.gui, self:id(), x, y, sprite, alpha * self._draw_alpha, scale_x, scale_y, 0, 2)
+	GuiImage(self.gui, self:id(), x, y, sprite, alpha * self._draw_alpha, scale_x, scale_y, angle, 2)
 end
 
 ---@class image_options
@@ -891,24 +893,50 @@ end
 ---@field scale_y number?
 ---@field dx number?
 ---@field dy number?
+---@field angle number?  rotation in radians (CCW positive); 90/270 deg swaps bounding box
 
 ---Draws an image at cursor position and advances cursor.
 ---@param sprite string
 ---@param opts image_options?
 function ui:image(sprite, opts)
-	local alpha, scale_x, scale_y, offset_x, offset_y = 1, 1, 1, 0, 0
+	local alpha, scale_x, scale_y, offset_x, offset_y, angle = 1, 1, 1, 0, 0, 0
 	if opts then
 		alpha = opts.alpha or 1
 		scale_x = opts.scale_x or 1
 		scale_y = opts.scale_y or scale_x
 		offset_x = opts.dx or 0
 		offset_y = opts.dy or 0
+		angle = opts.angle or 0
 	end
 	local image_width, image_height = self:get_image_dim(sprite, scale_x)
-	local advance_width = math.max(image_width + offset_x, 0)
-	local advance_height = math.max(image_height + offset_y, 0)
+	-- For 90 or 270 degree rotations the bounding box swaps width and height.
+	local adv_w, adv_h = image_width, image_height
+	if angle ~= 0 then
+		local q = math.floor(math.abs(angle) / (math.pi / 2) + 0.5) % 2
+		if q == 1 then
+			adv_w = math.floor(image_height * scale_y / scale_x + 0.5)
+			adv_h = image_width
+		end
+	end
+	local advance_width = math.max(adv_w + offset_x, 0)
+	local advance_height = math.max(adv_h + offset_y, 0)
 	if self:_is_drawing(advance_width, advance_height) then
-		self:image_at(self.cursor.x + offset_x, self.cursor.y + offset_y, sprite, alpha, scale_x, scale_y)
+		local draw_x = self.cursor.x + offset_x
+		local draw_y = self.cursor.y + offset_y
+		-- Shift origin so the rotated image lands inside the bounding box.
+		-- CCW 90 (angle > 0): origin must be at the right edge of the box.
+		-- CW 90  (angle < 0): origin must be at the bottom edge of the box.
+		if angle ~= 0 then
+			local q = math.floor(math.abs(angle) / (math.pi / 2) + 0.5) % 2
+			if q == 1 then
+				if angle > 0 then
+					draw_x = draw_x + adv_w
+				else
+					draw_y = draw_y + image_width
+				end
+			end
+		end
+		self:image_at(draw_x, draw_y, sprite, alpha, scale_x, scale_y, angle)
 	else
 		self._pending_color = nil -- consume so it can't leak onto a later widget
 	end
@@ -1320,7 +1348,12 @@ end
 ---@return number content_width, number content_height
 function ui:begin_scrollbox(string_id, width, height, fn, opts)
 	local content_width, content_height = self:measure(fn)
-	if self:_is_measuring() then return content_width, content_height end
+	if self:_is_measuring() then
+		-- Advance so the enclosing window's natural-width measurement (used by window_group)
+		-- sees the scrollbox content size, allowing the panel to auto-size correctly.
+		self:_advance_cursor(content_width, content_height)
+		return content_width, content_height
+	end
 
 	local bar_width = (opts and opts.bar_width) or self.options.scrollbar_width
 	local background_sprite = (opts and opts.sprite)
@@ -1328,37 +1361,53 @@ function ui:begin_scrollbox(string_id, width, height, fn, opts)
 	local thumb_sprite = (opts and opts.thumb_sprite) or self.options.scrollbar_thumb_sprite
 	local thumb_sprite_hl = (opts and opts.thumb_sprite_hl) or self.options.scrollbar_thumb_sprite_hl
 	local margin = (opts and opts.margin) or 0
-
-	local scroll = self._scrolls[string_id]
-	if not scroll then
-		scroll = { scroll_x = 0, scroll_y = 0, is_dragging = false, _drag_offset = 0, target_y = 0, _scroll_vel = 0 }
-		self._scrolls[string_id] = scroll
-	end
+	-- Never reserve empty space below content; cap the clip region at content size.
+	height = math.min(height, content_height + margin * 2)
 
 	local start_x, start_y = self.cursor.x, self.cursor.y
 	local inner_height = height - margin * 2
 
 	if background_sprite then self:ninepiece_at(start_x, start_y, width, height, { sprite = background_sprite }) end
 
-	local has_scrollbar = content_height > inner_height
-	-- Content is clipped to leave the bar its own column, so it never draws
-	-- under the scrollbar (by design, not a bug).
-	local visible_content_width = has_scrollbar and (width - bar_width) or width
-	if has_scrollbar then
-		self:_update_and_draw_scrollbar(
-			scroll,
-			start_x,
-			start_y,
-			width,
-			height,
-			margin,
-			content_height,
-			bar_width,
-			track_sprite,
-			thumb_sprite,
-			thumb_sprite_hl
-		)
+	-- Scrollbar only when content overflows by more than a few pixels; minor
+	-- measurement imprecision clips silently rather than triggering scroll UI.
+	local has_scrollbar = content_height > inner_height + 4
+	if not has_scrollbar then
+		-- No scroll state or stale offset. Clip only when content overflows slightly.
+		self:_push_cursor(start_x + margin, start_y + margin)
+		if content_height > inner_height then
+			self:_begin_clip(start_x + margin, start_y + margin, width - margin * 2, inner_height, fn)
+		else
+			fn()
+		end
+		self:_pop_cursor()
+		self._scroll_y = 0
+		self:_advance_cursor(width, height)
+		return content_width, content_height
 	end
+
+	-- Content overflows significantly: clip with scrollbar.
+	local scroll = self._scrolls[string_id]
+	if not scroll then
+		scroll = { scroll_x = 0, scroll_y = 0, is_dragging = false, _drag_offset = 0, target_y = 0, _scroll_vel = 0 }
+		self._scrolls[string_id] = scroll
+	end
+
+	-- Content is clipped to leave the bar its own column, so it never draws under the scrollbar.
+	local visible_content_width = width - bar_width
+	self:_update_and_draw_scrollbar(
+		scroll,
+		start_x,
+		start_y,
+		width,
+		height,
+		margin,
+		content_height,
+		bar_width,
+		track_sprite,
+		thumb_sprite,
+		thumb_sprite_hl
+	)
 
 	self:_push_cursor(start_x + margin, start_y + margin - scroll.scroll_y)
 	self:_begin_clip(start_x + margin, start_y + margin, visible_content_width - margin * 2, inner_height, fn)
