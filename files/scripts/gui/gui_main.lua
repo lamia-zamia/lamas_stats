@@ -108,8 +108,6 @@ function gui:post_world_init()
 	self.actions:parse()
 	self.mat:post_world_init()
 	self.fs:Init()
-	-- self.shop_pred:predict(0)
-	self.shops.pinned_wand = nil
 	self:get_settings(true)
 	self.show = self.mod:GetSettingBoolean("overlay_enabled")
 	self.menu.opened = self.mod:GetSettingBoolean("menu_enabled")
