@@ -78,6 +78,7 @@ local translations = {
 		shops_wand_inspect = "Left click to inspect",
 		shops_wand_spells = "Spells",
 		shops_wand_always_cast = "Always cast",
+		shops_current = "Current",
 	},
 	["русский"] = {
 		lamas_stat_current = "Текущие",
@@ -159,6 +160,7 @@ local translations = {
 		shops_wand_inspect = "Левый клик для просмотра",
 		shops_wand_spells = "Заклинания",
 		shops_wand_always_cast = "Постоянное заклинание",
+		shops_current = "Текущий",
 	},
 	["日本語"] = {
 		lamas_stat_current = "現在",
@@ -239,6 +241,7 @@ local translations = {
 		shops_wand_inspect = "左クリックで詳細表示",
 		shops_wand_spells = "呪文",
 		shops_wand_always_cast = "常時キャスト",
+		shops_current = "現在",
 	},
 }
 

@@ -98,10 +98,15 @@ function helper:get_fungal_shift_cooldown()
 	return math.max(math.floor((self.fs.cooldown - (frame - last_frame)) / 60), 0)
 end
 
+---Returns the player's current parallel world index (0 = main, positive = east, negative = west).
+function helper:get_player_pw()
+	return GetParallelWorldPosition(self.player_x, self.player_y)
+end
+
 ---Updates and persists farthest east/west parallel-world positions.
 ---@private
 function helper:scan_pw_position()
-	local player_par_x = GetParallelWorldPosition(self.player_x, self.player_y)
+	local player_par_x = self:get_player_pw()
 	if player_par_x < self.stats.position_pw_west then
 		self.stats.position_pw_west = player_par_x
 		GlobalsSetValue("lamas_stats_farthest_west", tostring(player_par_x))

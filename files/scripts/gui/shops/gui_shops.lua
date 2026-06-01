@@ -5,6 +5,8 @@
 ---@field pinned_wand shop_item? wand item pinned for persistent detail view, nil = none
 ---@field hovered_wand shop_item? wand item hovered this frame, nil if none (reset each frame)
 ---@field wand_panel_bottom number bottom y of the wand detail panel from last frame (1-frame lag; 0 = unknown)
+---@field world_offset integer  parallel world offset from player's current PW (-2..+2); 0 = player's world
+---@field last_pw integer       player's PW index at the last update; used to detect PW changes
 
 ---@class (exact) LS_Gui
 ---@field private shops LS_Gui_shops
@@ -16,6 +18,8 @@ local sg = {
 		pinned_wand = nil,
 		hovered_wand = nil,
 		wand_panel_bottom = 0,
+		world_offset = 0,
+		last_pw = 0,
 	},
 }
 
@@ -498,23 +502,33 @@ function sg:shops_draw_wand_panel()
 	end)
 end
 
----Called when the shops tab is opened; forces a fresh prediction.
+---Called when the shops tab is opened; forces a fresh prediction from the player's current world.
 function sg:shops_init()
+	self.shops.world_offset = 0
+	self.shops.last_pw = self:get_player_pw()
 	self:shops_update()
 end
 
----Re-runs shop prediction after a perk pick (shop contents may have changed).
+---Re-runs shop prediction for the currently viewed parallel world.
 ---@private
 function sg:shops_update()
-	self.shop_pred:predict(0)
+	local pw = self:get_player_pw()
+	self.shop_pred:predict((pw + self.shops.world_offset) * self.shop_pred.world_width)
 	self.shops.pinned_wand = nil
 	self.shops.wand_panel_bottom = 0
 end
 
----Triggers shops_update if a perk was picked since the last frame.
+---Triggers shops_update on perk pick or when the player moves to a different parallel world.
 ---@private
 function sg:shops_check_for_updates()
-	if self:check_perk_picked() then self:shops_update() end
+	local pw = self:get_player_pw()
+	if pw ~= self.shops.last_pw then
+		self.shops.last_pw = pw
+		self.shops.world_offset = 0
+		self:shops_update()
+	elseif self:check_perk_picked() then
+		self:shops_update()
+	end
 end
 
 ---Draw the holy mountain shops panel (header + scrollbox).
@@ -529,7 +543,17 @@ function sg:shops_draw_window()
 	local min_w = m._just_switched and min_content or math.max(m.shared_width, min_content)
 
 	local header_width, header_h = self:window(function()
-		self:text(T.Shops)
+		self:begin_centered_row(math.max(min_content, self:fill_width()), function()
+			for offset = -2, 2 do
+				if offset > -2 then self:spacing(2) end
+				local label = offset == 0 and T.shops_current or (offset > 0 and "+" .. offset or tostring(offset))
+				local is_active = offset == self.shops.world_offset
+				if self:button(label, not is_active) and not is_active then
+					self.shops.world_offset = offset
+					self:shops_update()
+				end
+			end
+		end)
 	end, { id = "shops_header", min_width = min_w })
 
 	self.shops.tip_x = m.start_x + header_width + 2
