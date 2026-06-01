@@ -18,9 +18,9 @@ local scanner = {
 
 ---Scans nearby entities
 function scanner:Scan()
-	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
+	local player = EntityGetWithTag("player_unit")[1]
 	if not player then return end
-	local x, y = ENTITY_GET_TRANSFORM(player)
+	local x, y = EntityGetTransform(player)
 	self.entities = EntityGetInRadiusWithTag(x, y, 350, "perk")
 end
 
@@ -29,7 +29,7 @@ function scanner:ParseEntities()
 	local parsed = {}
 	for i = 1, #self.entities do
 		local entity_id = self.entities[i]
-		local x, y = ENTITY_GET_TRANSFORM(entity_id)
+		local x, y = EntityGetTransform(entity_id)
 		local id = self:GetPerkId(entity_id)
 		parsed[#parsed + 1] = {
 			x = x or i,
@@ -52,7 +52,7 @@ end
 ---@param id string
 ---@return boolean
 function scanner:IsLotteryWon(x, y, id)
-	local perk_destroy_chance = tonumber(GLOBALS_GET_VALUE("TEMPLE_PERK_DESTROY_CHANCE", "100")) or 100
+	local perk_destroy_chance = tonumber(GlobalsGetValue("TEMPLE_PERK_DESTROY_CHANCE", "100")) or 100
 	SetRandomSeed(x, y)
 	local rand = Random(1, 100)
 	if id == "PERKS_LOTTERY" then perk_destroy_chance = perk_destroy_chance / 2 end
@@ -74,36 +74,34 @@ end
 ---@param y number
 ---@return string
 function scanner:PredictAlwaysCast(x, y)
-	function EntityGetTransform()
+	local env = setmetatable({}, { __index = _G })
+
+	env.EntityGetTransform = function()
 		return x, y, 0, 0, 0
 	end
-
-	function EntityGetFirstComponentIncludingDisabled()
+	env.EntityGetFirstComponentIncludingDisabled = function()
 		return 90
 	end
-
-	function find_the_wand_held()
+	env.find_the_wand_held = function()
 		return 1
 	end
-
-	function ComponentObjectGetValue()
+	env.ComponentObjectGetValue = function()
 		return 1
 	end
-
-	function EntityGetWandCapacity()
+	env.EntityGetWandCapacity = function()
 		return 20
 	end
-
-	local always_cast
-	function AddGunActionPermanent(wand, card)
-		always_cast = card
+	env.AddGunActionPermanent = function(_, card)
+		env._always_cast_result = card
 	end
+	env.GamePrintImportant = function() end
 
-	function GamePrintImportant() end
-
+	local original_fenv = getfenv(self.always_cast)
+	setfenv(self.always_cast, env)
 	self.always_cast()
+	setfenv(self.always_cast, original_fenv)
 
-	return always_cast
+	return env._always_cast_result
 end
 
 return scanner

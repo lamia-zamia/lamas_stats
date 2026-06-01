@@ -1,4 +1,3 @@
-dofile_once("mods/lamas_stats/files/scripts/redefined_functions.lua")
 T = dofile_once("mods/lamas_stats/translations/translation.lua") ---Translation strings (i hate this)
 local gui = dofile_once("mods/lamas_stats/files/scripts/gui/gui_main.lua") ---@type LS_Gui
 local current_language = GameTextGetTranslatedOrNot("$current_language")

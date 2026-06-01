@@ -23,12 +23,16 @@ local nil_fn = function() end
 ---@field private altar_positions {world_x:number, world_y:number}[]
 ---@field private shop_dx integer?
 ---@field private shop_dy integer?
+---@field private _env table?
+---@field private _state table?
 local shop_predictor = {
 	mountains = {},
 	world_width = 0,
 	altar_positions = {},
 	shop_dx = nil,
 	shop_dy = nil,
+	_env = nil,
+	_state = nil,
 }
 
 -- Colors in ABGR format (ModImageGetPixel returns signed int32).
@@ -86,23 +90,24 @@ local function parse_biome_offset_y(nxml_lib)
 	return tonumber(root.attr.biome_offset_y) or 14
 end
 
----Execute the biome map script to capture PNG path and per-pixel overrides.
+---Execute the biome map script inside env to capture PNG path and per-pixel overrides.
+---@param env table isolated environment
 ---@return string? map_img_path
 ---@return table pixel_overrides  [px][py] = color
-local function parse_biome_map_script()
+local function parse_biome_map_script(env)
 	local map_img_path
 	local pixel_overrides = {}
 
-	BiomeMapSetSize = nil_fn
-	BiomeMapLoadImage = function(_, _, path)
+	env.BiomeMapSetSize = nil_fn
+	env.BiomeMapLoadImage = function(_, _, path)
 		map_img_path = path
 	end
-	BiomeMapSetPixel = function(x, y, color)
+	env.BiomeMapSetPixel = function(x, y, color)
 		if not pixel_overrides[x] then pixel_overrides[x] = {} end
 		pixel_overrides[x][y] = color
 	end
 
-	dofile(MagicNumbersGetValue("BIOME_MAP"))
+	env.dofile(MagicNumbersGetValue("BIOME_MAP"))
 
 	return map_img_path, pixel_overrides
 end
@@ -135,32 +140,190 @@ end
 ---Must be called in post_biome_init while ModImage* API is available.
 function shop_predictor:scan_map()
 	local nxml = dofile_once("mods/lamas_stats/files/lib/nxml.lua")
-
-	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua")
-	sandbox:start_sandbox()
+	local make_env = dofile_once("mods/lamas_stats/files/lib/prediction_env.lua")
+	local env = make_env()
 
 	local biome_offset_y = parse_biome_offset_y(nxml)
-	local map_img_path, pixel_overrides = parse_biome_map_script()
+	local map_img_path, pixel_overrides = parse_biome_map_script(env)
 
-	if not map_img_path then
-		sandbox:end_sandbox()
-		return
-	end
+	if not map_img_path then return end
 
 	local map_img_id, map_w, map_h = ModImageMakeEditable(map_img_path, 0, 0)
 
-	if not map_w or not map_h then
-		sandbox:end_sandbox()
-		return
-	end
+	if not map_w or not map_h then return end
 
 	self.world_width = map_w * 512
 	self.altar_positions = find_altar_positions(map_img_id, map_w, map_h, pixel_overrides, biome_offset_y)
 
 	local altar_img_id, altar_w, altar_h = ModImageMakeEditable("data/biome_impl/temple/altar.png", 0, 0)
 	self.shop_dx, self.shop_dy = scan_for_first_color(altar_img_id, altar_w, altar_h, SHOP_TRIGGER_COLOR)
+end
 
-	sandbox:end_sandbox()
+---Initialize self._env and self._state on first call; no-op on subsequent calls.
+---Sets up all shadow functions, loads temple_altar.lua and gun_procedural.lua into env.
+function shop_predictor:_setup_env()
+	if self._env then return end
+
+	local make_env = dofile_once("mods/lamas_stats/files/lib/prediction_env.lua")
+	local state = {
+		captured_scene_x = nil,
+		captured_scene_y = nil,
+		captured_items = {},
+		items_by_eid = {},
+		fake_eid = 0,
+		pending_cheap = false,
+		wand_being_generated = nil,
+	}
+	self._state = state
+
+	local env = make_env()
+	self._env = env
+
+	-- Pre-load gun_procedural so wand init scripts' dofile_once calls hit the env cache,
+	-- keeping AddGunAction/Permanent shadows alive during generate_gun execution.
+	env.dofile_once("data/scripts/gun/procedural/gun_procedural.lua")
+
+	for i = 1, #NULL_FUNCTIONS do
+		env[NULL_FUNCTIONS[i]] = nil_fn
+	end
+
+	-- Load temple_altar.lua into env once.
+	-- init() and spawn_all_shopitems() will live in env and use env for all global lookups.
+	env.dofile_once("data/scripts/biomes/temple_altar.lua")
+
+	-- Shadow LoadPixelScene to capture altar scene origin from init().
+	-- Filter altar_top paths to avoid capturing the wrong origin.
+	env.LoadPixelScene = function(img_path, _, scene_x, scene_y, _, _)
+		if not img_path:find("altar_top", 1, true) and not state.captured_scene_x then
+			state.captured_scene_x = scene_x
+			state.captured_scene_y = scene_y
+		end
+	end
+
+	-- Shadow CreateItemActionEntity to capture spell items for the shop list.
+	-- When inside wand gen (wand_being_generated set), spells are captured via
+	-- AddGunAction/Permanent shadows instead; return a fake eid without recording.
+	env.CreateItemActionEntity = function(item_id, _, _)
+		state.fake_eid = state.fake_eid + 1
+		if state.wand_being_generated then return state.fake_eid end
+		local item = { id = item_id, is_wand = false, is_cheap = false, price = 0 }
+		state.items_by_eid[state.fake_eid] = item
+		state.captured_items[#state.captured_items + 1] = item
+		return state.fake_eid
+	end
+
+	-- Shadow EntityAddComponent to capture prices from ItemCostComponent.
+	local function capture_item_cost(eid, comp_type, params)
+		if comp_type == "ItemCostComponent" then
+			local item = state.items_by_eid[eid]
+			if item then item.price = math.floor(tonumber(params.cost) or 0) end
+		end
+	end
+	env.EntityAddComponent = capture_item_cost
+	env.EntityAddComponent2 = capture_item_cost
+
+	env.GetUpdatedEntityID = function()
+		if state.wand_being_generated then return state.wand_being_generated.eid end
+		return 0
+	end
+
+	env.EntityGetTransform = function(eid)
+		if state.wand_being_generated and eid == state.wand_being_generated.eid then
+			return state.wand_being_generated.x, state.wand_being_generated.y
+		end
+		return 0, 0
+	end
+
+	-- Returns a deterministic fake component id for the wand's AbilityComponent only.
+	env.EntityGetFirstComponent = function(eid, comp_type, _)
+		if state.wand_being_generated and eid == state.wand_being_generated.eid then
+			if comp_type == "AbilityComponent" then return state.wand_being_generated.eid * 100 + 1 end
+		end
+		return nil
+	end
+
+	-- Captures gun_config / gunaction_config stats written by make_wand_from_gun_data.
+	env.ComponentObjectSetValue = function(comp, _, key, val)
+		if state.wand_being_generated then
+			if comp == state.wand_being_generated.eid * 100 + 1 then state.wand_being_generated.item.stats[key] = tonumber(val) or val end
+		end
+	end
+
+	-- Captures mana/speed written by make_wand_from_gun_data; ignores visual-only keys.
+	local WAND_STAT_KEYS = { mana_max = true, mana_charge_speed = true, gun_level = true }
+	env.ComponentSetValue = function(comp, key, val)
+		if state.wand_being_generated then
+			if comp == state.wand_being_generated.eid * 100 + 1 and WAND_STAT_KEYS[key] then
+				state.wand_being_generated.item.stats[key] = tonumber(val) or val
+			end
+		end
+	end
+
+	-- Captures wand sprite path from SetWandSprite in make_wand_from_gun_data.
+	env.SetWandSprite = function(eid, _, sprite_path)
+		if state.wand_being_generated and eid == state.wand_being_generated.eid then state.wand_being_generated.item.sprite = sprite_path end
+	end
+
+	-- Deck and always-cast spell capture; replaces gun_action_utils versions so EntityAddChild
+	-- (nulled above) is never called with a fake eid.
+	env.AddGunAction = function(_, action_id)
+		if state.wand_being_generated and action_id ~= "" then
+			local s = state.wand_being_generated.item.spells
+			s[#s + 1] = action_id
+		end
+	end
+
+	env.AddGunActionPermanent = function(_, action_id)
+		if state.wand_being_generated and action_id ~= "" then
+			local ac = state.wand_being_generated.item.always_cast
+			ac[#ac + 1] = action_id
+		end
+	end
+
+	-- Shadow EntityLoad to capture wands (triggering gen script inline) and sale indicators.
+	-- Spell order: CreateItemActionEntity -> [sale_indicator] -> EntityAddComponent
+	-- Wand order:  [sale_indicator] -> EntityLoad(wand) -> EntityAddComponent
+	env.EntityLoad = function(path, x, y)
+		if path == "data/entities/buildings/shop_hitbox.xml" then return 0 end
+		if path == "data/entities/misc/sale_indicator.xml" then
+			local last = state.captured_items[#state.captured_items]
+			if last and not last.is_wand then
+				last.is_cheap = true
+			else
+				state.pending_cheap = true
+			end
+			return 0
+		end
+		if path:find("entities/items/wand", 1, true) then
+			state.fake_eid = state.fake_eid + 1
+			local wand_eid = state.fake_eid
+			local item = {
+				id = path,
+				is_wand = true,
+				is_cheap = state.pending_cheap,
+				price = 0,
+				sprite = nil,
+				stats = {},
+				spells = {},
+				always_cast = {},
+			}
+			state.pending_cheap = false
+			state.items_by_eid[wand_eid] = item
+			state.captured_items[#state.captured_items + 1] = item
+			-- Run the wand's procedural gen script inline so it executes with our shadows active.
+			-- gun_procedural.lua is pre-loaded at the top of _setup_env(), so wand scripts'
+			-- dofile_once calls hit the env cache and our AddGunAction/Permanent shadows are not overwritten.
+			-- Round to nearest integer pixel: Noita snaps entity transforms to the pixel grid
+			-- on load. Without this, wands 2+ use float offsets (e.g. trigger_x + 26.4) and
+			-- generate_gun seeds with a wrong value. math.floor(v + 0.5) = round-to-nearest.
+			state.wand_being_generated = { eid = wand_eid, x = math.floor(x + 0.5), y = math.floor(y + 0.5), item = item }
+			local script_path = path:gsub("data/entities/items/", "data/scripts/gun/procedural/"):gsub("%.xml$", ".lua")
+			pcall(env.dofile, script_path)
+			state.wand_being_generated = nil
+			return wand_eid
+		end
+		return 0
+	end
 end
 
 ---Simulate shop contents for all mountains at the given world x offset.
@@ -169,182 +332,34 @@ end
 function shop_predictor:predict(world_x_offset)
 	if #self.altar_positions == 0 or not self.shop_dx then return end
 
-	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua")
-	sandbox:start_sandbox()
+	self:_setup_env()
 
-	for i = 1, #NULL_FUNCTIONS do
-		_G[NULL_FUNCTIONS[i]] = nil_fn
-	end
-
-	-- Mutable upvalues reset per mountain; all shadow closures share these bindings.
-	local captured_scene_x, captured_scene_y
-	local captured_items, items_by_eid
-	local fake_eid, pending_cheap
-	local wand_being_generated -- { eid, x, y, item }; set only during wand gen script execution
-
-	-- Shadow LoadPixelScene to capture altar scene origin from init().
-	-- Filter altar_top paths to avoid capturing the wrong origin.
-	LoadPixelScene = function(img_path, _, scene_x, scene_y, _, _)
-		if not img_path:find("altar_top", 1, true) and not captured_scene_x then
-			captured_scene_x = scene_x
-			captured_scene_y = scene_y
-		end
-	end
-
-	-- Shadow CreateItemActionEntity to capture spell items for the shop list.
-	-- When inside wand gen (wand_being_generated set), spells are captured via
-	-- AddGunAction/Permanent shadows instead; return a fake eid without recording.
-	CreateItemActionEntity = function(item_id, _, _)
-		fake_eid = fake_eid + 1
-		if wand_being_generated then return fake_eid end
-		local item = { id = item_id, is_wand = false, is_cheap = false, price = 0 }
-		items_by_eid[fake_eid] = item
-		captured_items[#captured_items + 1] = item
-		return fake_eid
-	end
-
-	-- Shadow EntityLoad to capture wands (triggering gen script inline) and sale indicators.
-	-- Spell order: CreateItemActionEntity -> [sale_indicator] -> EntityAddComponent
-	-- Wand order:  [sale_indicator] -> EntityLoad(wand) -> EntityAddComponent
-	EntityLoad = function(path, x, y)
-		if path == "data/entities/buildings/shop_hitbox.xml" then return 0 end
-		if path == "data/entities/misc/sale_indicator.xml" then
-			local last = captured_items[#captured_items]
-			if last and not last.is_wand then
-				last.is_cheap = true
-			else
-				pending_cheap = true
-			end
-			return 0
-		end
-		if path:find("entities/items/wand", 1, true) then
-			fake_eid = fake_eid + 1
-			local wand_eid = fake_eid
-			local item = {
-				id = path,
-				is_wand = true,
-				is_cheap = pending_cheap,
-				price = 0,
-				sprite = nil,
-				stats = {},
-				spells = {},
-				always_cast = {},
-			}
-			pending_cheap = false
-			items_by_eid[wand_eid] = item
-			captured_items[#captured_items + 1] = item
-			-- Run the wand's procedural gen script inline so it executes with our shadows active.
-			-- gun_procedural.lua is already in __loadonce (pre-loaded below), so its dofile_once
-			-- is a no-op and our AddGunAction/Permanent shadows are not overwritten.
-			-- Round to nearest integer pixel: Noita snaps entity transforms to the pixel grid
-			-- on load. Without this, wands 2+ use float offsets (e.g. trigger_x + 26.4) and
-			-- generate_gun seeds with a wrong value. math.floor(v + 0.5) = round-to-nearest.
-			wand_being_generated = { eid = wand_eid, x = math.floor(x + 0.5), y = math.floor(y + 0.5), item = item }
-			local script_path = path:gsub("data/entities/items/", "data/scripts/gun/procedural/"):gsub("%.xml$", ".lua")
-			pcall(dofile, script_path)
-			wand_being_generated = nil
-			return wand_eid
-		end
-		return 0
-	end
-
-	-- Shadow EntityAddComponent to capture prices from ItemCostComponent.
-	local function capture_item_cost(eid, comp_type, params)
-		if comp_type == "ItemCostComponent" then
-			local item = items_by_eid[eid]
-			if item then item.price = math.floor(tonumber(params.cost) or 0) end
-		end
-	end
-	EntityAddComponent = capture_item_cost
-	EntityAddComponent2 = capture_item_cost
-
-	dofile("data/scripts/biomes/temple_altar.lua")
-
-	-- Pre-load gun_procedural so that wand init scripts' dofile_once calls are no-ops,
-	-- keeping our AddGunAction/Permanent shadows alive during generate_gun execution.
-	dofile_once("data/scripts/gun/procedural/gun_procedural.lua")
-
-	-- Wand generation API shadows; all guard on wand_being_generated to be no-ops otherwise.
-
-	GetUpdatedEntityID = function()
-		if wand_being_generated then return wand_being_generated.eid end
-		return 0
-	end
-
-	EntityGetTransform = function(eid)
-		if wand_being_generated and eid == wand_being_generated.eid then return wand_being_generated.x, wand_being_generated.y end
-		return 0, 0
-	end
-
-	-- Returns a deterministic fake component id for the wand's AbilityComponent only.
-	EntityGetFirstComponent = function(eid, comp_type, _)
-		if wand_being_generated and eid == wand_being_generated.eid then
-			if comp_type == "AbilityComponent" then return wand_being_generated.eid * 100 + 1 end
-		end
-		return nil
-	end
-
-	-- Captures gun_config / gunaction_config stats written by make_wand_from_gun_data.
-	ComponentObjectSetValue = function(comp, _, key, val)
-		if wand_being_generated then
-			if comp == wand_being_generated.eid * 100 + 1 then wand_being_generated.item.stats[key] = tonumber(val) or val end
-		end
-	end
-
-	-- Captures mana/speed written by make_wand_from_gun_data; ignores visual-only keys.
-	local WAND_STAT_KEYS = { mana_max = true, mana_charge_speed = true, gun_level = true }
-	ComponentSetValue = function(comp, key, val)
-		if wand_being_generated then
-			if comp == wand_being_generated.eid * 100 + 1 and WAND_STAT_KEYS[key] then wand_being_generated.item.stats[key] = tonumber(val) or val end
-		end
-	end
-
-	-- Captures wand sprite path from SetWandSprite in make_wand_from_gun_data.
-	SetWandSprite = function(eid, _, sprite_path)
-		if wand_being_generated and eid == wand_being_generated.eid then wand_being_generated.item.sprite = sprite_path end
-	end
-
-	-- Deck and always-cast spell capture; replaces gun_action_utils versions so EntityAddChild
-	-- (nulled above) is never called with a fake eid.
-	AddGunAction = function(_, action_id)
-		if wand_being_generated and action_id ~= "" then
-			local s = wand_being_generated.item.spells
-			s[#s + 1] = action_id
-		end
-	end
-
-	AddGunActionPermanent = function(_, action_id)
-		if wand_being_generated and action_id ~= "" then
-			local ac = wand_being_generated.item.always_cast
-			ac[#ac + 1] = action_id
-		end
-	end
+	local state = assert(self._state)
+	local env = assert(self._env)
 
 	local mountains = {}
 	for _, pos in ipairs(self.altar_positions) do
-		captured_scene_x = nil
-		captured_scene_y = nil
-		captured_items = {}
-		items_by_eid = {}
-		fake_eid = 0
-		pending_cheap = false
+		state.captured_scene_x = nil
+		state.captured_scene_y = nil
+		state.captured_items = {}
+		state.items_by_eid = {}
+		state.fake_eid = 0
+		state.pending_cheap = false
 
 		local shifted_x = pos.world_x + world_x_offset
-		init(shifted_x, pos.world_y)
+		env.init(shifted_x, pos.world_y)
 
-		if captured_scene_x then
-			local trigger_x = captured_scene_x + self.shop_dx
-			local trigger_y = captured_scene_y + self.shop_dy
-			spawn_all_shopitems(trigger_x, trigger_y)
+		if state.captured_scene_x then
+			local trigger_x = state.captured_scene_x + self.shop_dx
+			local trigger_y = state.captured_scene_y + self.shop_dy
+			env.spawn_all_shopitems(trigger_x, trigger_y)
 			mountains[#mountains + 1] = {
 				world_x = shifted_x,
 				world_y = pos.world_y,
-				items = captured_items,
+				items = state.captured_items,
 			}
 		end
 	end
-
-	sandbox:end_sandbox()
 
 	table.sort(mountains, function(a, b)
 		return a.world_y < b.world_y

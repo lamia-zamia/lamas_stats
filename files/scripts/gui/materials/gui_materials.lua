@@ -756,14 +756,14 @@ end
 
 ---Checks if material checkers found anything and opens the materials window on a match.
 function materials:check_for_checkers()
-	local detector = GLOBALS_GET_VALUE("LAMAS_STATS_DETECTOR", "")
+	local detector = GlobalsGetValue("LAMAS_STATS_DETECTOR", "")
 	local is_found = detector ~= ""
 	if is_found then
 		self.show = true
 		self.menu.opened = true
 		self.menu.current = "materials"
 		self.materials.current_recipe = tonumber(detector)
-		GLOBALS_SET_VALUE("LAMAS_STATS_DETECTOR", "")
+		GlobalsSetValue("LAMAS_STATS_DETECTOR", "")
 	end
 	if checker_spawned then GamePlaySound("data/audio/Desktop/ui.bank", is_found and "ui/item_move_success" or "ui/item_move_denied", 0, 0) end
 	checker_spawned = false

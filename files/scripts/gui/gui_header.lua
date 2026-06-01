@@ -13,9 +13,7 @@ function header:header_draw()
 	if self:is_text_button_clicked(self.header.pos_x, self.header.pos_y, self.menu.opened and "*" or "L") then
 		self.menu.opened = not self.menu.opened
 
-		if self.menu.opened then
-			self:menu_call_current_init()
-		end
+		if self.menu.opened then self:menu_call_current_init() end
 	end
 end
 

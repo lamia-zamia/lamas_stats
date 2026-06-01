@@ -68,7 +68,7 @@ gui.textbox.gui = gui:handle()
 ---Updates player transform, shift counter, and fungal cooldown each frame.
 ---@private
 function gui:fetch_data()
-	self.player_x, self.player_y = ENTITY_GET_TRANSFORM(self.player)
+	self.player_x, self.player_y = EntityGetTransform(self.player)
 	if GameGetFrameNum() % 60 == 0 then self:scan_pw_position() end
 	local shift_num = self.mod:GetGlobalNumber("fungal_shift_iteration", 0) + 1
 	if self.fs.current_shift ~= shift_num then
@@ -108,7 +108,7 @@ function gui:post_world_init()
 	self.actions:parse()
 	self.mat:post_world_init()
 	self.fs:Init()
-	self.shop_pred:predict(0)
+	-- self.shop_pred:predict(0)
 	self.shops.pinned_wand = nil
 	self:get_settings(true)
 	self.show = self.mod:GetSettingBoolean("overlay_enabled")
@@ -136,7 +136,7 @@ end
 ---Per-frame entry point: processes input, fetches data, and draws the overlay.
 function gui:loop()
 	self:start_frame()
-	self.player = ENTITY_GET_WITH_TAG("player_unit")[1]
+	self.player = EntityGetWithTag("player_unit")[1]
 	if not self.player then return self:end_frame() end
 
 	if self.textbox.controls_disabled then self.textbox:enable_controls() end

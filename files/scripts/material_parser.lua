@@ -328,9 +328,7 @@ function mat:post_biome_init()
 	for _, parsed_file in ipairs(parsed_files) do
 		for elem in parsed_file:each_of("CellDataChild") do
 			parse_material(elem, true)
-			if elem.attr._inherit_reactions == "1" and elem.attr._parent then
-				inherit_children[elem.attr.name] = elem.attr._parent
-			end
+			if elem.attr._inherit_reactions == "1" and elem.attr._parent then inherit_children[elem.attr.name] = elem.attr._parent end
 		end
 	end
 

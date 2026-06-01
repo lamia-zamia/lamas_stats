@@ -92,7 +92,7 @@ local repeat_rate = 2
 
 ---Restores player movement controls.
 function textbox:enable_controls()
-	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
+	local player = EntityGetWithTag("player_unit")[1]
 	if not player then return end
 	local controls_component = EntityGetFirstComponent(player, "ControlsComponent")
 	if not controls_component then return end
@@ -103,7 +103,7 @@ end
 ---Disables player movement controls while text input is active.
 ---@private
 function textbox:disable_controls()
-	local player = ENTITY_GET_WITH_TAG("player_unit")[1]
+	local player = EntityGetWithTag("player_unit")[1]
 	if not player then return end
 	local controls_component = EntityGetFirstComponent(player, "ControlsComponent")
 	if not controls_component then return end

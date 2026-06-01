@@ -286,11 +286,7 @@ end
 function pg:check_for_updates(current_nearby_perks)
 	local reroll_count = self.mod:GetGlobalNumber("TEMPLE_PERK_REROLL_COUNT")
 	self.perks.nearby:Scan()
-	if
-		current_nearby_perks ~= #self.perks.nearby.entities
-		or self:check_perk_picked()
-		or reroll_count ~= self.perk.reroll_count
-	then
+	if current_nearby_perks ~= #self.perks.nearby.entities or self:check_perk_picked() or reroll_count ~= self.perk.reroll_count then
 		self:perks_update()
 	end
 	self.perk.reroll_count = reroll_count

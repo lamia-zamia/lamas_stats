@@ -15,7 +15,7 @@ function perk:GetCurrentList()
 	self.total_amount = 0
 	for i = 1, #self.data.list do
 		local id = self.data.list[i]
-		local pickup_count = tonumber(GLOBALS_GET_VALUE("PERK_PICKED_" .. id .. "_PICKUP_COUNT", "0")) or 0
+		local pickup_count = tonumber(GlobalsGetValue("PERK_PICKED_" .. id .. "_PICKUP_COUNT", "0")) or 0
 		self.total_amount = self.total_amount + pickup_count
 		self.data.perks[id].picked_count = pickup_count
 	end

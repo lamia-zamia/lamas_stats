@@ -28,8 +28,11 @@ local shift_predictor = {
 local last_shift_result
 local flask
 
----Redefines functions so they would do nothing
-local function redefine_functions()
+-- Holds the prediction env for the duration of parse(); referenced by all helpers.
+local shift_env
+
+---Set null/interceptor shadows on env for prediction run.
+local function redefine_env_functions(env)
 	local nil_fn = function() end
 	local fn_to_nil = {
 		"GameCreateParticle",
@@ -48,17 +51,14 @@ local function redefine_functions()
 		"print",
 		"GameTextGet",
 		"CrossCall",
-		"GameHasFlagRun",
 	}
 
 	for i = 1, #fn_to_nil do
-		_G[fn_to_nil[i]] = nil_fn
+		env[fn_to_nil[i]] = nil_fn
 	end
 
-	local cell_factory_get_type = CellFactory_GetType
-	---@param material string
-	---@return number
-	function CellFactory_GetType(material)
+	local real_cell_factory = CellFactory_GetType
+	env.CellFactory_GetType = function(material)
 		if not material then
 			report(
 				"Some mod broke fungal shifts, shift number: "
@@ -68,43 +68,36 @@ local function redefine_functions()
 			)
 			return nest
 		end
-		return cell_factory_get_type(material)
+		return real_cell_factory(material)
 	end
 
-	-- Anti-NT sync
-	local game_has_flag_run_old = GameHasFlagRun
-	local game_has_flag_run = function(flag)
+	-- Anti-NT sync: return false for NT_sync_shift, nil (falsy) for everything else.
+	env.GameHasFlagRun = function(flag)
 		if flag == "NT_sync_shift" then return false end
-		return game_has_flag_run_old(flag)
 	end
-	GameHasFlagRun = game_has_flag_run
 end
 
----Bruteforce cooldown value
+---Bruteforce cooldown value; sets shift_predictor.cooldown.
 local function determine_cooldown()
 	local passed_frame_check
 	local frame = 0
 
-	local globalsGetValue = function(key)
-		-- Returning frame 180000 - frame for checks
+	shift_env.GlobalsGetValue = function(key)
 		if key == "fungal_shift_last_frame" then return 180000 - frame end
-		-- Returning iteration 5000 for it to exit after frame check
 		if key == "fungal_shift_iteration" then
 			passed_frame_check = true
 			return 5000
 		end
 	end
-	GlobalsGetValue = globalsGetValue
 
-	local gameGetFrameNum = function()
+	shift_env.GameGetFrameNum = function()
 		return 180000
 	end
-	GameGetFrameNum = gameGetFrameNum
 
 	-- Starting from 180000, decreasing frame by one and checking if frame check was passed
 	for _ = 1, 180000 do
 		passed_frame_check = false
-		fungal_shift(1, 0, 0, false)
+		shift_env.fungal_shift(1, 0, 0, false)
 		if passed_frame_check then
 			shift_predictor.cooldown = frame
 			return
@@ -117,24 +110,25 @@ end
 
 local function detect_single_pass_deterministic()
 	local converted = false
-	ConvertMaterialEverywhere = function()
+	shift_env.ConvertMaterialEverywhere = function()
 		converted = true
 	end
 
-	-- get_held_item_material is not yet mocked here; neutralise it so flask
-	-- logic cannot override from/to and corrupt the detection.
-	local old_get_held = get_held_item_material
-	get_held_item_material = function()
+	-- Save env values (loaded into env by fungal_shift's dependency scripts) before overriding.
+	local saved_get_held = shift_env.get_held_item_material
+	local saved_pick = shift_env.pick_random_from_table_weighted
+
+	-- Neutralise flask logic so it cannot override from/to and corrupt the detection.
+	shift_env.get_held_item_material = function()
 		return 0
 	end
 
-	-- Strategy: force the first while-loop iteration to fail (from == to → no
+	-- Strategy: force the first while-loop iteration to fail (from == to -> no
 	-- conversion), then force the second iteration to succeed (from ~= to).
 	-- If converted == true after the run, the implementation retried, meaning
 	-- it is NOT single-pass deterministic.
-	local pick_random_from_table_weighted_old = pick_random_from_table_weighted
 	local call_count = 0
-	pick_random_from_table_weighted = function()
+	shift_env.pick_random_from_table_weighted = function()
 		call_count = call_count + 1
 		-- call 3 is the "from" pick of the second iteration; use a material
 		-- that differs from water so the conversion check passes on retry.
@@ -142,27 +136,26 @@ local function detect_single_pass_deterministic()
 		return { materials = { "water" }, material = "water" }
 	end
 
-	fungal_shift(1, 0, 0, true)
+	shift_env.fungal_shift(1, 0, 0, true)
 
-	pick_random_from_table_weighted = pick_random_from_table_weighted_old
-	get_held_item_material = old_get_held
+	shift_env.pick_random_from_table_weighted = saved_pick
+	shift_env.get_held_item_material = saved_get_held
+
 	return not converted
 end
 
----Bruteforce max shift count
+---Bruteforce max shift count; sets shift_predictor.max_shifts.
 local function determine_max_shift()
 	local converted
 
-	-- Rewriting function to set boolean to true when shift was successful
-	local convertMaterialEverywhere = function()
+	shift_env.ConvertMaterialEverywhere = function()
 		converted = true
 	end
-	ConvertMaterialEverywhere = convertMaterialEverywhere
 
 	for _ = 1, 200 do
 		converted = false
-		fungal_shift(1, 0, 0, false)
-		-- If it didn't converted - it was failed
+		shift_env.fungal_shift(1, 0, 0, false)
+		-- If it didn't convert - it was failed
 		if not converted then
 			shift_predictor.max_shifts = shift_predictor.current_predict_iter - 1
 			return
@@ -181,7 +174,7 @@ local function do_fungal_shift_with_material(material)
 	last_shift_result = {
 		from = {},
 	}
-	fungal_shift(1, 0, 0, true)
+	shift_env.fungal_shift(1, 0, 0, true)
 end
 
 ---Checks for failed shifts with flask from
@@ -287,7 +280,7 @@ local function get_shift_materials()
 	}
 	-- Setting no flask (air)
 	flask = 0
-	fungal_shift(1, 0, 0, true)
+	shift_env.fungal_shift(1, 0, 0, true)
 
 	-- Something failed
 	if not last_shift_result.from[1] or not last_shift_result.to then
@@ -327,49 +320,46 @@ end
 
 ---Parses data from fungal_shift.lua
 function shift_predictor:parse()
-	-- Starting sandbox to not load any globals
-	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
-	sandbox:start_sandbox()
+	local make_env = dofile_once("mods/lamas_stats/files/lib/prediction_env.lua")
+	local env = make_env()
+	shift_env = env
 
 	nest = CellFactory_GetType("nest_static")
 	gold = CellFactory_GetType("gold")
 	grass = CellFactory_GetType("grass_holy")
 
-	-- Redefining some functions so fungal shift would do nothing
-	redefine_functions()
-	fungal_shift = nil ---@diagnostic disable-line: assign-type-mismatch
-	dofile("data/scripts/magic/fungal_shift.lua")
+	redefine_env_functions(env)
+
+	-- Load fungal_shift.lua fresh into env so fungal_shift() lives in env, not _G.
+	env.fungal_shift = nil
+	env.dofile("data/scripts/magic/fungal_shift.lua")
 
 	-- Gets shift cooldown
 	determine_cooldown()
 
 	-- Cooldown value was set, we don't need to work with cooldown anymore
-	local gameGetFrameNum = function()
+	shift_env.GameGetFrameNum = function()
 		return 0
 	end
-	GameGetFrameNum = gameGetFrameNum
-	local globalsGetValue = function(key, default)
+	shift_env.GlobalsGetValue = function(key, default)
 		if key == "fungal_shift_iteration" then return shift_predictor.current_predict_iter - 1 end
 		return default
 	end
-	GlobalsGetValue = globalsGetValue
 
 	-- Gets max shift
 	determine_max_shift()
 	self.is_single_pass = detect_single_pass_deterministic()
 
 	-- Starting to parse materials, overriding convertMaterial function so it would return what was converted
-	local convertMaterialEverywhere = function(material_from_type, material_to_type)
+	shift_env.ConvertMaterialEverywhere = function(material_from_type, material_to_type)
 		last_shift_result.from[#last_shift_result.from + 1] = material_from_type
 		last_shift_result.to = material_to_type
 	end
-	ConvertMaterialEverywhere = convertMaterialEverywhere
 
-	-- Overwriting a function to return a set material instead of hold material
-	local _get_held_item_material = function()
+	-- Overwriting a function to return a set material instead of held material
+	shift_env.get_held_item_material = function() ---@diagnostic disable-line: lowercase-global
 		return flask
 	end
-	get_held_item_material = _get_held_item_material ---@diagnostic disable-line: lowercase-global
 
 	-- Getting 200 shifts (because fuck you)
 	for i = 1, 200 do
@@ -388,9 +378,7 @@ function shift_predictor:parse()
 	-- Removing vars
 	last_shift_result = nil ---@diagnostic disable-line: cast-local-type
 	flask = nil ---@diagnostic disable-line: cast-local-type
-
-	-- Reverting globals to its formal state
-	sandbox:end_sandbox()
+	shift_env = nil ---@diagnostic disable-line: cast-local-type
 end
 
 return shift_predictor

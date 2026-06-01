@@ -514,9 +514,7 @@ end
 ---Triggers shops_update if a perk was picked since the last frame.
 ---@private
 function sg:shops_check_for_updates()
-	if self:check_perk_picked() then
-		self:shops_update()
-	end
+	if self:check_perk_picked() then self:shops_update() end
 end
 
 ---Draw the holy mountain shops panel (header + scrollbox).
