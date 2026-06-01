@@ -419,6 +419,7 @@ end
 function fg:fungal_init()
 	self.fungal.past = self.mod:GetSettingBoolean("enable_fungal_past")
 	self.fungal.future = self.mod:GetSettingBoolean("enable_fungal_future")
+	self:fungal_shift_list_changed()
 end
 
 return fg

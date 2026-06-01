@@ -1,6 +1,44 @@
-﻿local helper = {} ---@class (exact) LS_Gui
+﻿---@class (exact) LS_Gui
+---@field private _perk_children_count integer?
+---@field private _perk_children_frame integer
+---@field private _perk_children_changed boolean
+local helper = {
+	_perk_children_frame = -1,
+	_perk_children_changed = false,
+}
 
 local material_name_cache = {}
+
+---Returns true if the player's children entity count changed since last frame.
+---Frame-cached: multiple callers in the same frame all see the same result.
+---@private
+---@return boolean
+function helper:check_perk_picked()
+	local frame = GameGetFrameNum()
+	if frame ~= self._perk_children_frame then
+		local count = #(EntityGetAllChildren(self.player) or {})
+		self._perk_children_changed = self._perk_children_count ~= nil and count ~= self._perk_children_count
+		self._perk_children_count = count
+		self._perk_children_frame = frame
+	end
+	return self._perk_children_changed
+end
+
+---Draws a shaded rectangle overlay at the current cursor position without advancing it.
+---shade is a grey level (0=black, 1=white).
+---@private
+---@param width number
+---@param height number
+---@param shade number
+---@param alpha number
+---@param dy number?  optional vertical offset (does not affect cursor)
+function helper:draw_stripe(width, height, shade, alpha, dy)
+	self:overlay(function()
+		self:color(shade, shade, shade)
+		self:set_z_for_next(self.z_index + 4)
+		self:image(self.c.px, { alpha = alpha, scale_x = width, scale_y = height, dy = dy })
+	end)
+end
 
 ---Sets a soft yellow color for the next widget.
 ---@private

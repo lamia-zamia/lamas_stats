@@ -4,6 +4,7 @@
 ---@field content_w number     inner pixel width of the shops scrollbox
 ---@field pinned_wand shop_item? wand item pinned for persistent detail view, nil = none
 ---@field hovered_wand shop_item? wand item hovered this frame, nil if none (reset each frame)
+---@field wand_panel_bottom number bottom y of the wand detail panel from last frame (1-frame lag; 0 = unknown)
 
 ---@class (exact) LS_Gui
 ---@field private shops LS_Gui_shops
@@ -14,6 +15,7 @@ local sg = {
 		content_w = 0,
 		pinned_wand = nil,
 		hovered_wand = nil,
+		wand_panel_bottom = 0,
 	},
 }
 
@@ -74,6 +76,17 @@ local ITEM_BG = {
 	[7] = INV .. "item_bg_passive.png",
 }
 local SPELL_BOX = INV .. "hover_info_empty_slot.png"
+local TOOLTIP_SPRITE = "mods/lamas_stats/files/gfx/ui_9piece_tooltip_darker.png"
+local ACTION_TYPE_LOCALE = {
+	[0] = "$inventory_actiontype_projectile",
+	[1] = "$inventory_actiontype_staticprojectile",
+	[2] = "$inventory_actiontype_modifier",
+	[3] = "$inventory_actiontype_drawmany",
+	[4] = "$inventory_actiontype_material",
+	[5] = "$inventory_actiontype_other",
+	[6] = "$inventory_actiontype_utility",
+	[7] = "$inventory_actiontype_passive",
+}
 
 ---Format a numeric stat value for display.
 ---@param stat table  entry from WAND_STATS
@@ -94,45 +107,88 @@ local function fmt_stat(stat, v, alt)
 	return tostring(math.floor(v + 0.5))
 end
 
----Draw a single spell icon with a three-layer background (box + type bg + icon),
----hover-zoom, and spell name tooltip.
+---Tooltip body for a spell: icon + name header, description lines, type in alt mode.
+---@private
+---@param data action_data
+---@param spell_id string
+function sg:shops_spell_tooltip(data, spell_id)
+	local ui_name = self:locale(data.name)
+	local description_lines = self:split_string(self:locale(data.description), 200)
+	local id_line = self.alt and ("(" .. spell_id .. ")") or ""
+	local type_name = self.alt and self:locale(ACTION_TYPE_LOCALE[data.type] or "$inventory_actiontype_other") or ""
+
+	-- spell_id always in array: provides a stable minimum width across spells.
+	-- Cache key encodes alt mode (id_line differs) so toggling doesn't return a stale width.
+	local longest = self:get_longest_text({ ui_name, spell_id, id_line, type_name }, spell_id .. id_line)
+	longest = math.max(longest, self:get_longest_text(description_lines, data.description))
+
+	local icon_w, icon_h = self:get_image_dim(data.sprite, 0.625)
+	local _, text_h = self:get_text_dim(ui_name)
+	self:begin_centered_row(longest, function()
+		self:leaf(icon_w, text_h, function()
+			self:image(data.sprite, { scale_x = 0.625, dy = (text_h - icon_h) / 2 })
+		end)
+		self:spacing(3)
+		self:text(ui_name)
+	end)
+
+	for i = 1, #description_lines do
+		self:color(0.8, 0.8, 0.8)
+		self:text_centered(description_lines[i], longest)
+	end
+
+	if self.alt then
+		self:spacing(2)
+		self:color_gray()
+		self:text_centered(id_line, longest)
+		self:color_gray()
+		self:text_centered(type_name, longest)
+	else
+		self:alt_hint()
+	end
+end
+
+---Three-layer spell icon visual (box + type bg + icon). No interaction; shared by wand panel and shop list.
 ---Layers are z-sorted so box renders behind type bg, icon on top.
 ---@private
----@param spell_id string
----@param tip_key integer  stable tooltip key unique in this scrollbox pass
----@param box boolean? draw box
-function sg:shops_draw_spell(spell_id, tip_key, box)
-	local data = self.actions:get_data(spell_id)
+---@param data action_data
+---@param box boolean? draw outer slot box
+---@param hovered boolean
+function sg:shops_draw_spell_icon(data, box, hovered)
 	local type_bg = ITEM_BG[data.type] or INV .. "item_bg_other.png"
-	local hovered = self:is_hovered_cursor(SPELL_SIZE, SPELL_SIZE)
 	local pop = hovered and 1.0 or 0
 	self:leaf(SPELL_SIZE, SPELL_SIZE, function()
 		-- z_index is the global GuiZSet base (~-9000). Window ninepieces land at
 		-- z_index+100-depth (~-8900), so content must be MORE negative to render in front.
-		-- Layer 1: generic box (furthest back, still in front of window frame)
 		if box then
 			self:set_z_for_next(self.z_index - 1)
 			self:image(SPELL_BOX, { scale_x = SPELL_SCALE })
 		end
-		-- Layer 2: type-specific background (middle).
-		-- When box was drawn it advanced the cursor by SPELL_SIZE, so go back by that
-		-- amount. Without box the cursor is still at cell start, so dx = 0.
+		-- box=true:  box already advanced cursor by SPELL_SIZE, pull type_bg back to x=0.
+		-- box=false: type_bg at x=0; icon at SPELL_INSET gives center ~SPELL_SIZE/2, matching
+		--            the price which is also centered within SPELL_SIZE.
 		local bg_dx = box and -SPELL_SIZE or 0
 		self:set_z_for_next(self.z_index - 2)
 		self:image(type_bg, { dx = bg_dx, scale_x = SPELL_SCALE, alpha = 0.75 })
-		-- Layer 3: spell icon (front), SPELL_INSET inset; hover pops it slightly.
-		-- ICON_SCALE is smaller than SPELL_SCALE so the icon sits inset from the bg edge.
 		self:set_z_for_next(self.z_index - 3)
 		self:image(data.sprite, { dx = -(SPELL_SIZE - SPELL_INSET) - pop, dy = SPELL_INSET - pop, scale_x = ICON_SCALE * (hovered and 1.15 or 1) })
 	end)
+end
+
+---Draw a single spell icon with hover-zoom and spell tooltip. Used in the wand detail panel.
+---@private
+---@param spell_id string
+---@param tip_key integer  stable tooltip key unique in this scrollbox pass
+---@param box boolean? draw outer slot box
+function sg:shops_draw_spell(spell_id, tip_key, box)
+	local data = self.actions:get_data(spell_id)
+	local hovered = self:is_hovered_cursor(SPELL_SIZE, SPELL_SIZE)
+	self:shops_draw_spell_icon(data, box, hovered)
 	self:spacing(-1)
-	if hovered and self:tooltip(true, { id = tip_key }) then
-		self:text(self:locale(data.name))
-		if self.alt then
-			self:color_gray()
-			self:text(spell_id)
-		end
-		self:tooltip_end(self.shops.tip_x, self.shops.tip_y, false)
+	if hovered and self:tooltip(true, { id = tip_key, sprite = TOOLTIP_SPRITE, border = 0 }) then
+		self:shops_spell_tooltip(data, spell_id)
+		local tip_y = self.shops.wand_panel_bottom > 0 and (self.shops.wand_panel_bottom + 2) or self.shops.tip_y
+		self:tooltip_end(self.shops.tip_x - 1, tip_y, false)
 	end
 end
 
@@ -201,6 +257,13 @@ function sg:shops_draw_wand_body(stats, spells, always_cast, sprite, per_row, al
 				elseif v == nil then
 					self:color_gray()
 					self:text("?")
+				elseif s.time then
+					-- Reserve the wider of sec/frame format so the column doesn't resize on alt toggle.
+					local w = math.max(self:get_text_dim(fmt_stat(s, v, false)), self:get_text_dim(fmt_stat(s, v, true)))
+					local _, h = self:get_text_dim(fmt_stat(s, v, alt))
+					self:leaf(w, h, function()
+						self:text(fmt_stat(s, v, alt))
+					end)
 				else
 					self:text(fmt_stat(s, v, alt))
 				end
@@ -222,7 +285,7 @@ function sg:shops_draw_wand_body(stats, spells, always_cast, sprite, per_row, al
 		self:begin_row(function()
 			-- Wrap label in a column so it can be vertically centered against the
 			-- spell cell height. AC_ICON is 7px + dy=2 = 9px advance; text ~9px.
-			local label_dy = math.max(0, math.floor((SPELL_SIZE - 9) / 2))
+			local label_dy = math.max(0, (SPELL_SIZE - 9) / 2)
 			self:begin_column(function()
 				self:spacing(label_dy)
 				self:begin_row(function()
@@ -258,17 +321,52 @@ end
 ---@param item shop_item
 ---@param tip_key integer  stable numeric tooltip key, unique within one scrollbox pass
 function sg:shops_draw_item(item, tip_key)
-	local cell_sprite = item.is_wand and WAND_ICON or self.actions:get_data(item.id).sprite
 	local hovered = self:is_hovered_cursor(ITEM_W - 1, ITEM_H)
 	local is_pinned = item.is_wand and (self.shops.pinned_wand == item)
 
 	self:leaf(ITEM_W, ITEM_H, function()
 		self:begin_column(function()
-			if is_pinned then self:color(0.6, 1, 0.6) end
-			self:image(cell_sprite)
+			if is_pinned then
+				self:overlay(function()
+					self:color(0.2, 1, 0.2)
+					self:set_z_for_next(self.z_index + 4)
+					-- SPELL_SIZE matches the wand/price centering reference width so the highlight is symmetric.
+					self:image(self.c.px, { alpha = 0.3, scale_x = SPELL_SIZE, scale_y = ITEM_H })
+				end)
+			end
+			-- 2px top inset so item content sits centred within the stripe.
+			self:spacing(2)
+			if item.is_wand then
+				local pop = hovered and 1.0 or 0
+				local sprite = item.sprite
+				if sprite then
+					-- Scale all wands to the same height; center the narrow rotated sprite under the price.
+					-- Leaf reserves fixed height so the price row does not shift on hover.
+					local nat_w, nat_h = self:get_image_dim(sprite)
+					local s = nat_w > 0 and ((ITEM_H - 10) / nat_w) or 0.5
+					local hover_s = s * (hovered and 1.15 or 1)
+					local visual_w = nat_h * hover_s
+					local center_dx = (SPELL_SIZE - visual_w) / 2
+					self:leaf(SPELL_SIZE, ITEM_H - 10, function()
+						self:image(sprite, { angle = -math.pi / 2, scale_x = hover_s, dx = center_dx, dy = -pop })
+					end)
+				else
+					-- Leaf reserves fixed space; pop shifts icon without affecting price.
+					self:leaf(SPELL_SIZE, SPELL_SIZE, function()
+						self:image(WAND_ICON, { scale_x = hovered and 1.15 or 1, dx = -pop, dy = -pop })
+					end)
+				end
+			else
+				local spell_data = self.actions:get_data(item.id)
+				self:shops_draw_spell_icon(spell_data, false, hovered)
+				self:spacing(-1)
+			end
 			self:spacing(1)
 			if item.is_cheap then self:color(1, 0.85, 0.25) end
-			self:text(tostring(item.price), { scale = 0.7 })
+			local price_str = tostring(item.price)
+			local price_w = self:get_text_dim(price_str, 0.7)
+			local price_scale = price_w <= SPELL_SIZE and 0.7 or (0.7 * SPELL_SIZE / price_w)
+			self:text_centered(price_str, ITEM_W, { scale = price_scale })
 		end)
 	end)
 
@@ -284,31 +382,53 @@ function sg:shops_draw_item(item, tip_key)
 	end
 
 	-- Wands show a full detail panel on hover; only tooltip non-wand items.
-	if not item.is_wand and hovered and self:tooltip(true, { id = tip_key }) then
-		self:text(self:locale(self.actions:get_data(item.id).name))
+	if not item.is_wand and hovered and self:tooltip(true, { id = tip_key, sprite = TOOLTIP_SPRITE, border = 0 }) then
+		self:shops_spell_tooltip(self.actions:get_data(item.id), item.id)
 		if item.is_cheap then
 			self:spacing(3)
 			self:color(1, 0.85, 0.25)
 			self:text(T.shops_sale)
 		end
-		self:tooltip_end(self.shops.tip_x, self.shops.tip_y, false)
+		local tip_y = self.shops.wand_panel_bottom > 0 and (self.shops.wand_panel_bottom + 2) or self.shops.tip_y
+		self:tooltip_end(self.shops.tip_x - 1, tip_y, false)
 	end
 end
 
----Draw one mountain row: index label followed by all item cells.
+---Draw one mountain: index label on the first row, items wrapped to fit content width.
 ---@private
 ---@param mountain shop_mountain
 ---@param mountain_index integer  1-based display number
 function sg:shops_draw_mountain(mountain, mountain_index)
-	self:begin_row(function()
-		self:leaf(LABEL_W, ITEM_H, function()
-			self:text(tostring(mountain_index))
+	local items = mountain.items
+	local count = #items
+	local items_w = math.max(ITEM_W, self.shops.content_w - LABEL_W - 3)
+	local per_row = math.max(1, math.floor(items_w / ITEM_W))
+	local row_count = math.max(1, math.ceil(count / per_row))
+	local shade = (mountain_index % 2 == 0) and 0.35 or 0.65
+	local total_h = (ITEM_H + 2) * row_count
+	-- Stripe covers all wrapped rows; ITEM_H+2 per row tiles with no gaps between mountains.
+	self:draw_stripe(self.shops.content_w, total_h, shade, 0.13)
+	-- Mountain number centered vertically across all wrapped rows via overlay (no cursor advance).
+	self:overlay(function()
+		local str = tostring(mountain_index)
+		local _, text_h = self:get_text_dim(str)
+		self:begin_column(function()
+			self:spacing((total_h - text_h) / 2)
+			self:text_centered(str, LABEL_W)
 		end)
-		for item_i, item in ipairs(mountain.items) do
-			self:shops_draw_item(item, mountain_index * 64 + item_i)
-		end
 	end)
-	self:spacing(2)
+	for row = 0, row_count - 1 do
+		local start_i = row * per_row + 1
+		local end_i = math.min(start_i + per_row - 1, count)
+		self:begin_row(function()
+			-- Label column is reserved on every row; the number itself is drawn via overlay above.
+			self:spacing(LABEL_W + 3)
+			for item_i = start_i, end_i do
+				self:shops_draw_item(items[item_i], mountain_index * 64 + item_i)
+			end
+		end)
+		self:spacing(2)
+	end
 end
 
 ---Draw the wand detail side panel for the active wand (pinned or hovered).
@@ -316,7 +436,10 @@ end
 ---@private
 function sg:shops_draw_wand_panel()
 	local wand = self.shops.pinned_wand or self.shops.hovered_wand
-	if not wand then return end
+	if not wand then
+		self.shops.wand_panel_bottom = 0
+		return
+	end
 
 	local is_pinned = wand == self.shops.pinned_wand
 	local m = self.menu
@@ -339,12 +462,19 @@ function sg:shops_draw_wand_panel()
 							self:color_gray()
 							self:text("Lv." .. math.floor(lvl + 0.5))
 						end
-						if is_pinned then
-							-- fill_width() is the group-shared inner width; pushes button right.
-							self:row_fill_right(self:fill_width(), function()
-								if self:button(T.close, true) then self.shops.pinned_wand = nil end
-							end)
+						if wand.is_cheap then
+							self:spacing(2)
+							self:color(1, 0.85, 0.25)
+							self:text(T.shops_sale)
 						end
+						-- Always reserve button space so header height is stable on pin/unpin.
+						self:row_fill_right(self:fill_width(), function()
+							if is_pinned then
+								if self:button(T.close, true) then self.shops.pinned_wand = nil end
+							else
+								self:leaf(1, 12, function() end)
+							end
+						end)
 					end)
 					self:spacing(-2)
 				end, { id = "shops_wand_header" })
@@ -359,13 +489,39 @@ function sg:shops_draw_wand_panel()
 						self:shops_draw_wand_body(stats, spells, always_cast, wand.sprite, per_row, self.alt)
 					end)
 				end, { id = "shops_wand_body" })
+
+				-- cursor screen y here = bottom of the panel; saved for spell tooltip positioning next frame.
+				local _, panel_bottom = self:cursor_screen()
+				self.shops.wand_panel_bottom = panel_bottom
 			end)
 		end)
 	end)
 end
 
+---Called when the shops tab is opened; forces a fresh prediction.
+function sg:shops_init()
+	self:shops_update()
+end
+
+---Re-runs shop prediction after a perk pick (shop contents may have changed).
+---@private
+function sg:shops_update()
+	self.shop_pred:predict(0)
+	self.shops.pinned_wand = nil
+	self.shops.wand_panel_bottom = 0
+end
+
+---Triggers shops_update if a perk was picked since the last frame.
+---@private
+function sg:shops_check_for_updates()
+	if self:check_perk_picked() then
+		self:shops_update()
+	end
+end
+
 ---Draw the holy mountain shops panel (header + scrollbox).
 function sg:shops_draw_window()
+	self:shops_check_for_updates()
 	-- Reset each frame; set during item drawing when a wand cell is under cursor.
 	self.shops.hovered_wand = nil
 

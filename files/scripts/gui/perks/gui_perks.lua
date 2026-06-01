@@ -2,7 +2,6 @@
 ---@field current integer|nil  index into VIEWS of the open sub-view, nil = none
 ---@field content_w number  inner pixel width of the perk windows (= header width)
 ---@field per_row integer  perk icons that fit across content_w (no magic cap)
----@field current_children_entities number
 ---@field reroll_count number
 ---@field scroll_h number  last frame's scrollbox content height (used to detect scrollbar presence for per_row)
 ---@field tip_x number  screen x for perk tooltips (right of the window)
@@ -18,7 +17,6 @@ local pg = {
 		current = 1,
 		content_w = 0,
 		per_row = 1,
-		current_children_entities = 0,
 		reroll_count = 0,
 		scroll_h = 0,
 		tip_x = 0,
@@ -288,16 +286,13 @@ end
 function pg:check_for_updates(current_nearby_perks)
 	local reroll_count = self.mod:GetGlobalNumber("TEMPLE_PERK_REROLL_COUNT")
 	self.perks.nearby:Scan()
-	local current_children_entities = EntityGetAllChildren(self.player) or {}
-	local current_children_count = #current_children_entities
 	if
 		current_nearby_perks ~= #self.perks.nearby.entities
-		or current_children_count ~= self.perk.current_children_entities
+		or self:check_perk_picked()
 		or reroll_count ~= self.perk.reroll_count
 	then
 		self:perks_update()
 	end
-	self.perk.current_children_entities = current_children_count
 	self.perk.reroll_count = reroll_count
 end
 
@@ -311,7 +306,7 @@ end
 
 ---Initializes perks data.
 function pg:perks_init()
-	self:perks_update()
+	self:check_for_updates(-1)
 end
 
 ---Perks summary row; always drawn (even as zeroes) to keep header width stable.
@@ -390,11 +385,7 @@ end
 ---@param shade number
 ---@param row_count integer
 function pg:perks_group_stripe(shade, row_count)
-	self:overlay(function()
-		self:color(shade, shade, shade)
-		self:set_z_for_next(self.z_index + 4)
-		self:image(self.c.px, { alpha = 0.1, scale_x = self.perk.content_w, scale_y = PERK_PITCH * row_count + GROUP_PAD, dy = -GROUP_PAD })
-	end)
+	self:draw_stripe(self.perk.content_w, PERK_PITCH * row_count + GROUP_PAD, shade, 0.1, -GROUP_PAD)
 end
 
 ---Picked-perk data list (picked_count >= 1) for the "current" view grid.

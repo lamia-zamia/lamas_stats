@@ -59,6 +59,7 @@ local WINDOWS = {
 		id = "shops",
 		label = "Shops",
 		draw = "shops_draw_window",
+		init = "shops_init",
 		overlay = "shops_draw_overlays",
 		flag = "show_shops_menu",
 		self_framed = true,
@@ -90,6 +91,14 @@ local WINDOWS = {
 local WINDOWS_BY_ID = {}
 for i = 1, #WINDOWS do
 	WINDOWS_BY_ID[WINDOWS[i].id] = WINDOWS[i]
+end
+
+---Calls the init function of whichever window is currently open, if it has one.
+---Use when re-entering the menu without a tab click (e.g. menu toggled back on).
+---@private
+function menu:menu_call_current_init()
+	local e = self.menu.current and WINDOWS_BY_ID[self.menu.current]
+	if e and e.init then self[e.init](self) end
 end
 
 ---Contributes this window's width to the shared menu group (call at end of self_framed draw).

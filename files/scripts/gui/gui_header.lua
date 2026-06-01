@@ -14,8 +14,7 @@ function header:header_draw()
 		self.menu.opened = not self.menu.opened
 
 		if self.menu.opened then
-			self:check_for_updates(-1)
-			self:fungal_shift_list_changed()
+			self:menu_call_current_init()
 		end
 	end
 end
