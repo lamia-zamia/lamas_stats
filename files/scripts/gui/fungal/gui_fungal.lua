@@ -4,7 +4,6 @@
 ---@field row_count integer  current shift row count (centering math uses this; set per-draw)
 ---@field offset LS_Gui_fungal_offset
 ---@field content_w number  scrollbox / hover width (set each frame by fungal_draw_window)
----@field scroll_h number   last frame's scrollbox content height (for self-sizing)
 ---@field tip_x number      screen x for fungal tooltips (right of window)
 ---@field tip_y number      screen y for fungal tooltips (level with menu header)
 ---@field shift_fmt string  format string for shift labels; cached to avoid per-row concat
@@ -24,7 +23,6 @@ local fg = {
 		row_count = 1,
 		offset = {}, ---@diagnostic disable-line: missing-fields
 		content_w = 0,
-		scroll_h = 0,
 		tip_x = 0,
 		tip_y = 0,
 		shift_fmt = "",
@@ -406,16 +404,14 @@ function fg:fungal_draw_window()
 		-- previous panel's inflated width.
 		local inner_w = math.max(min_shift_content, self:fill_width())
 		self.fungal.content_w = inner_w
-		local box_h = self.fungal.scroll_h > 0 and math.min(self.fungal.scroll_h, scrollbox_cap) or scrollbox_cap
-		local _, content_h = self:begin_scrollbox("fungal_shifts", inner_w, box_h, function()
+		self:begin_scrollbox("fungal_shifts", inner_w, scrollbox_cap, function()
 			self:fungal_draw_shift_list()
 		end)
-		self.fungal.scroll_h = content_h
 	end, { id = "fungal_window", min_width = header_width })
 
 	-- Ensure the menu bar is always at least as wide as the shift-list columns.
-	-- The scrollbox window's natural contribution (begin_scrollbox early-returns during
-	-- group measurement) is too small to capture min_shift_w, so we feed it explicitly.
+	-- window_group handles header/body width sharing, but the menu bar tab strip is
+	-- a separate group; feed min_shift_w explicitly so the tab is wide enough.
 	self:menu_feed_width(min_shift_w)
 end
 

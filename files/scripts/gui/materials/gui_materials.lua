@@ -10,7 +10,7 @@
 ---@field header_width number   main panel header width from last frame (drives reaction x + shared_width)
 ---@field tip_x number          screen x for material tooltips (right of the rightmost visible panel)
 ---@field tip_y number          screen y for material tooltips (level with menu header)
----@field scroll_h number            list scrollbox content height (previous frame; drives self-sizing)
+---@field list_h number              actual list scrollbox height this frame (passed to right panel for vertical alignment)
 ---@field panel_start_y number      cursor y at the start of the main draw (drives reaction panel avail_h)
 ---@field main_header_h number      height of the main header window (drives reaction scroll height)
 ---@field reaction_header_h number  height of the reaction header window (previous frame)
@@ -27,7 +27,7 @@ local materials = {
 		filter = "",
 		width_reaction = 200,
 		reaction_show_output = false,
-		scroll_h = 0,
+		list_h = 0,
 		panel_start_y = 0,
 		reaction_scroll_height = 100,
 		tag_height = 10,
@@ -701,16 +701,15 @@ function materials:materials_draw_window()
 	-- Scrollbox cap: max_height is the total budget for the whole panel (header + list).
 	-- Subtract the header window height so all panels bottom-align at the same screen y.
 	local scrollbox_cap = math.max(20, self.max_height - main_header_h + 1)
-	local list_box_h = self.materials.scroll_h > 0 and math.min(self.materials.scroll_h, scrollbox_cap) or scrollbox_cap
 	self:window(function()
 		-- fill_width() = 0 during the group's natural-width pass, so the group
 		-- accumulates the true content width rather than locking to the previous
 		-- panel's inflated width.
 		local inner_w = math.max(1, self:fill_width())
-		local _, content_h = self:begin_scrollbox("materials_list", inner_w, list_box_h, function()
+		local _, content_h = self:begin_scrollbox("materials_list", inner_w, scrollbox_cap, function()
 			self:materials_draw_list(inner_w)
 		end)
-		self.materials.scroll_h = content_h
+		self.materials.list_h = math.min(content_h, scrollbox_cap)
 	end, { id = "materials_window", min_width = header_width })
 
 	-- Tooltip anchor: always right of the main panel so it doesn't jump when the reaction panel opens.
@@ -723,9 +722,7 @@ end
 function materials:materials_draw_overlays()
 	if not self.materials.current_recipe then return end
 	local m = self.menu
-	local scrollbox_cap = math.max(20, self.max_height - self.materials.main_header_h + 1)
-	local list_box_h = self.materials.scroll_h > 0 and math.min(self.materials.scroll_h, scrollbox_cap) or scrollbox_cap
-	self:materials_draw_right_panel(m.start_x + self.materials.header_width + 2, self.materials.panel_start_y, list_box_h)
+	self:materials_draw_right_panel(m.start_x + self.materials.header_width + 2, self.materials.panel_start_y, self.materials.list_h)
 end
 
 local checker_spawned = false

@@ -4,7 +4,7 @@
 ---@field per_row integer  perk icons that fit across content_w (no magic cap)
 ---@field current_children_entities number
 ---@field reroll_count number
----@field scroll_h number  last frame's scrollbox content height (for self-sizing)
+---@field scroll_h number  last frame's scrollbox content height (used to detect scrollbar presence for per_row)
 ---@field tip_x number  screen x for perk tooltips (right of the window)
 ---@field tip_y number  screen y for perk tooltips (level with the header)
 ---@field cache perk_cell[][]?  built groups for cache_view (nil = needs build)
@@ -265,14 +265,16 @@ function pg:perks_draw_window()
 			-- group target. Reusing the previous stable content_w prevents per_row from
 			-- jumping to a wide value and reflowing icons for one frame.
 			local inner_w = (m._just_switched and self.perk.content_w > 0) and self.perk.content_w or math.max(PERK_PITCH, self:fill_width())
+			-- Reset scroll_h on switch so stale overflow from the previous tab doesn't
+			-- shrink per_row and inflate content height, which would self-perpetuate.
+			if m._just_switched then self.perk.scroll_h = 0 end
 			local scrollbar = (self.perk.scroll_h > scrollbox_cap) and (self.options.scrollbar_width or 0) or 0
 			self.perk.content_w = inner_w
 			self.perk.per_row = math.max(1, math.floor((inner_w - scrollbar) / PERK_PITCH))
 			-- Self-size to last frame's content (one-frame lag, but content
 			-- height is stable per view) so the box never reserves more
 			-- vertical space than it needs, capped at scrollbox_cap.
-			local box_height = self.perk.scroll_h > 0 and math.min(self.perk.scroll_h, scrollbox_cap) or scrollbox_cap
-			local _, content_height = self:begin_scrollbox("perks", inner_w, box_height, function()
+			local _, content_height = self:begin_scrollbox("perks", inner_w, scrollbox_cap, function()
 				self:perks_draw_view()
 			end)
 			self.perk.scroll_h = content_height
