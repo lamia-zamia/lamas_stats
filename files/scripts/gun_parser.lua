@@ -26,11 +26,11 @@ function actions_data:parse()
 	local sandbox = dofile_once("mods/lamas_stats/files/lib/sandbox.lua") ---@type ML_sandbox
 	sandbox:start_sandbox()
 
-	actions = {}
+	dofile_once("data/scripts/gun/gun_enums.lua")
 	dofile_once("data/scripts/gun/gun_actions.lua")
 
-	for i = 1, #actions do
-		local action = actions[i]
+	for i = 1, #actions do ---@diagnostic disable-line: undefined-global
+		local action = actions[i] ---@diagnostic disable-line: undefined-global
 		add_action(action)
 	end
 
