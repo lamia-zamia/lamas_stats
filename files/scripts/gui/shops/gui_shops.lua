@@ -552,7 +552,7 @@ function sg:shops_draw_window()
 		end)
 	end, { id = "shops_window", min_width = header_width })
 
-	self:menu_feed_width(math.max(min_w, header_width))
+	self:menu_feed_width(min_content)
 end
 
 ---Draw the wand detail overlay; called outside window_group so it doesn't affect shared width.
