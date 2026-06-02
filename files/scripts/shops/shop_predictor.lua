@@ -334,8 +334,8 @@ function shop_predictor:predict(world_x_offset)
 
 	self:_setup_env()
 
-	local state = assert(self._state)
-	local env = assert(self._env)
+	local state = self._state ---@cast state -?
+	local env = self._env ---@cast env -?
 
 	local mountains = {}
 	for _, pos in ipairs(self.altar_positions) do
