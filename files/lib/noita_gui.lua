@@ -68,7 +68,11 @@
 ---@field private _rec_border number? border override for the tooltip being recorded
 ---@field private _tt_pending {cmds:tooltip_cmd[], ax:number, ay:number, center:boolean, id:string|number?, sframes:integer?, aframes:integer?, sprite:string?, margin:number?, border:number?}? tooltip queued for end-of-frame draw
 ---@field private _tt_active {key:string|number, cmds:tooltip_cmd[], ax:number, ay:number, center:boolean, sframes:integer, aframes:integer, scale_p:number, alpha_p:number, target:number, sprite:string?, margin:number?, border:number?}? tooltip currently animating in/out
----@field private _pending_color number[]? deferred color, applied by the next draw primitive
+---@field private _pending_color boolean? true when a deferred color is queued for the next draw primitive
+---@field private _pending_cr number deferred color red channel (live path; avoids per-call table alloc)
+---@field private _pending_cg number deferred color green channel
+---@field private _pending_cb number deferred color blue channel
+---@field private _pending_ca number deferred color alpha channel
 ---@field private _draw_alpha number global alpha multiplier (for fade animations)
 ---@field private _anim {[string]: {start:integer, frame:integer, w:number?, h:number?}} per-key animation + smoothed window size
 ---@field private _frame integer frame counter (for animation-state cleanup)
@@ -1140,16 +1144,18 @@ function ui:color(red, green, blue, alpha)
 		self._rec_color = { red, green, blue, alpha or 1 }
 		return
 	end
-	self._pending_color = { red, green, blue, alpha or 1 }
+	-- Live path: store channels as scalars so a per-call table isn't allocated
+	-- (color() is hit per-row in scrollboxes, which run twice per frame).
+	self._pending_cr, self._pending_cg, self._pending_cb, self._pending_ca = red, green, blue, alpha or 1
+	self._pending_color = true
 end
 
 ---@private Applies the deferred color (if any) and the global alpha multiplier
 ---to the next widget. Called by every live draw primitive.
 function ui:_apply_color()
 	local draw_alpha = self._draw_alpha
-	local color = self._pending_color
-	if color then
-		GuiColorSetForNextWidget(self.gui, color[1], color[2], color[3], math.max(color[4] * draw_alpha, self.MIN_TEXT_ALPHA))
+	if self._pending_color then
+		GuiColorSetForNextWidget(self.gui, self._pending_cr, self._pending_cg, self._pending_cb, math.max(self._pending_ca * draw_alpha, self.MIN_TEXT_ALPHA))
 		self._pending_color = nil
 	elseif draw_alpha < 1 then
 		GuiColorSetForNextWidget(self.gui, 1, 1, 1, math.max(draw_alpha, self.MIN_TEXT_ALPHA))
@@ -1158,9 +1164,8 @@ end
 
 ---@private Applies only a deferred color tint (no alpha fade, caller handles that). For image/nine-piece.
 function ui:_apply_tint()
-	local color = self._pending_color
-	if color then
-		GuiColorSetForNextWidget(self.gui, color[1], color[2], color[3], color[4])
+	if self._pending_color then
+		GuiColorSetForNextWidget(self.gui, self._pending_cr, self._pending_cg, self._pending_cb, self._pending_ca)
 		self._pending_color = nil
 	end
 end
