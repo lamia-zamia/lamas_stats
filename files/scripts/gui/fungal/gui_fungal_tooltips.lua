@@ -3,6 +3,18 @@ local ft = {}
 
 local ARROW_WIDTH = 8
 
+-- Greedy-shift "from" materials (gold, holy grass). Resolved lazily on first use
+-- (CellFactory isn't available at load time) and cached, since both the greedy
+-- block and its measure pass need them every hovered frame.
+local cached_gold, cached_grass
+local function greedy_material_types()
+	if not cached_gold then
+		cached_gold = CellFactory_GetType("gold")
+		cached_grass = CellFactory_GetType("grass_holy")
+	end
+	return cached_gold, cached_grass
+end
+
 ---@private
 ---@param shift shift
 ---@param i integer
@@ -98,8 +110,7 @@ function ft:fungal_draw_future_tooltip_greedy(greedy, max_from_w)
 	self.fungal.row_count = 2
 	self:color_gray()
 	self:text(T.lamas_stats_fungal_greedy)
-	local gold_type = CellFactory_GetType("gold")
-	local grass_type = CellFactory_GetType("grass_holy")
+	local gold_type, grass_type = greedy_material_types()
 	local greedy_from = { gold_type, grass_type }
 	local greedy_col_w = self:fungal_get_longest_material_name(greedy_from, 0)
 	local pad = max_from_w and math.max(0, max_from_w - (3 + greedy_col_w)) or 0
@@ -143,7 +154,8 @@ function ft:fungal_draw_future_tooltip(shift, i)
 		end
 	end
 	if self.fs.predictor.is_using_pouch_shift and shift.greedy and self.alt then
-		local greedy_col_w = self:fungal_get_longest_material_name({ CellFactory_GetType("gold"), CellFactory_GetType("grass_holy") }, 0)
+		local gold_type, grass_type = greedy_material_types()
+		local greedy_col_w = self:fungal_get_longest_material_name({ gold_type, grass_type }, 0)
 		max_from_w = math.max(max_from_w, greedy_col_w + 3)
 	end
 
