@@ -11,11 +11,16 @@ local function make_env(overrides)
 	-- Mirrors do_mod_appends: runs each ModLuaFileAppend file in env.
 	local function run_appends(path)
 		local appends = ModLuaFileGetAppends(path)
-		for i = 1, #appends do
-			local append_chunk, err = loadfile(appends[i])
-			if append_chunk == nil then return nil, err end
-			setfenv(append_chunk, env)
-			append_chunk()
+		for _, file in ipairs(appends) do
+			if ModDoesFileExist(file) then
+				local append_chunk, err = loadfile(file)
+				if append_chunk then
+					setfenv(append_chunk, env)
+					append_chunk()
+				else
+					print("BOGUS APPEND IN " .. path .. ", file: " .. file .. ", error: " .. err)
+				end
+			end
 		end
 	end
 
