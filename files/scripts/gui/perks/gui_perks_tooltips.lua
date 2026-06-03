@@ -23,7 +23,7 @@ function pg:perks_current_perk_tooltip(perk)
 	local picked_count = T.PerkCount .. ": " .. perk.picked_count
 	local id = self.alt and string.format("(%s)", perk.id) or ""
 	local reminder = self.alt and "" or T.PressShiftToSeeMore
-	local longest = self:get_longest_text({ ui_name, id, reminder }, perk.id .. id)
+	local longest = math.max(self:get_text_dim(ui_name), self:get_text_dim(id), self:get_text_dim(reminder))
 	longest = math.max(longest, self:get_longest_text(description_lines, perk.ui_description))
 
 	self:perk_tip_header(perk, ui_name, longest)
@@ -54,7 +54,8 @@ function pg:perks_nearby_tooltip(nearby_perk)
 	local always_cast_result = nearby_perk.cast
 		or (self.config.always_show_always_cast and self.perks.nearby:PredictAlwaysCast(nearby_perk.x, nearby_perk.y) or nil)
 	local always_cast_text = always_cast_result and T.lamas_stats_perks_always_cast .. ":" or nil
-	local longest = self:get_longest_text({ ui_name, id, reminder, always_cast_text }, perk.id .. id)
+	local longest = math.max(self:get_text_dim(ui_name), self:get_text_dim(id), self:get_text_dim(reminder))
+	if always_cast_text then longest = math.max(longest, self:get_text_dim(always_cast_text)) end
 	longest = math.max(longest, self:get_longest_text(description_lines, perk.ui_description))
 
 	self:perk_tip_header(perk, ui_name, longest)
