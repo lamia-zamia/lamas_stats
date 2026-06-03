@@ -153,16 +153,26 @@ local function get_material_type(attributes, is_child)
 	return mat.material_types.liquid
 end
 
----Inserts value into index table
+local index_seen = {}
+
+---Inserts value into index table (deduplicated)
 ---@param index table
 ---@param key string
 ---@param value any
 local function insert_to_index(index, key, value)
-	index[key] = index[key] or {}
-	for _, v in ipairs(index[key]) do
-		if v == value then return end
+	local list = index[key]
+	if not list then
+		list = {}
+		index[key] = list
 	end
-	table.insert(index[key], value)
+	local seen = index_seen[list]
+	if not seen then
+		seen = {}
+		index_seen[list] = seen
+	end
+	if seen[value] then return end
+	seen[value] = true
+	list[#list + 1] = value
 end
 
 ---Gets material tags
@@ -357,6 +367,7 @@ function mat:post_biome_init()
 	parsed_files = nil
 	nxml = nil ---@diagnostic disable-line: cast-local-type
 	full_data = nil
+	index_seen = nil
 end
 
 ---Converts buffer data into actual data
