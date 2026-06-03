@@ -183,14 +183,14 @@ end
 
 ---Returns true if the material passes the current type filter and text filter.
 ---@param material_index integer
+---@param filter string  pre-lowercased filter text
 ---@return boolean?
-function materials:is_material_in_filter(material_index)
+function materials:is_material_in_filter(material_index, filter)
 	local material = self.mat:get_data(material_index)
 	if not self.materials.visible_types[material.type] then return end
-	local filter = self.materials.filter:lower()
-	for _, name in ipairs({ material.id, material.ui_name, self:locale(material.ui_name) }) do
-		if name:lower():find(filter, 1, true) then return true end
-	end
+	if material.id:lower():find(filter, 1, true) then return true end
+	if material.ui_name:lower():find(filter, 1, true) then return true end
+	if self:locale(material.ui_name):lower():find(filter, 1, true) then return true end
 end
 
 ---Returns (and lazily builds) the filtered material list.
@@ -198,9 +198,10 @@ end
 ---@return integer[]
 function materials:get_filtered_materials()
 	if not filtered_materials then
+		local filter = self.materials.filter:lower()
 		local result = {}
 		for material_index, _ in pairs(self.mat.data) do
-			if self:is_material_in_filter(material_index) then result[#result + 1] = material_index end
+			if self:is_material_in_filter(material_index, filter) then result[#result + 1] = material_index end
 		end
 		filtered_materials = result
 	end
