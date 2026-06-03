@@ -51,7 +51,9 @@ local hotkey_types = {
 function util:get_hotkey(setting_id)
 	local code = tonumber(self:GetSettingString(setting_id)) or 0
 	local code_type = self:GetSettingString(setting_id .. "_type")
-	local fn = hotkey_types[code_type] or function() end
+	local fn = hotkey_types[code_type] or function()
+		return false
+	end
 	return function()
 		return fn(code)
 	end
