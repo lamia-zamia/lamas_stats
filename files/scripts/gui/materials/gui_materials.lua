@@ -95,7 +95,7 @@ function materials:reaction_datas_get_longest_name(reaction_datas)
 		max = math.max(max, self:get_text_dim(truncate(material_name)))
 		if not is_tag(material_name) then
 			local material_data = self.mat:get_data_by_id(material_name)
-			max = math.max(max, self:get_text_dim(self:get_material_name(material_data)))
+			max = math.max(max, self:get_text_dim(truncate(self:get_material_name(material_data))))
 		end
 	end
 	return max
@@ -306,7 +306,11 @@ function materials:materials_draw_reaction_item(material, col_w)
 		self:begin_row(function()
 			self:spacing(math.max(0, (col_w - text_w) / 2))
 			hovered = self:is_hovered_cursor(text_w, 10)
-			if hovered then self:color_yellow() end
+			if hovered then
+				self:color_yellow()
+			else
+				self:color_gray()
+			end
 			self:text(material)
 		end)
 		if not self:is_measuring() and hovered and self:is_left_clicked() then
@@ -316,7 +320,7 @@ function materials:materials_draw_reaction_item(material, col_w)
 		end
 	else
 		local mat = self.mat:get_data_by_id(material)
-		local mat_name = self.alt and truncate(mat.id) or self:get_material_name(mat)
+		local mat_name = self.alt and truncate(mat.id) or truncate(self:get_material_name(mat))
 		local text_w = self:get_text_dim(mat_name)
 		self:begin_row(function()
 			self:spacing(math.max(0, (col_w - text_w) / 2 - 9)) -- center text; 9 = icon(8)+gap(1)
@@ -431,6 +435,8 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 
 	-- Reaction panel width: use the previous frame's actual header width so the body
 	-- always matches even when name+buttons overflow the estimated reaction_w.
+	-- max_length is measured from truncated names (see reaction_datas_get_longest_name),
+	-- so the panel stays bounded regardless of how long a material name is.
 	self.materials.width_reaction = math.max(200, math.min(reaction_data.max_length * 2 + 50, 400))
 	local reaction_w = math.max(self.materials.width_reaction, self.materials.actual_reaction_w)
 	local scrollbox_w = reaction_w - self.options.window_padding * 2
@@ -465,7 +471,7 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 	end
 	self.materials.reaction_scroll_height = reaction_scroll_h
 
-	local mat_name = self.alt and truncate(mat.id) or self:get_material_name(mat)
+	local mat_name = self.alt and truncate(mat.id) or truncate(self:get_material_name(mat))
 
 	self:layout_at(panel_right_x, self.menu.start_y, function()
 		self:begin_column(function()
@@ -501,7 +507,7 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 				end)
 
 				self:spacing(-3)
-				local id_text = "(" .. mat.id .. ")"
+				local id_text = "(" .. truncate(mat.id) .. ")"
 				self:color_gray()
 				self:text_centered(id_text, scrollbox_w)
 
@@ -652,7 +658,7 @@ function materials:fungal_apo_elixir_draw()
 			if elixir.color then self:color(elixir.color.r, elixir.color.g, elixir.color.b, elixir.color.a) end
 			self:image(elixir.icon, { dy = 1 })
 		end)
-		self:ninepiece(W, H, { z = self.z_index + 5, sprite = spr, margin = 1 })
+		self:ninepiece(W, H, { z = self.z_index + 5, sprite = spr, margin = 2.5, dx = -1 })
 	end)
 	if hovered and self:tooltip(true, { sprite = TOOLTIP_DARKER, border = 0 }) then
 		self:fungal_apo_elixir_tooltip()
@@ -691,7 +697,7 @@ function materials:materials_draw_window()
 		local icons_w = self:measure(function()
 			if self.materials.apo_elixir then
 				self:fungal_apo_elixir_draw()
-				self:spacing(4)
+				self:spacing(5)
 			end
 			if self.materials.aplc then self:fungal_ap_lc_draw() end
 		end)
@@ -729,7 +735,7 @@ function materials:materials_draw_window()
 				self:row_fill_right(icon_inner_w, function()
 					if self.materials.apo_elixir then
 						self:fungal_apo_elixir_draw()
-						self:spacing(4)
+						self:spacing(5)
 					end
 					if self.materials.aplc then self:fungal_ap_lc_draw() end
 				end)
@@ -827,9 +833,7 @@ function materials:materials_parse_recipes()
 	local aplc = dofile_once("mods/lamas_stats/files/scripts/aplc.lua") ---@type APLC
 	local aplc_recipe = aplc:get()
 	self.materials.aplc = aplc.failed and false or aplc_recipe
-	if ModIsEnabled("Apotheosis") then
-		self.materials.apo_elixir = dofile_once("mods/lamas_stats/files/scripts/apo_elixir.lua")
-	end
+	if ModIsEnabled("Apotheosis") then self.materials.apo_elixir = dofile_once("mods/lamas_stats/files/scripts/apo_elixir.lua") end
 end
 
 return materials
