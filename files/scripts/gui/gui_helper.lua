@@ -164,4 +164,17 @@ function helper:material_row(mat_type, draw_id)
 	end)
 end
 
+---Draws a sprite in a leaf sized to a text line's height, vertically centered
+---@private
+---@param sprite string
+---@param line_height number  height of the text line to center against
+---@param scale number?  sprite scale (default 0.625)
+function helper:tooltip_icon_cell(sprite, line_height, scale)
+	scale = scale or 0.625
+	local icon_width, icon_height = self:get_image_dim(sprite, scale)
+	self:leaf(icon_width, line_height, function()
+		self:image(sprite, { scale_x = scale, dy = (line_height - icon_height) / 2 })
+	end)
+end
+
 return helper

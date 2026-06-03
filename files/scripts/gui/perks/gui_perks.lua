@@ -365,12 +365,9 @@ end
 ---@param ui_name string
 ---@param width number
 function pg:perk_tip_header(perk, ui_name, width)
-	local icon_width, icon_height = self:get_image_dim(perk.perk_icon, 0.625)
 	local _, text_height = self:get_text_dim(ui_name)
 	self:begin_centered_row(width, function()
-		self:leaf(icon_width, text_height, function()
-			self:image(perk.perk_icon, { scale_x = 0.625, dy = (text_height - icon_height) / 2 })
-		end)
+		self:tooltip_icon_cell(perk.perk_icon, text_height)
 		self:spacing(3)
 		self:text(ui_name)
 	end)

@@ -1,6 +1,18 @@
 ﻿---@class (exact) LS_Gui
 local pg = {}
 
+---Draws the alt-mode id line (if any) followed by the wrapped description lines centred within `width`.
+---@private
+---@param id string
+---@param description_lines string[]
+---@param width number
+function pg:perk_tip_description_block(id, description_lines, width)
+	if self.alt then self:perk_tip_line(id, width, true) end
+	for i = 1, #description_lines do
+		self:perk_tip_line(description_lines[i], width)
+	end
+end
+
 ---Tooltip for an already-picked / predicted perk. Recorded by the immediate-
 ---mode tooltip block (see perks_icon); lines are centred within the widest line.
 ---@private
@@ -15,10 +27,7 @@ function pg:perks_current_perk_tooltip(perk)
 	longest = math.max(longest, self:get_longest_text(description_lines, perk.ui_description))
 
 	self:perk_tip_header(perk, ui_name, longest)
-	if self.alt then self:perk_tip_line(id, longest, true) end
-	for i = 1, #description_lines do
-		self:perk_tip_line(description_lines[i], longest)
-	end
+	self:perk_tip_description_block(id, description_lines, longest)
 
 	self:spacing(2)
 	self:color(1, 1, 1)
@@ -56,10 +65,7 @@ function pg:perks_nearby_tooltip(nearby_perk)
 		self:text_centered(lottery, longest)
 	end
 
-	if self.alt then self:perk_tip_line(id, longest, true) end
-	for i = 1, #description_lines do
-		self:perk_tip_line(description_lines[i], longest)
-	end
+	self:perk_tip_description_block(id, description_lines, longest)
 
 	if self.config.enable_nearby_always_cast and always_cast_text then
 		local cast_data = self.actions:get_data(always_cast_result --[[@as string]])
@@ -68,13 +74,10 @@ function pg:perks_nearby_tooltip(nearby_perk)
 
 		-- Always-cast label + spell icon, on one centred row.
 		local _, text_height = self:get_text_dim(always_cast_text)
-		local cast_icon_w, cast_icon_h = self:get_image_dim(cast_data.sprite, 0.625)
 		self:begin_centered_row(longest, function()
 			self:text(always_cast_text)
 			self:spacing(3)
-			self:leaf(cast_icon_w, text_height, function()
-				self:image(cast_data.sprite, { scale_x = 0.625, dy = (text_height - cast_icon_h) / 2 })
-			end)
+			self:tooltip_icon_cell(cast_data.sprite, text_height)
 		end)
 
 		if self.alt then
