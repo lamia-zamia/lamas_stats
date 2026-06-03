@@ -264,9 +264,9 @@ function fg:fungal_decide_row_color(hovered, i, is_past, greedy)
 		end
 		return
 	end
-	-- Future shift color: greedy success overrides all
+	-- Future shift color: greedy success overrides all (magenta; brightens green on hover)
 	if greedy and greedy.success then
-		self:color(hovered and 1 or 1, hovered and 0.5 or 0, 1)
+		self:color(1, hovered and 0.5 or 0, 1)
 		return
 	end
 	local is_current = i == self.fs.current_shift
