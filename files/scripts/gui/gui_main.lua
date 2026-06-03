@@ -141,7 +141,7 @@ function gui:loop()
 
 	if self.hotkey() then self.show = not self.show end
 	self:check_for_checkers()
-	if self:sampler() then gui:spawn_getter() end
+	if self:sampler() then self:spawn_getter() end
 
 	if not self.show or GameIsInventoryOpen() then return self:end_frame() end
 
