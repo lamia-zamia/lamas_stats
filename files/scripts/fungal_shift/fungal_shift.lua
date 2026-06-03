@@ -21,7 +21,6 @@ local reporter = dofile_once("mods/lamas_stats/files/scripts/error_reporter.lua"
 ---@field cooldown number
 ---@field past_shifts shift
 ---@field current_shift integer
----@field aplc APLC_recipes|false
 ---@field shift_indexed integer
 local fs = {
 	predictor = dofile_once("mods/lamas_stats/files/scripts/fungal_shift/fungal_shift_predictor.lua"),
@@ -178,26 +177,8 @@ function fs:AnalysePastShifts()
 	end
 end
 
----Gets APLC recipe if success
-function fs:GetApLcRecipe()
-	local aplc = dofile_once("mods/lamas_stats/files/scripts/aplc.lua") ---@type APLC
-	local aplc_recipe = aplc:get()
-	if aplc.failed then
-		self.aplc = false
-	else
-		self.aplc = aplc_recipe
-	end
-end
-
-function fs:GetApoElixirRecipe()
-	self.apo_elixir = dofile_once("mods/lamas_stats/files/scripts/apo_elixir.lua")
-end
-
 ---Init fungal shifts
 function fs:Init()
-	self:GetApLcRecipe()
-	if ModIsEnabled("Apotheosis") then self:GetApoElixirRecipe() end
-
 	local comp_worldstate = EntityGetFirstComponent(GameGetWorldStateEntity(), "WorldStateComponent")
 	if comp_worldstate and ComponentGetValue2(comp_worldstate, "EVERYTHING_TO_GOLD") then
 		self.max_shifts = 20

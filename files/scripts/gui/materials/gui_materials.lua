@@ -16,6 +16,8 @@
 ---@field reaction_header_h number  height of the reaction header window (previous frame)
 ---@field actual_reaction_w number  actual reaction header window width (previous frame; keeps body >= header)
 ---@field tag_header_h number       height of the tag viewer header window (previous frame)
+---@field aplc APLC_recipes|false   AP/LC recipe shown in the header (false if parsing failed)
+---@field apo_elixir apo_elixir_recipe?  apothecary-elixir recipe (only when Apotheosis is enabled)
 
 ---@class (exact) LS_Gui
 ---@field materials LS_Gui_materials
@@ -38,6 +40,7 @@ local materials = {
 		reaction_header_h = 0,
 		actual_reaction_w = 0,
 		tag_header_h = 18,
+		aplc = false,
 	},
 }
 
@@ -385,10 +388,9 @@ end
 
 ---Reactions list; uses pre-captured data so state can change safely mid-frame.
 ---@private
----@param reaction_data gui_reaction_data
 ---@param reactions reactions_data[]
 ---@param scrollbox_w number  inner width of the scrollbox (for separator scaling)
-function materials:materials_draw_reactions_content(reaction_data, reactions, scrollbox_w)
+function materials:materials_draw_reactions_content(reactions, scrollbox_w)
 	local col_w = (scrollbox_w - ARROW_COL_WIDTH) / 2
 
 	if #reactions > 0 then
@@ -440,7 +442,7 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 	local avail_h = math.max(20, bar_offset + self.materials.main_header_h + list_box_h - self.materials.reaction_header_h)
 	local reactions = reaction_show_output and reaction_data.producing or reaction_data.using
 	local _, content_h = self:measure(function()
-		self:materials_draw_reactions_content(reaction_data, reactions, scrollbox_w)
+		self:materials_draw_reactions_content(reactions, scrollbox_w)
 	end)
 	local reaction_scroll_h
 	if current_tag then
@@ -536,7 +538,7 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 			self:window(function()
 				self:begin_scrollbox("materials_reactions", body_scrollbox_w, reaction_scroll_h, function()
 					-- Use captured reaction data: current_recipe may have been cleared above.
-					self:materials_draw_reactions_content(reaction_data, reactions, body_scrollbox_w)
+					self:materials_draw_reactions_content(reactions, body_scrollbox_w)
 				end)
 			end, { id = "materials_reaction_body", min_width = actual_reaction_w })
 
@@ -573,11 +575,57 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 	end)
 end
 
+-- Shared recipe layout (AP/LC and apothecary-elixir tooltips):
+--   result material
+--   [6 px indent] ingredient 1
+--   [6 px indent] + ingredient 2   (prob%)
+--   [6 px indent] ingredient 3
+---@private
+---@param recipe {result:integer, mats:integer[], prob:integer}
+function materials:fungal_recipe_block(recipe)
+	self:material_row(recipe.result, false)
+	self:spacing(2)
+	-- Indent the three ingredient lines as a group.
+	self:begin_row(function()
+		self:spacing(6)
+		self:begin_column(function()
+			self:material_row(recipe.mats[1], self.alt)
+			self:spacing(1)
+			-- The "+" line shares a row with ingredient 2 and the probability.
+			self:begin_row(function()
+				self:color_gray()
+				self:text("+")
+				self:spacing(2)
+				self:material_inline_content(recipe.mats[2], self.alt)
+				self:spacing(3)
+				self:color_gray()
+				self:text(string.format("(%d%%)", recipe.prob))
+			end)
+			self:spacing(1)
+			self:material_row(recipe.mats[3], self.alt)
+		end)
+	end)
+end
+
+---@private
+function materials:fungal_ap_lc_tooltip()
+	self:fungal_recipe_block(self.materials.aplc.ap)
+	self:spacing(8)
+	self:fungal_recipe_block(self.materials.aplc.lc)
+	self:alt_hint()
+end
+
+---@private
+function materials:fungal_apo_elixir_tooltip()
+	self:fungal_recipe_block(self.materials.apo_elixir)
+	self:alt_hint()
+end
+
 ---AP + LC icon pair with hover highlight and tooltip.
 ---@private
 function materials:fungal_ap_lc_draw()
-	local ap_icon = self.mat:get_data(self.fs.aplc.ap.result)
-	local lc_icon = self.mat:get_data(self.fs.aplc.lc.result)
+	local ap_icon = self.mat:get_data(self.materials.aplc.ap.result)
+	local lc_icon = self.mat:get_data(self.materials.aplc.lc.result)
 	local W, H = 18, 9
 	local hovered = self:is_hovered_cursor(W, H)
 	local spr = hovered and self.options.button_sprite_hl or self.options.button_sprite
@@ -600,7 +648,7 @@ end
 ---Apothecary-elixir icon with hover highlight and tooltip.
 ---@private
 function materials:fungal_apo_elixir_draw()
-	local elixir = self.mat:get_data(self.fs.apo_elixir.result)
+	local elixir = self.mat:get_data(self.materials.apo_elixir.result)
 	local W, H = 9, 9
 	local hovered = self:is_hovered_cursor(W, H)
 	local spr = hovered and self.options.button_sprite_hl or self.options.button_sprite
@@ -633,7 +681,7 @@ function materials:materials_draw_window()
 	-- Compute icon row width before the window: measure() uses DIR_H, so each stacked
 	-- row must be measured individually (can't measure multiple begin_rows together).
 	local icon_inner_w
-	if self.fs.apo_elixir or self.fs.aplc then
+	if self.materials.apo_elixir or self.materials.aplc then
 		local checkboxes_w = self:measure(function()
 			for material_type, type_name in ipairs(material_types) do
 				self:checkbox(type_name, self.materials.visible_types[material_type])
@@ -646,11 +694,11 @@ function materials:materials_draw_window()
 			self:leaf(100, 9, function() end)
 		end)
 		local icons_w = self:measure(function()
-			if self.fs.apo_elixir then
+			if self.materials.apo_elixir then
 				self:fungal_apo_elixir_draw()
 				self:spacing(4)
 			end
-			if self.fs.aplc then self:fungal_ap_lc_draw() end
+			if self.materials.aplc then self:fungal_ap_lc_draw() end
 		end)
 		icon_inner_w = math.max(math.max(checkboxes_w, search_w + icons_w), math.max(0, min_w - padding * 2))
 	end
@@ -682,13 +730,13 @@ function materials:materials_draw_window()
 					end
 				end
 			end)
-			if self.fs.apo_elixir or self.fs.aplc then
+			if self.materials.apo_elixir or self.materials.aplc then
 				self:row_fill_right(icon_inner_w, function()
-					if self.fs.apo_elixir then
+					if self.materials.apo_elixir then
 						self:fungal_apo_elixir_draw()
 						self:spacing(4)
 					end
-					if self.fs.aplc then self:fungal_ap_lc_draw() end
+					if self.materials.aplc then self:fungal_ap_lc_draw() end
 				end)
 			end
 		end)
@@ -737,15 +785,17 @@ function materials:spawn_getter()
 	EntityAddComponent2(parent, "LifetimeComponent", {
 		lifetime = 2,
 	})
-	for i = 1, #self.mat.data do
+	-- self.mat.data is keyed by CellFactory material type (numeric, 0-based and
+	-- possibly gapped with modded materials), so iterate with pairs rather than #.
+	for material_type in pairs(self.mat.data) do
 		local entity = EntityCreateNew()
 		EntitySetTransform(entity, x, y)
 		EntityAddComponent2(entity, "LuaComponent", {
 			script_material_area_checker_success = "mods/lamas_stats/files/scripts/gui/materials/material_checker.lua",
 		})
 		local maac = EntityAddComponent2(entity, "MaterialAreaCheckerComponent", {
-			material = i,
-			material2 = i,
+			material = material_type,
+			material2 = material_type,
 			look_for_failure = false,
 			count_min = 1,
 			update_every_x_frame = 1,
@@ -774,6 +824,17 @@ end
 ---@param did_language_changed boolean
 function materials:materials_update(did_language_changed)
 	if did_language_changed then reactions_data = {} end
+end
+
+---Parses the AP/LC and (when Apotheosis is enabled) apothecary-elixir recipes shown
+---in the materials header. Called once at world init.
+function materials:materials_parse_recipes()
+	local aplc = dofile_once("mods/lamas_stats/files/scripts/aplc.lua") ---@type APLC
+	local aplc_recipe = aplc:get()
+	self.materials.aplc = aplc.failed and false or aplc_recipe
+	if ModIsEnabled("Apotheosis") then
+		self.materials.apo_elixir = dofile_once("mods/lamas_stats/files/scripts/apo_elixir.lua")
+	end
 end
 
 return materials
