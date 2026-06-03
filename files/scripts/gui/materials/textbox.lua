@@ -75,6 +75,12 @@ local keycodes_lookup = {
 	[44] = " ",
 }
 
+-- Faster array
+local printable_keys = {}
+for code, char in pairs(keycodes_lookup) do
+	printable_keys[#printable_keys + 1] = { code = code, char = char }
+end
+
 local controls_comp_fields = {
 	"mButtonDownLeft",
 	"mButtonDownRight",
@@ -120,18 +126,19 @@ end
 ---@param key number
 ---@return boolean
 function textbox:key_repeat(frame, key)
-	local just_down = InputIsKeyJustDown(key)
 	local held = InputIsKeyDown(key)
+	if not held then
+		if self.held_key == key then self.held_key = nil end
+		return false
+	end
 
-	if just_down then
+	if InputIsKeyJustDown(key) then
 		self.held_key = key
 		self.next_repeat_time = frame + repeat_initial_delay
 		return true
-	elseif held and self.held_key == key and frame >= self.next_repeat_time then
+	elseif self.held_key == key and frame >= self.next_repeat_time then
 		self.next_repeat_time = frame + repeat_rate
 		return true
-	elseif not held and self.held_key == key then
-		self.held_key = nil
 	end
 	return false
 end
@@ -253,12 +260,13 @@ function textbox:process_keys(text)
 	end
 
 	-- normal character input
-	for key, value in pairs(keycodes_lookup) do
-		if self:key_repeat(now, key) then
+	for i = 1, #printable_keys do
+		local entry = printable_keys[i]
+		if self:key_repeat(now, entry.code) then
 			if self.selection_start then text = self:delete_selection(text) end
 			local before = text:sub(1, self.cursor_pos - 1)
 			local after = text:sub(self.cursor_pos)
-			text = before .. value .. after
+			text = before .. entry.char .. after
 			self.cursor_pos = self.cursor_pos + 1
 			return text
 		end
