@@ -312,21 +312,25 @@ function stats:stats_speed()
 	return true
 end
 
+local stat_fns
+
 ---Draws stats
 ---@private
 function stats:stats_draw()
 	local x = self.header.pos_x + 20
 	local y = self.header.pos_y
 
-	local stat_fns = {
-		self.stats_fungal,
-		self.stats_fps,
-		self.stats_time,
-		self.stats_kills,
-		self.stats_position,
-		self.stats_speed,
-		self.stats_biome,
-	}
+	if not stat_fns then
+		stat_fns = {
+			self.stats_fungal,
+			self.stats_fps,
+			self.stats_time,
+			self.stats_kills,
+			self.stats_position,
+			self.stats_speed,
+			self.stats_biome,
+		}
+	end
 
 	self:layout_at(x, y, function()
 		self:begin_row(function()
