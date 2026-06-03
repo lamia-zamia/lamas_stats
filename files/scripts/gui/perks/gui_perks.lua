@@ -226,7 +226,7 @@ function pg:perks_draw_window()
 					if is_open then
 						self.perk.current = nil
 					else
-						self:check_for_updates(-1)
+						self:perks_update()
 						self.perk.current = i
 					end
 				end
