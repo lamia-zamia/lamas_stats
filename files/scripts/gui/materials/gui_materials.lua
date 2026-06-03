@@ -406,10 +406,11 @@ function materials:materials_draw_reactions_content(reactions, scrollbox_w)
 	end
 end
 
----Draws tagged materials list inside the tag scrollbox.
+---Draws the tagged-materials list (one material_row per member) for a tag.
 ---@private
-function materials:materials_draw_tagged_materials()
-	local material_list = self.mat.get_tagged_materials(self.materials.current_tag)
+---@param tag string
+function materials:materials_draw_tag_list(tag)
+	local material_list = self.mat.get_tagged_materials(tag)
 	for _, material_name in ipairs(material_list) do
 		self:material_row(CellFactory_GetType(material_name), true)
 	end
@@ -453,11 +454,8 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 		-- Net budget for the two scrollboxes: avail_h - thh - 2*pad + 2.
 		local thh = self.materials.tag_header_h
 		local total_split = math.max(30, avail_h - thh - 2 * self.options.window_padding + 2)
-		local tag_list = self.mat.get_tagged_materials(current_tag)
 		local _, tag_content_h = self:measure(function()
-			for _, material_name in ipairs(tag_list) do
-				self:material_row(CellFactory_GetType(material_name), true)
-			end
+			self:materials_draw_tag_list(current_tag)
 		end)
 		local tag_scroll_h = math.max(10, math.min(tag_content_h, math.floor(total_split * 0.45)))
 		self.materials.tag_height = tag_scroll_h
@@ -564,10 +562,7 @@ function materials:materials_draw_right_panel(panel_right_x, panel_start_y, list
 				self:window(function()
 					self:begin_scrollbox("materials_tags", scrollbox_w, tag_scroll_h, function()
 						-- Use captured current_tag: state may have changed above.
-						local tag_list = self.mat.get_tagged_materials(current_tag)
-						for _, material_name in ipairs(tag_list) do
-							self:material_row(CellFactory_GetType(material_name), true)
-						end
+						self:materials_draw_tag_list(current_tag)
 					end)
 				end, { id = "materials_tags_body", min_width = actual_reaction_w })
 			end
