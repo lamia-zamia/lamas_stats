@@ -73,8 +73,8 @@ local NULL_FUNCTIONS = {
 ---@return integer? px
 ---@return integer? py
 local function scan_for_first_color(img_id, img_w, img_h, target_color)
-	for py = 0, img_h - 1 do
-		for px = 0, img_w - 1 do
+	for py = 0, img_h do
+		for px = 0, img_w do
 			if ModImageGetPixel(img_id, px, py) == target_color then return px, py end
 		end
 	end
@@ -121,8 +121,8 @@ end
 ---@return table positions  list of {world_x, world_y}
 local function find_altar_positions(img_id, map_w, map_h, pixel_overrides, biome_offset_y)
 	local positions = {}
-	for py = 0, map_h - 1 do
-		for px = 0, map_w - 1 do
+	for py = 0, map_h do
+		for px = 0, map_w do
 			local color = ModImageGetPixel(img_id, px, py)
 			if pixel_overrides[px] and pixel_overrides[px][py] then color = pixel_overrides[px][py] end
 			if color == ALTAR_BIOME_COLOR then
