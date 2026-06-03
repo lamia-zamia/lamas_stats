@@ -70,9 +70,8 @@ end
 ---@private
 ---@param entry string
 function config:config_draw_config(entry)
-	local value = self.mod:GetSettingBoolean(entry)
+	local value = self.config[entry]
 	local clicked = false
-	-- A row with a leading gap = the indent (cursor-idiomatic, no dx option).
 	self:begin_row(function()
 		self:spacing(8)
 		clicked = self:checkbox(T[entry], value)
@@ -108,17 +107,16 @@ end
 ---@private
 ---@param did_language_changed boolean
 function config:config_get_settings(did_language_changed)
-	if not did_language_changed then return end
 	local max = 0
 	for _, category in ipairs(self.config.config_order) do
 		local entries = self.config.config_list[category]
 		for j = 1, #entries do
 			local config_key = entries[j]
 			self.config[config_key] = self.mod:GetSettingBoolean(config_key)
-			max = math.max(max, self:get_text_dim(T[config_key]) + 25)
+			if did_language_changed then max = math.max(max, self:get_text_dim(T[config_key]) + 25) end
 		end
 	end
-	self.config.width = max
+	if did_language_changed then self.config.width = max end
 end
 
 ---Re-measures all setting label widths; called when the config window is opened.
