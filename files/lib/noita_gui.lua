@@ -1155,7 +1155,13 @@ end
 function ui:_apply_color()
 	local draw_alpha = self._draw_alpha
 	if self._pending_color then
-		GuiColorSetForNextWidget(self.gui, self._pending_cr, self._pending_cg, self._pending_cb, math.max(self._pending_ca * draw_alpha, self.MIN_TEXT_ALPHA))
+		GuiColorSetForNextWidget(
+			self.gui,
+			self._pending_cr,
+			self._pending_cg,
+			self._pending_cb,
+			math.max(self._pending_ca * draw_alpha, self.MIN_TEXT_ALPHA)
+		)
 		self._pending_color = nil
 	elseif draw_alpha < 1 then
 		GuiColorSetForNextWidget(self.gui, 1, 1, 1, math.max(draw_alpha, self.MIN_TEXT_ALPHA))
@@ -1249,14 +1255,19 @@ end
 ---@param str string
 ---@return string
 function ui:locale(str)
+	local pattern = "%$%w[%w_.]*"
+
 	for _ = 1, 8 do
 		local before = str
 		local count
-		str, count = str:gsub("%$%w[%w_]+", GameTextGetTranslatedOrNot)
+
+		str, count = str:gsub(pattern, GameTextGetTranslatedOrNot)
+
 		-- Done when there was nothing left to expand, or a pass changed nothing
 		-- (an untranslatable key that maps to itself).
 		if count == 0 or str == before then break end
 	end
+
 	return str
 end
 
